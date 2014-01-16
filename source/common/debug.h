@@ -7,21 +7,16 @@
  *			之后要做的就是在程序入口处调用 CCrtDbg::enable_leak_check()，可以调用
  *           CCrtDbg::set_report_mode() 来设置输出报告的目标位置。
  *
+ * 邮箱：	wxxweb@gmail.com
  * 作者：	wu.xiongxing
  * 时间：	2013-05-24
  ******************************************************************************/
 
-#ifndef W2X_COMMON_CRT_DBG_H_
-#define W2X_COMMON_CRT_DBG_H_
+#ifndef __W2X_COMMON_CRT_DBG_H__
+#define __W2X_COMMON_CRT_DBG_H__
 
+#include "exports.h"
 
-#ifndef COMMON_API
-#  ifdef COMMON_EXPORTS
-#    define COMMON_API __declspec(dllexport)
-#else
-#    define COMMON_API __declspec(dllimport)
-#  endif
-#endif
 
 #define _CRTDBG_MAP_ALLOC	// 开启 DEBUG 模式下堆内存泄漏检测
 
@@ -64,7 +59,7 @@
 #ifndef TRACE
 #  ifdef _DEBUG
 #    define TRACE(format,...) \
-       _CrtDbgReport(_CRT_WARN, __FILE__, __LINE__, NULL, format,__VA_ARGS__)
+       _CrtDbgReport(_CRT_WARN, __FILE__, __LINE__, NULL, format, __VA_ARGS__)
 #  else
 #    define TRACE(format) ((void)0)
 #  endif
@@ -88,7 +83,7 @@ public:
 	/*
 	 * 设置输出检测报告的目标：VS 的 Debug 输出窗口，或者是标准错误输出 stderr
 	 */
-	static COMMON_API void set_report_mode(EReportMode mode);
+	static W2X_COMMON_API void set_report_mode(EReportMode mode);
 
 	/*
 	 * 该函数放在程序入口处，用于开启栈内存泄漏检测，当出现内存泄漏，将输出内存泄漏
@@ -102,8 +97,8 @@ public:
 	 *	6.以字节为单位的块大小；
 	 *	7.前 16 字节的内容（亦为十六进制）。
 	 */
-	static COMMON_API void enable_leak_check(bool delay = false);
+	static W2X_COMMON_API void enable_leak_check(bool delay = false);
 };
 
 
-#endif /* W2X_COMMON_CRT_DBG_H_ */
+#endif /* __W2X_COMMON_CRT_DBG_H__ */
