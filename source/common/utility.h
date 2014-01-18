@@ -91,19 +91,19 @@
 
 /* 如果表达式 e 的结果为假, 弹出断言对话框, 并返回 r */
 #ifndef IF_FALSE_ASSERT_RETURN
-#  define IF_FALSE_ASSERT_RETURN(e,r) ASSERT(IS_TRUE(e)); IF_FALSE_RETURN((e), (r))
+#  define IF_FALSE_ASSERT_RETURN(e,r) ASSERT(IS_TRUE(e)); if (!IS_TRUE(e)) {return (r);}
 #endif
 
 
 /* 如果指针 p 值为空, 返回 r */
 #ifndef IF_NULL_RETURN
-#  define IF_NULL_RETURN(p,r) if (NULL == (p)) {return (r);}
+#  define IF_NULL_RETURN(p,r) IF_FALSE_RETURN(NULL != (p), (r))
 #endif
 
 
 /* 如果指针 p 值为空,  弹出断言对话框, 并返回 r */
 #ifndef IF_NULL_ASSERT_RETURN
-#  define IF_NULL_ASSERT_RETURN(p,r) ASSERT(NULL != (p)); IF_NULL_RETURN((p), (r))
+#  define IF_NULL_ASSERT_RETURN(p,r) IF_FALSE_ASSERT_RETURN(NULL != (p), r)
 #endif
 
 

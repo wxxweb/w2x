@@ -11,6 +11,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	//CDebug::set_report_mode(CDebug::kModeStderr);
 	CDebug::enable_leak_check(true);
 
+	//char* pszNull = NULL;
+	//IF_NULL_ASSERT_RETURN(pszNull, -1);
 	char* psz1 = new char[100];
 	memset(psz1, 0, 100);
 	strcpy_s(psz1, 100, "12234443");

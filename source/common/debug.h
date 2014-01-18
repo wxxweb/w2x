@@ -42,7 +42,7 @@
 #ifndef ASSERT
 #  ifdef _DEBUG
 #    define ASSERT(expression) \
-	   do {  \
+	   do { \
 	     if ( !!(expression) || \
 	       _CrtDbgReport(_CRT_ASSERT, __FILE__, __LINE__, NULL, #expression) ) \
 	         __asm {int 3}; \

@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "main.h"
+#include "..\common\common.h"
 
 #define MAX_LOADSTRING 100
 

@@ -5,7 +5,10 @@
  * ʱ�䣺	2013-05-24
  ******************************************************************************/
 
-#include "exports.h"
+#ifndef __W2X_COMMON_COMMON_H__
+#define __W2X_COMMON_COMMON_H__
 
+#include "exports.h"
+#include "utility.h"
 
 #endif /* __W2X_COMMON_COMMON_H__ */
