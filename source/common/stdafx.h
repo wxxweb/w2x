@@ -20,5 +20,8 @@
 #include <stdio.h>
 #include <time.h>
 
+// C++库函数
+#include <queue>
+
 // TODO: 在此处引用程序需要的其他头文件
 #include "debug.h"
