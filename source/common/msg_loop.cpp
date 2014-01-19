@@ -16,11 +16,11 @@
 class CMsgLoop::CImpl
 {
 private:
-	// 消息处理函数类型
-	typedef bool (*MsgHandler)(
-		PVOID,		// handler_param
-		LPCTSTR,	// msg
-		PVOID);		// msg_param
+	// 消息处理器
+	typedef bool (CALLBACK *MsgHandler)(
+		PVOID /* _handler_param */,
+		LPCTSTR /* _msg */,
+		PVOID /* _msg_param */);
 
 	// 消息信息结构
 	struct Msg {
@@ -42,13 +42,15 @@ public:
 	bool EnterMsg(LPCTSTR _msg, PVOID _msg_handler);
 	bool SetMsgHandler(MsgHandler _msg_handler, PVOID _handler_param);
 	bool StartLoopThread(void);
-	bool StopLoopThread(void);
+	void StopLoopThread(void);
 
 private:
 	size_t GetMsgQueueSize(void);
 	size_t GetFrontMsgLength(void);
 	bool QuitMsg(void);
-	bool GetFrontMsg(LPCTSTR _buffer, size_t& _size_in_words, PVOID& _msg_param);
+	bool GetFrontMsg(LPCTSTR _buffer, 
+					 IN OUT size_t& _size_in_words, 
+					 OUT PVOID& _msg_param);
 	bool WaitMsg(void);
 	void ExitLoop(void);
 	bool HandleMsg(LPCTSTR _msg, PVOID _msg_param);
@@ -97,13 +99,13 @@ bool CMsgLoop::CImpl::HandleMsg(LPCTSTR _msg, PVOID _msg_param)
 {
 	CAutoLock autoLock(this);
 
-	IF_NULL_ASSERT_RETURN(m_msg_handler, true);
+	IF_NULL_ASSERT_RETURN_VALUE(m_msg_handler, true);
 	return m_msg_handler(m_handler_param, _msg, _msg_param);
 }
 
 bool CMsgLoop::CImpl::EnterMsg(LPCTSTR _msg, PVOID _msg_param)
 {
-	IF_NULL_ASSERT_RETURN(_msg, false);
+	IF_NULL_ASSERT_RETURN_VALUE(_msg, false);
 
 	CAutoLock autoLock(this);
 
@@ -151,10 +153,10 @@ size_t CMsgLoop::CImpl::GetFrontMsgLength(void)
 }
 
 bool CMsgLoop::CImpl::GetFrontMsg(LPCTSTR _buffer, 
-								  size_t& _size_in_words, 
-								  PVOID& _msg_param)
+								  IN OUT size_t& _size_in_words, 
+								  OUT PVOID& _msg_param)
 {
-	IF_NULL_ASSERT_RETURN(_buffer, false);
+	IF_NULL_ASSERT_RETURN_VALUE(_buffer, false);
 
 	CAutoLock autoLock(this);
 
@@ -237,18 +239,17 @@ bool CMsgLoop::CImpl::StartLoopThread(void)
 	return true;
 }
 
-bool CMsgLoop::CImpl::StopLoopThread(void)
+void CMsgLoop::CImpl::StopLoopThread(void)
 {
 	CAutoLock autoLock(this);
 
 	this->ExitLoop();
 
-	IF_NULL_RETURN(m_loop_thread_handle, false);
+	IF_NULL_RETURN(m_loop_thread_handle);
 
 	::TerminateThread(m_loop_thread_handle, 0);
 	::CloseHandle(m_loop_thread_handle);
 	m_loop_thread_handle = NULL;
-	return true;
 }
 
 DWORD CMsgLoop::CImpl::LoopThread(PVOID _thread_param)
@@ -308,7 +309,7 @@ bool CMsgLoop::StartLoopThread(MsgHandler _msg_handler, PVOID _handler_param)
 	return m_impl_ptr->StartLoopThread();
 }
 
-bool CMsgLoop::StopLoopThread(void)
+void CMsgLoop::StopLoopThread(void)
 {
-	return m_impl_ptr->StopLoopThread();
+	m_impl_ptr->StopLoopThread();
 }
