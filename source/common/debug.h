@@ -43,9 +43,9 @@
 #  ifdef _DEBUG
 #    define ASSERT(expression) \
 	   do { \
-	     if ( !!(expression) || \
+	     if ( !(expression) && \
 	       _CrtDbgReport(_CRT_ASSERT, __FILE__, __LINE__, NULL, #expression) ) \
-	         __asm {int 3}; \
+		 { __asm {int 3}; } \
 	   } while(0)
 #  else
 #    define ASSERT(expression) ((void)0)
