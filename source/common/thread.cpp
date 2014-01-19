@@ -46,12 +46,12 @@ CCriticalSection::~CCriticalSection(void)
 	SAFE_DELETE(const_cast<CImpl*>(m_impl));
 }
 
-void CCriticalSection::enter(void) 
+void CCriticalSection::Enter(void) 
 {
 	::EnterCriticalSection(&(m_impl->m_cs));
 }
 
-void CCriticalSection::leave(void) 
+void CCriticalSection::Leave(void) 
 {
 	::LeaveCriticalSection(&(m_impl->m_cs));
 }
