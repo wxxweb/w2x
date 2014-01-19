@@ -22,6 +22,24 @@
 #endif /* NULL */
 
 
+/* 指明一个函数是回调函数 */
+#ifndef CALLBACK
+#  define CALLBACK
+#endif /* CALLBACK */
+
+
+/* 指明一个参数是输入参数 */
+#ifndef IN
+#  define IN
+#endif /* IN */
+
+
+/* 指明一个参数是输出参数 */
+#ifndef OUT
+#  define OUT
+#endif /* OUT */
+
+
 /* 指明一个变量没有被使用 */
 #ifndef UNUSED
 #  ifdef _DEBUG
@@ -83,27 +101,51 @@
 #endif
 
 
-/* 如果表达式 e 的结果为假, 返回指定值 r */
+/* 如果表达式 e 的结果为假, 返回 */
 #ifndef IF_FALSE_RETURN
-#  define IF_FALSE_RETURN(e,r) if (!IS_TRUE(e)) {return (r);}
+#  define IF_FALSE_RETURN(e) if (!IS_TRUE(e)) {return;}
 #endif
 
 
-/* 如果表达式 e 的结果为假, 弹出断言对话框, 并返回 r */
+/* 如果表达式 e 的结果为假, 返回指定值 r */
+#ifndef IF_FALSE_RETURN_VALUE
+#  define IF_FALSE_RETURN_VALUE(e,r) if (!IS_TRUE(e)) {return (r);}
+#endif
+
+
+/* 如果表达式 e 的结果为假, 弹出断言对话框, 并返回 */
 #ifndef IF_FALSE_ASSERT_RETURN
-#  define IF_FALSE_ASSERT_RETURN(e,r) ASSERT(IS_TRUE(e)); if (!IS_TRUE(e)) {return (r);}
+#  define IF_FALSE_ASSERT_RETURN(e) ASSERT(IS_TRUE(e)); if (!IS_TRUE(e)) {return;}
 #endif
 
 
-/* 如果指针 p 值为空, 返回 r */
+/* 如果表达式 e 的结果为假, 弹出断言对话框, 并返回指定值 r */
+#ifndef IF_FALSE_ASSERT_RETURN_VALUE
+#  define IF_FALSE_ASSERT_RETURN_VALUE(e,r) ASSERT(IS_TRUE(e)); if (!IS_TRUE(e)) {return (r);}
+#endif
+
+
+/* 如果指针 p 值为空, 返回 */
 #ifndef IF_NULL_RETURN
-#  define IF_NULL_RETURN(p,r) IF_FALSE_RETURN(NULL != (p), (r))
+#  define IF_NULL_RETURN(p) IF_FALSE_RETURN(NULL != (p))
 #endif
 
 
-/* 如果指针 p 值为空,  弹出断言对话框, 并返回 r */
+/* 如果指针 p 值为空, 返回指定值 r */
+#ifndef IF_NULL_RETURN_VALUE
+#  define IF_NULL_RETURN_VALUE(p,r) IF_FALSE_RETURN_VALUE(NULL != (p), (r))
+#endif
+
+
+/* 如果指针 p 值为空,  弹出断言对话框, 并返回 */
 #ifndef IF_NULL_ASSERT_RETURN
-#  define IF_NULL_ASSERT_RETURN(p,r) IF_FALSE_ASSERT_RETURN(NULL != (p), r)
+#  define IF_NULL_ASSERT_RETURN(p) IF_FALSE_ASSERT_RETURN(NULL != (p))
+#endif
+
+
+/* 如果指针 p 值为空,  弹出断言对话框, 并返回指定值 r */
+#ifndef IF_NULL_ASSERT_RETURN_VALUE
+#  define IF_NULL_ASSERT_RETURN_VALUE(p,r) IF_FALSE_ASSERT_RETURN_VALUE(NULL != (p), r)
 #endif
 
 
