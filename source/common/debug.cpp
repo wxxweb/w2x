@@ -12,7 +12,7 @@
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(debug)
 
-void set_report_mode(EReportMode mode)
+void SetReportMode(EReportMode mode)
 {
 	if (kModeDebug == mode)
 	{ 
@@ -34,7 +34,7 @@ void set_report_mode(EReportMode mode)
 }
 
 
-void enable_leak_check(bool delay)
+void EnableLeakCheck(bool delay)
 {
 	// Get the current state of the flag and store it in a temporary variable.
 	int tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);

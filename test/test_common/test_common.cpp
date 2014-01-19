@@ -9,7 +9,7 @@
 int _tmain(int argc, _TCHAR* argv[])
 {
 	//CDebug::set_report_mode(CDebug::kModeStderr);
-	w2x::debug::enable_leak_check(true);
+	w2x::debug::EnableLeakCheck(true);
 
 	//char* pszNull = NULL;
 	//IF_NULL_ASSERT_RETURN(pszNull, -1);

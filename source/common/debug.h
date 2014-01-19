@@ -1,11 +1,11 @@
 /******************************************************************************
- * 文件：	crt_dbg.h
+ * 文件：	debug.h
  *
  * 描述：	用于在 DEBUG 模式下对数据有效性、堆内存泄漏等进行检测，并输出检测报告。
  *		若想让程序在 Debug 模式下检测泄漏并输出报告，请将本头文件 include 在 
- *		系统头文件之后，用户头文件之前。 如果有 stdafx.h ，可放在它之后。
- *		后要做的就是在程序入口处调用 CCrtDbg::enable_leak_check()，可以调用
- *      CCrtDbg::set_report_mode() 来设置输出报告的目标位置。
+ *		系统头文件之后，用户头文件之前。 如果有 stdafx.h，可放在它之后。
+ *		后要做的就是在程序入口处调用 w2x::debug::EnableLeakCheck()，
+ *      可以调用w2x::debug::SetReportMode() 来设置输出报告的目标位置。
  *
  * 邮箱：	wxxweb@gmail.com
  * 作者：	wu.xiongxing
@@ -76,7 +76,7 @@ enum EReportMode {
 /*
 * 设置输出检测报告的目标：VS 的 Debug 输出窗口，或者是标准错误输出 stderr
 */
-W2X_COMMON_API void set_report_mode(EReportMode mode);
+W2X_COMMON_API void SetReportMode(EReportMode mode);
 
 /*
 * 该函数放在程序入口处，用于开启栈内存泄漏检测，当出现内存泄漏，将输出内存泄漏
@@ -90,7 +90,7 @@ W2X_COMMON_API void set_report_mode(EReportMode mode);
 *	6.以字节为单位的块大小；
 *	7.前 16 字节的内容（亦为十六进制）。
 */
-W2X_COMMON_API void enable_leak_check(bool delay = false);
+W2X_COMMON_API void EnableLeakCheck(bool delay = false);
 
 W2X_DEFINE_NAME_SPACE_END(debug)
 W2X_NAME_SPACE_END
