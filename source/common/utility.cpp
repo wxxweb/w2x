@@ -8,10 +8,10 @@
 #include "stdafx.h"
 #include "utility.h"
 
-W2X_NAMESPACE_BEGIN
+W2X_NAME_SPACE_BEGIN
 
 // static CRITICAL_SECTION gs_csLog;
 // 
 // class AutoInitialize
 
-W2X_NAMESPACE_END
+W2X_NAME_SPACE_END

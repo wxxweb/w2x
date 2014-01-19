@@ -9,7 +9,7 @@
 #include "stdafx.h"
 #include "thread.h"
 
-W2X_NAMESPACE_BEGIN
+W2X_NAME_SPACE_BEGIN
 
 class CCriticalSection::CImpl
 {
@@ -56,4 +56,4 @@ void CCriticalSection::leave(void)
 	::LeaveCriticalSection(&(m_impl->m_cs));
 }
 
-W2X_NAMESPACE_END
+W2X_NAME_SPACE_END

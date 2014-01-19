@@ -11,7 +11,7 @@
 #include "exports.h"
 #include "thread.h"
 
-W2X_NAMESPACE_BEGIN
+W2X_NAME_SPACE_BEGIN
 
 class CLogger
 {
@@ -38,6 +38,6 @@ private:
 W2X_IMPLEMENT_LOCKING(CLogger, CAutoLock)
 };
 
-W2X_NAMESPACE_END
+W2X_NAME_SPACE_END
 
 #endif /* W2X_COMMON_LOGGER_H_ */

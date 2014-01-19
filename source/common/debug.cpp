@@ -9,18 +9,10 @@
 #include "debug.h"
 
 
-CDebug::CDebug(void)
-{
-	/*NULL*/
-}
+W2X_NAME_SPACE_BEGIN
+W2X_DEFINE_NAME_SPACE_BEGIN(debug)
 
-CDebug::~CDebug(void)
-{
-	/*NULL*/
-}
-
-
-void CDebug::set_report_mode(EReportMode mode)
+void set_report_mode(EReportMode mode)
 {
 	if (kModeDebug == mode)
 	{ 
@@ -42,7 +34,7 @@ void CDebug::set_report_mode(EReportMode mode)
 }
 
 
-void CDebug::enable_leak_check(bool delay)
+void enable_leak_check(bool delay)
 {
 	// Get the current state of the flag and store it in a temporary variable.
 	int tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
@@ -70,3 +62,6 @@ void CDebug::enable_leak_check(bool delay)
 	// Set the new state for the flag.
 	_CrtSetDbgFlag(tmpDbgFlag);
 }
+
+W2X_DEFINE_NAME_SPACE_END(debug)
+W2X_NAME_SPACE_END

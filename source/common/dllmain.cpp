@@ -7,7 +7,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 					 )
 {
 	// DEBUG 模式下检测堆区内存泄漏
-	CDebug::enable_leak_check();
+	w2x::debug::enable_leak_check();
 
 	switch (ul_reason_for_call)
 	{

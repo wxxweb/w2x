@@ -21,12 +21,21 @@
 #endif
 
 
-/* 定义 w2x 命名空间 */
-#ifndef W2X_NAMESPACE_BEGIN
-#  define W2X_NAMESPACE_BEGIN namespace w2x {
+/* 定义命名空间并标记其开始和结束位置 */
+#ifndef W2X_DEFINE_NAME_SPACE_BEGIN
+#  define W2X_DEFINE_NAME_SPACE_BEGIN(name) namespace name {
 #endif
-#ifndef W2X_NAMESPACE_END
-#  define W2X_NAMESPACE_END };
+#ifndef W2X_DEFINE_NAME_SPACE_END
+#  define W2X_DEFINE_NAME_SPACE_END(name) };
+#endif
+
+
+/* 定义 w2x 命名空间 */
+#ifndef W2X_NAME_SPACE_BEGIN
+#  define W2X_NAME_SPACE_BEGIN namespace w2x {
+#endif
+#ifndef W2X_NAME_SPACE_END
+#  define W2X_NAME_SPACE_END };
 #endif
 
 
