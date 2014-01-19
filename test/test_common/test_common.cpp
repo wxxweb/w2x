@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "common/debug.h"
 #include "common/utility.h"
-#include "common/logger.h"
+#include "common/log.h"
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -20,11 +20,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	//SAFE_DELETE_ARRAY(psz1);
 	ASSERT(NULL);
 	TRACE("------");
-	w2x::CLogger::log(NULL);
-	w2x::CLogger::log(TEXT("日志文件测试"));
-	w2x::CLogger::log(TEXT("123988304890483"));
-	w2x::CLogger::log(TEXT(""));
-	w2x::CLogger::log(TEXT("SFSFSFDFJKLJSKLFJDSLKLDJSKLFJDKJDFD"));
+	w2x::log::Log(NULL, NULL);
+	w2x::log::Log(NULL, TEXT("日志文件测试"));
+	w2x::log::Log(NULL, TEXT("123988304890483"));
+	w2x::log::Log(NULL, TEXT(""));
+	w2x::log::Log(NULL, TEXT("SFSFSFDFJKLJSKLFJDSLKLDJSKLFJDKJDFD"));
 
 	//MessageBox(NULL, NULL, NULL, 0);
 
