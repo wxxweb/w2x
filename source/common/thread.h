@@ -24,11 +24,11 @@ public:
 	CCriticalSection(void);
 	virtual ~CCriticalSection(void);
 
-	W2X_DISALLOW_COPY_AND_ASSIGN(CCriticalSection)
+W2X_DISALLOW_COPY_AND_ASSIGN(CCriticalSection)
 
 public:
-	void enter(void);
-	void leave(void);
+	void Enter(void);
+	void Leave(void);
 
 private:
 	class CImpl;
@@ -46,13 +46,13 @@ protected:                                                                   \
 	class class_lock {                                                       \
 	public:                                                                  \
 		explicit class_lock(class_parent* parent) : m_parent(parent)         \
-		{ m_parent->lock(); }                                                \
-		~class_lock(void) { m_parent->unlock(); }							 \
+		{ m_parent->Lock(); }                                                \
+		~class_lock(void) { m_parent->Unlock(); }							 \
 	private:                                                                 \
 		class_parent* m_parent;                                              \
 	};                                                                       \
-	void lock() { m_critical_section_##class_lock.enter(); }                 \
-	void unlock() { m_critical_section_##class_lock.leave(); }               \
+	void Lock() { m_critical_section_##class_lock.Enter(); }                 \
+	void Unlock() { m_critical_section_##class_lock.Leave(); }               \
 private:                                                                     \
 	w2x::CCriticalSection m_critical_section_##class_lock;
 
