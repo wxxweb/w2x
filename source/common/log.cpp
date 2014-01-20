@@ -56,7 +56,7 @@ inline bool IsFileNameValid(LPCTSTR _file_name)
 //============================================================================
 // 日志系统实现类.
 //============================================================================
-class CLog
+class CLogImpl
 {
 public:
 	enum {
@@ -70,13 +70,13 @@ public:
 	typedef std::map<DirId, TSTDSTR> DirMap;
 
 public:
-	CLog(void);
-	~CLog(void);
+	CLogImpl(void);
+	~CLogImpl(void);
 
-W2X_DISALLOW_COPY_AND_ASSIGN(CLog)
+W2X_DISALLOW_COPY_AND_ASSIGN(CLogImpl)
 
 public:
-	static CLog& GetInstance(void);
+	static CLogImpl& GetInstance(void);
 	bool Initialize(void);
 	void Uninitialize(void);
 	bool SetGlobal(const Custom& _custom_ref);
@@ -109,7 +109,7 @@ private:
 	static bool CALLBACK HandleMsg(PVOID _handler_param, LPCTSTR _msg, PVOID _msg_param);
 
 private:
-W2X_IMPLEMENT_LOCKING(CLog, CAutoLock)
+W2X_IMPLEMENT_LOCKING(CLogImpl, CAutoLock)
 
 private:
 	static CCriticalSection sm_critical_section;	// 用于对类成员函数操作加锁解锁
@@ -128,12 +128,12 @@ private:
 	CMsgLoop m_msg_loop;				// 日志消息循环处理对象
 };
 
-::w2x::CCriticalSection CLog::sm_critical_section;
+::w2x::CCriticalSection CLogImpl::sm_critical_section;
 
 //----------------------------------------------------------------------------
 // 以下为日志模块实现类的构造和析构函数.
 //----------------------------------------------------------------------------
-CLog::CLog(void)
+CLogImpl::CLogImpl(void)
 	: m_is_init_startup_info(false)
 	, m_today_num(0)
 	, m_startup_count(0)
@@ -147,7 +147,7 @@ CLog::CLog(void)
 	this->Initialize();
 }
 
-CLog::~CLog(void)
+CLogImpl::~CLogImpl(void)
 {
 	this->Uninitialize();
 }
@@ -155,38 +155,38 @@ CLog::~CLog(void)
 //----------------------------------------------------------------------------
 // 获取日子模块实现类对象, 当对象不存在时创建之.
 //----------------------------------------------------------------------------
-CLog& CLog::GetInstance(void)
+CLogImpl& CLogImpl::GetInstance(void)
 {
-	static CLog* s_pInstance = NULL;
+	static CLogImpl* s_instance_ptr = NULL;
 
 	// 使用DCLP(Double Checked Locking Pattern)保证线程安全
-	if (NULL == s_pInstance)
+	if (NULL == s_instance_ptr)
 	{
 		sm_critical_section.Enter();
-		if (NULL == s_pInstance)
+		if (NULL == s_instance_ptr)
 		{
 			// 日志对象在程序运行期间一直使用，
 			// 无需delete，交给操作系统最终销毁吧
-			s_pInstance = new CLog();
+			s_instance_ptr = new CLogImpl();
 			//::atexit(UninitializeLog);
 		}
 		sm_critical_section.Leave();
 	}
 
-	return *s_pInstance;
+	return *s_instance_ptr;
 }
 
-// 为了较早创建日志模块对象, 不要在其他析构函数里使用s_rLog.
-static CLog& s_rLog = CLog::GetInstance();
+// 为了较早创建日志模块对象, 不要在其他析构函数里使用s_log_impl_ref.
+static CLogImpl& s_log_impl_ref = CLogImpl::GetInstance();
 
 //----------------------------------------------------------------------------
 // 初始化日志模块, 确保日志相关目录、文件被创建, 并缓存它们的全路径等信息.
 //----------------------------------------------------------------------------
-bool CLog::Initialize(void)
+bool CLogImpl::Initialize(void)
 {
 	this->RemoveExpiredLogFiles();
 	this->GetTodayDir();
-	m_msg_loop.StartLoopThread(CLog::HandleMsg, static_cast<PVOID>(this));
+	m_msg_loop.StartLoopThread(CLogImpl::HandleMsg, static_cast<PVOID>(this));
 	
 	return true;
 }
@@ -194,7 +194,7 @@ bool CLog::Initialize(void)
 //----------------------------------------------------------------------------
 // 释放日志模块所获取的资源, 如关闭文件等.
 //----------------------------------------------------------------------------
-void CLog::Uninitialize(void)
+void CLogImpl::Uninitialize(void)
 {
 	// 不主动停止日志循环, 让它打完
 	m_msg_loop.StopLoopThread();
@@ -203,7 +203,7 @@ void CLog::Uninitialize(void)
 //----------------------------------------------------------------------------
 // 设置全局日志定制信息, 未做特殊定制的日志均采用默认定制.
 //----------------------------------------------------------------------------
-bool CLog::SetGlobal(const Custom& _custom_ref)
+bool CLogImpl::SetGlobal(const Custom& _custom_ref)
 {
 	CAutoLock autoLock(this);
 
@@ -224,13 +224,13 @@ bool CLog::SetGlobal(const Custom& _custom_ref)
 //----------------------------------------------------------------------------
 // 获取当前的全局日志定制信息.
 //----------------------------------------------------------------------------
-void CLog::GetGlobal(Custom& _custom_ref)
+void CLogImpl::GetGlobal(Custom& _custom_ref)
 {
 	CAutoLock autoLock(this);
 	_custom_ref = m_global_custom;
 }
 
-const Custom& CLog::GetGlobal(void)
+const Custom& CLogImpl::GetGlobal(void)
 {
 	return m_global_custom;
 }
@@ -238,7 +238,7 @@ const Custom& CLog::GetGlobal(void)
 //----------------------------------------------------------------------------
 // 重置全局日志信息为最初状态.
 //----------------------------------------------------------------------------
-void CLog::ResetGlobal(void)
+void CLogImpl::ResetGlobal(void)
 {
 	m_global_custom.priority = DEFAULT_LOG_PRIORITY;
 	m_global_custom.category = DEFAULT_LOG_CATEGORY;
@@ -249,7 +249,7 @@ void CLog::ResetGlobal(void)
 //----------------------------------------------------------------------------
 // 添加读写日志的工作目录, dir_id最小值为1, 0为默认工作目录.
 //----------------------------------------------------------------------------
-DirId CLog::AddWorkDir(LPCTSTR _dir_name)
+DirId CLogImpl::AddWorkDir(LPCTSTR _dir_name)
 {
 	if (NULL == _dir_name)
 	{
@@ -257,9 +257,9 @@ DirId CLog::AddWorkDir(LPCTSTR _dir_name)
 		return false;
 	}
 
-	TSTDSTR strDirName = _dir_name;
-	std::transform(strDirName.begin(), strDirName.end(), strDirName.begin(), _totlower);
-	if (0 == strDirName.compare(DEFAULT_LOG_DIR_NAME))
+	TSTDSTR dir_name = _dir_name;
+	std::transform(dir_name.begin(), dir_name.end(), dir_name.begin(), _totlower);
+	if (0 == dir_name.compare(DEFAULT_LOG_DIR_NAME))
 	{
 		return 0;
 	}
@@ -267,8 +267,8 @@ DirId CLog::AddWorkDir(LPCTSTR _dir_name)
 	for (DirMap::iterator it = m_work_dir_name_map.begin();
 		 m_work_dir_name_map.end() != it; ++it)
 	{
-		TSTDSTR& strName = it->second;
-		if (0 == strDirName.compare(strName))
+		TSTDSTR& dir_name_ref = it->second;
+		if (0 == dir_name.compare(dir_name_ref))
 		{
 			return 0;
 		}
@@ -285,7 +285,7 @@ DirId CLog::AddWorkDir(LPCTSTR _dir_name)
 	return true;
 }
 
-bool CLog::GetRootDir(LPTSTR _dir_path, size_t _size_in_words)
+bool CLogImpl::GetRootDir(LPTSTR _dir_path, size_t _size_in_words)
 {
 	if (NULL == _dir_path)
 	{
@@ -299,9 +299,9 @@ bool CLog::GetRootDir(LPTSTR _dir_path, size_t _size_in_words)
 //----------------------------------------------------------------------------
 // 当 _custom_ptr=NULL 时, 该条日志采用默认定制, 否则使用特殊定制
 //----------------------------------------------------------------------------
-bool CLog::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg_list_ref)
+bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg_list_ref)
 {
-	const Custom& custom_ref = (NULL != _custom_ptr) ? *_custom_ptr : s_rLog.GetGlobal();
+	const Custom& custom_ref = (NULL != _custom_ptr) ? *_custom_ptr : s_log_impl_ref.GetGlobal();
 
 #ifndef _DEBUG
 	if (kCategoryDebug == custom_ref.category)
@@ -311,27 +311,27 @@ bool CLog::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg_lis
 	}
 #endif
 
-	LPCTSTR pszPriority = NULL;
+	LPCTSTR priority = NULL;
 	switch (custom_ref.priority)
 	{
-	case kPriorityNormal:	pszPriority = STR_PRIORITY_NORMAL;	break;
-	case kPriorityUrgent:	pszPriority = STR_PRIORITY_URGENT;	break;
-	case kPriorityHigh:	pszPriority = STR_PRIORITY_HIGH;	break;
-	case kPriorityLow:	pszPriority = STR_PRIORITY_LOW;		break;
-	default: ASSERT(false);		pszPriority = STR_PRIORITY_NORMAL;	break;
+	case kPriorityNormal:	priority = STR_PRIORITY_NORMAL;	break;
+	case kPriorityUrgent:	priority = STR_PRIORITY_URGENT;	break;
+	case kPriorityHigh:		priority = STR_PRIORITY_HIGH;	break;
+	case kPriorityLow:		priority = STR_PRIORITY_LOW;	break;
+	default: ASSERT(false);	priority = STR_PRIORITY_NORMAL;	break;
 	}
 
-	LPCTSTR pszCategory = NULL;
+	LPCTSTR category = NULL;
 	switch (custom_ref.category)
 	{
-	case kCategoryInfo:		pszCategory = STR_CATEGORY_INFO;	break;
-	case kCategoryWarn:		pszCategory = STR_CATEGORY_WARN;	break;
-	case kCategoryError:	pszCategory = STR_CATEGORY_ERROR;	break;
-	case kCategoryDebug:	pszCategory = STR_CATEGORY_DEBUG;	break;
-	default: ASSERT(false);	pszCategory = STR_CATEGORY_INFO;	break;
+	case kCategoryInfo:		category = STR_CATEGORY_INFO;	break;
+	case kCategoryWarn:		category = STR_CATEGORY_WARN;	break;
+	case kCategoryError:	category = STR_CATEGORY_ERROR;	break;
+	case kCategoryDebug:	category = STR_CATEGORY_DEBUG;	break;
+	default: ASSERT(false);	category = STR_CATEGORY_INFO;	break;
 	}
 
-	TCHAR szBuffer[MAX_LOG_HEAD + MAX_LOG_INFO] = {0};
+	TCHAR log_buffer[MAX_LOG_HEAD + MAX_LOG_INFO] = {0};
 	SYSTEMTIME st = {0};
 	::GetLocalTime(&st);
 
@@ -344,57 +344,49 @@ bool CLog::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg_lis
 	// [2	urgent	error	22:42:21.001]	this is a urgent error.
 	//------------------------------------------------------------------
 	
-	int nWritten = _stprintf_s(szBuffer, MAX_LOG_HEAD - 1, 
+	int chars_written = _stprintf_s(log_buffer, MAX_LOG_HEAD - 1, 
 		TEXT("[%d\t%s\t%s\t%02d:%02d:%02d.%03d]\t"),
-		++m_log_record_count, pszPriority, pszCategory,
+		++m_log_record_count, priority, category,
 		st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
-	if (-1 == nWritten)
+	if (-1 == chars_written)
 	{
 		ASSERT(false);
-		nWritten = 0;
+		chars_written = 0;
 	}
 
 	// 不使用 wvsprintf(), 因为adb 输出 usage() 信息太多会导致越界崩溃.
-	::StringCbVPrintf(szBuffer + nWritten,
-		(sizeof(szBuffer) - nWritten * sizeof(TCHAR)), _format_str, _arg_list_ref);
+	::StringCbVPrintf(
+		log_buffer + chars_written,
+		(sizeof(log_buffer) - chars_written * sizeof(TCHAR)), 
+		_format_str, _arg_list_ref);
 
 #ifdef _DEBUG
 	::OutputDebugString(TEXT("\n"));
-	::OutputDebugString(szBuffer);
+	::OutputDebugString(log_buffer);
 #endif
 
-	m_msg_loop.AddMsg(szBuffer, reinterpret_cast<PVOID>(custom_ref.work_dir_id));
+	m_msg_loop.AddMsg(log_buffer, reinterpret_cast<PVOID>(custom_ref.work_dir_id));
 
-// #ifdef _DEBUG
-// 	if (kCategoryWarn == custom_ref.category)
-// 	{
-// 		TCHAR szTitle[MAX_LOG_HEAD] = {0};
-// 		_stprintf_s(szTitle, _countof(szTitle) - 1, 
-// 			TEXT("%s - %s"), pszCategory, pszPriority);
-// 		::MessageBox(NULL, szBuffer + nWritten, szTitle, MB_ICONWARNING);
-// 	}
-// #endif /* _DEBUG */
-
-	return 0 >= nWritten;
+	return 0 >= chars_written;
 }
 
-LPCTSTR CLog::GetModuleName(void)
+LPCTSTR CLogImpl::GetModuleName(void)
 {
 	if (TEXT('\0') != m_module_name[0])
 	{
 		return m_module_name;
 	}
 
-	TCHAR szFileName[MAX_PATH] = {0};
-	::GetModuleFileName(NULL, szFileName, MAX_PATH);
-	LPTSTR pszModuleName = ::PathFindFileName(szFileName);
-	::PathRemoveExtension(pszModuleName);
-	::_tcscpy_s(m_module_name, _countof(m_module_name), pszModuleName);
+	TCHAR file_name[MAX_PATH] = {0};
+	::GetModuleFileName(NULL, file_name, MAX_PATH);
+	LPTSTR module_name = ::PathFindFileName(file_name);
+	::PathRemoveExtension(module_name);
+	::_tcscpy_s(m_module_name, _countof(m_module_name), module_name);
 
 	return m_module_name;
 }
 
-LPCTSTR CLog::GetWorkDir(LPTSTR _str_buffer, 
+LPCTSTR CLogImpl::GetWorkDir(LPTSTR _str_buffer, 
 							 size_t _size_in_words, 
 							 DirId _dir_id)
 {
@@ -404,10 +396,10 @@ LPCTSTR CLog::GetWorkDir(LPTSTR _str_buffer,
 		return NULL;
 	}
 
-	LPCTSTR pszWorkDirName = NULL;
+	LPCTSTR work_dir_name = NULL;
 	if (0 == _dir_id)
 	{
-		pszWorkDirName = DEFAULT_LOG_DIR_NAME;
+		work_dir_name = DEFAULT_LOG_DIR_NAME;
 	}
 	else
 	{
@@ -417,37 +409,37 @@ LPCTSTR CLog::GetWorkDir(LPTSTR _str_buffer,
 		if (m_work_dir_name_map.end() == it)
 		{
 			ASSERT(false);
-			pszWorkDirName = DEFAULT_LOG_DIR_NAME;
+			work_dir_name = DEFAULT_LOG_DIR_NAME;
 		}
 		else
 		{
-			pszWorkDirName = it->second.c_str();
+			work_dir_name = it->second.c_str();
 		}
 	}
 
-	const int nWritten = _stprintf_s(_str_buffer, _size_in_words - 1, TEXT("%s\\%s"),
-		this->GetTodayDir(), pszWorkDirName);
+	_stprintf_s(_str_buffer, _size_in_words - 1, 
+		TEXT("%s\\%s"), this->GetTodayDir(), work_dir_name);
 
-	BOOL bExist = TRUE;
+	BOOL is_dir_exist = TRUE;
 	for (int i = 0; FALSE == ::PathFileExists(_str_buffer) && i < 2; ++i)
 	{
-		bExist = ::CreateDirectory(_str_buffer, NULL);
+		is_dir_exist = ::CreateDirectory(_str_buffer, NULL);
 	}
-	if (FALSE == bExist)
+	if (FALSE == is_dir_exist)
 	{
-		DWORD dwError = ::GetLastError();
-		TCHAR szInfo[MAX_PATH] = {0};
-		_stprintf_s(szInfo, _countof(szInfo) - 1,
+		DWORD last_error = ::GetLastError();
+		TCHAR error_info[MAX_PATH] = {0};
+		_stprintf_s(error_info, _countof(error_info) - 1,
 			TEXT("The log work directory (%s) does not exist and create failed(%d)."),
-			pszWorkDirName, dwError);
-		::MessageBox(NULL, szInfo, TEXT("ERROR"), MB_OK | MB_ICONERROR);
+			work_dir_name, last_error);
+		::MessageBox(NULL, error_info, TEXT("ERROR"), MB_OK | MB_ICONERROR);
 		return NULL;
 	}
 
 	return _str_buffer;
 }
 
-bool CLog::EnsureLogFile(LPCTSTR _file_path)
+bool CLogImpl::EnsureLogFile(LPCTSTR _file_path)
 {
 	if (NULL == _file_path)
 	{
@@ -463,44 +455,45 @@ bool CLog::EnsureLogFile(LPCTSTR _file_path)
 	CAutoLock autoLock(this);
 
 	// 创建日志文件
-	HANDLE hFile = NULL;
+	HANDLE file_handle = NULL;
 	for (int i = 0; FALSE == ::PathFileExists(_file_path) && i < 2; ++i)
 	{
-		hFile = ::CreateFile(_file_path, GENERIC_WRITE, FILE_SHARE_READ,
+		file_handle = ::CreateFile(_file_path, GENERIC_WRITE, FILE_SHARE_READ,
 			NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	}
 
-	if (NULL == hFile || INVALID_HANDLE_VALUE == hFile)
+	if (NULL == file_handle || INVALID_HANDLE_VALUE == file_handle)
 	{
-		DWORD dwError = ::GetLastError();
-		TCHAR szInfo[MAX_PATH] = {0};
-		_stprintf_s(szInfo, _countof(szInfo) - 1,
+		DWORD last_error = ::GetLastError();
+		TCHAR error_info[MAX_PATH] = {0};
+		_stprintf_s(error_info, _countof(error_info) - 1,
 			TEXT("The log file (%s) does not exist and create failed(%d)."),
-			_file_path, dwError);
-		::MessageBox(NULL, szInfo, TEXT("ERROR"), MB_OK | MB_ICONERROR);
+			_file_path, last_error);
+		::MessageBox(NULL, error_info, TEXT("ERROR"), MB_OK | MB_ICONERROR);
 		return false;
 	}
 
 	// 写文件头
-	DWORD dwNumberOfBytesWritten = 0;
-	BOOL bWritten = ::WriteFile(hFile, static_cast<LPCVOID>(&BYTE_LOG_FILE_HEAD), 
-		sizeof(BYTE_LOG_FILE_HEAD), &dwNumberOfBytesWritten, NULL);
-	if (FALSE == bWritten || sizeof(BYTE_LOG_FILE_HEAD) != dwNumberOfBytesWritten)
+	DWORD num_of_bytes_written = 0;
+	BOOL is_written = ::WriteFile(
+		file_handle, static_cast<LPCVOID>(&BYTE_LOG_FILE_HEAD), 
+		sizeof(BYTE_LOG_FILE_HEAD), &num_of_bytes_written, NULL);
+	if (FALSE == is_written || sizeof(BYTE_LOG_FILE_HEAD) != num_of_bytes_written)
 	{
-		DWORD dwError = ::GetLastError();
-		TCHAR szInfo[MAX_PATH] = {0};
-		_stprintf_s(szInfo, _countof(szInfo) - 1,
-			TEXT("Write log file (%s) head failed(%d)."), _file_path, dwError);
-		::MessageBox(NULL, szInfo, TEXT("ERROR"), MB_OK | MB_ICONERROR);
+		DWORD last_error = ::GetLastError();
+		TCHAR error_info[MAX_PATH] = {0};
+		_stprintf_s(error_info, _countof(error_info) - 1,
+			TEXT("Write log file (%s) head failed(%d)."), _file_path, last_error);
+		::MessageBox(NULL, error_info, TEXT("ERROR"), MB_OK | MB_ICONERROR);
 	}
 
-	::CloseHandle(hFile);
-	hFile = NULL;
+	::CloseHandle(file_handle);
+	file_handle = NULL;
 
 	return true;
 }
 
-bool CLog::WriteLogFile(LPCTSTR _file_path, LPCTSTR _log_record)
+bool CLogImpl::WriteLogFile(LPCTSTR _file_path, LPCTSTR _log_record)
 {
 	if (NULL == _file_path || NULL == _log_record)
 	{
@@ -515,31 +508,31 @@ bool CLog::WriteLogFile(LPCTSTR _file_path, LPCTSTR _log_record)
 	SECURITY_ATTRIBUTES sa = {0};
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 	sa.bInheritHandle = FALSE;
-	HANDLE hFile = ::CreateFile(_file_path, GENERIC_WRITE, 
+	HANDLE file_handle = ::CreateFile(_file_path, GENERIC_WRITE, 
 		FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, OPEN_EXISTING, 
 		FILE_ATTRIBUTE_NORMAL, NULL);
 
-	if (NULL == hFile || INVALID_HANDLE_VALUE == hFile)
+	if (NULL == file_handle || INVALID_HANDLE_VALUE == file_handle)
 	{
 		ASSERT(false);
 		return false;
 	}
 
-	DWORD dwBytesWritten = 0;
-	DWORD dwBytesToWrite = _tcslen(_log_record) * sizeof(TCHAR);
-	::SetFilePointer(hFile, 0, NULL, FILE_END);
-	::WriteFile(hFile, _log_record, dwBytesToWrite, &dwBytesWritten, NULL);
-	::SetFilePointer(hFile, 0, NULL, FILE_END);
-	dwBytesToWrite = _tcslen(STR_LOG_LINE_END) * sizeof(TCHAR);
-	::WriteFile(hFile, STR_LOG_LINE_END, dwBytesToWrite, &dwBytesWritten, NULL);
+	DWORD bytes_written = 0;
+	DWORD bytes_to_write = _tcslen(_log_record) * sizeof(TCHAR);
+	::SetFilePointer(file_handle, 0, NULL, FILE_END);
+	::WriteFile(file_handle, _log_record, bytes_to_write, &bytes_written, NULL);
+	::SetFilePointer(file_handle, 0, NULL, FILE_END);
+	bytes_to_write = _tcslen(STR_LOG_LINE_END) * sizeof(TCHAR);
+	::WriteFile(file_handle, STR_LOG_LINE_END, bytes_to_write, &bytes_written, NULL);
 
-	::CloseHandle(hFile);
-	hFile = NULL;
+	::CloseHandle(file_handle);
+	file_handle = NULL;
 
 	return true;
 }
 
-bool CLog::InitStartupInfo(void)
+bool CLogImpl::InitStartupInfo(void)
 {
 	CAutoLock autoLock(this);
 	if (true == m_is_init_startup_info)
@@ -548,46 +541,47 @@ bool CLog::InitStartupInfo(void)
 	}
 	m_is_init_startup_info = true;
 
-	LPCTSTR pszTodayDir = this->GetTodayDir();
-	if (NULL == pszTodayDir)
+	LPCTSTR today_dir = this->GetTodayDir();
+	if (NULL == today_dir)
 	{
 		ASSERT(false);
 		return false;
 	}
 
-	TCHAR szStartupFile[MAX_PATH] = {0};
-	_stprintf_s(szStartupFile, _countof(szStartupFile) - 1, 
-		TEXT("%s\\startup.log"), pszTodayDir);
+	TCHAR startup_file_path[MAX_PATH] = {0};
+	_stprintf_s(startup_file_path, _countof(startup_file_path) - 1, 
+		TEXT("%s\\startup.log"), today_dir);
 
-	this->EnsureLogFile(szStartupFile);
+	this->EnsureLogFile(startup_file_path);
 
 	SECURITY_ATTRIBUTES sa = {0};
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 	sa.bInheritHandle = FALSE;
-	HANDLE hFile = ::CreateFile(szStartupFile, GENERIC_READ, 
+	HANDLE file_handle = ::CreateFile(startup_file_path, GENERIC_READ, 
 		FILE_SHARE_READ, &sa, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
-	if (NULL == hFile || INVALID_HANDLE_VALUE == hFile)
+	if (NULL == file_handle || INVALID_HANDLE_VALUE == file_handle)
 	{
 		ASSERT(false);
 		return false;
 	}
 
-	TCHAR szStartupCount[MAX_STARTUP_COUNT + 1] = {0};
-	const DWORD dwBytesToRead = MAX_STARTUP_COUNT * sizeof(TCHAR);
-	const DWORD dwBytesOffset = dwBytesToRead + _tcslen(STR_LOG_LINE_END) * sizeof(TCHAR);
-	DWORD dwBytesRead = 0;
+	TCHAR startup_count[MAX_STARTUP_COUNT + 1] = {0};
+	const DWORD bytes_to_read = MAX_STARTUP_COUNT * sizeof(TCHAR);
+	const DWORD bytes_offset 
+		= bytes_to_read + _tcslen(STR_LOG_LINE_END) * sizeof(TCHAR);
+	DWORD bytes_read = 0;
 	
-	const DWORD dwSetFilePtr = ::SetFilePointer(
-		hFile, (-1 * static_cast<LONG>(dwBytesOffset)), NULL, FILE_END);
+	/*const DWORD file_pointer = */::SetFilePointer(
+		file_handle, (-1 * static_cast<LONG>(bytes_offset)), NULL, FILE_END);
 
-	::ReadFile(hFile, &szStartupCount, dwBytesToRead, &dwBytesRead, NULL);
-	m_startup_count = static_cast<UINT>(_ttoi(szStartupCount));
+	::ReadFile(file_handle, &startup_count, bytes_to_read, &bytes_read, NULL);
+	m_startup_count = static_cast<UINT>(_ttoi(startup_count));
 
-	::CloseHandle(hFile);
-	hFile = NULL;
+	::CloseHandle(file_handle);
+	file_handle = NULL;
 
-	bool bSuccessed = true;
+	bool is_write_successed = true;
 	if (false == m_global_custom.is_resue_file)
 	{
 		// 启动次数递增
@@ -597,19 +591,19 @@ bool CLog::InitStartupInfo(void)
 		}
 		SYSTEMTIME st = {0};
 		::GetLocalTime(&st);
-		TCHAR szLine[MAX_LOG_INFO] = {0};
-		_stprintf_s(szLine, _countof(szLine) - 1, 
+		TCHAR log_record[MAX_LOG_INFO] = {0};
+		_stprintf_s(log_record, _countof(log_record) - 1, 
 			TEXT("%04d-%02d-%02d %02d:%02d:%02d.%03d %03d"), 
 			st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, 
 			st.wSecond, st.wMilliseconds, m_startup_count);
 
-		bSuccessed = this->WriteLogFile(szStartupFile, szLine);
+		is_write_successed = this->WriteLogFile(startup_file_path, log_record);
 	}
 
-	return bSuccessed;
+	return is_write_successed;
 }
 
-bool CLog::ParseDateString(SYSTEMTIME* _date_ptr, LPCTSTR _date_str)
+bool CLogImpl::ParseDateString(SYSTEMTIME* _date_ptr, LPCTSTR _date_str)
 {
 	if (NULL == _date_ptr || NULL == _date_str)
 	{
@@ -618,90 +612,88 @@ bool CLog::ParseDateString(SYSTEMTIME* _date_ptr, LPCTSTR _date_str)
 	}
 
 	const size_t MAX_BUF_COUNT = 16;
-	const size_t nLen = _tcslen(_date_str);
-	if (MAX_BUF_COUNT <= nLen)
+	const size_t date_str_len = _tcslen(_date_str);
+	if (MAX_BUF_COUNT <= date_str_len)
 	{
 		ASSERT(false);
 		return false;
 	}
 
-	TCHAR szDate[MAX_BUF_COUNT] = {0};
-	_tcscpy_s(szDate, _countof(szDate), _date_str);
-	LPTSTR pszBegin = szDate;
+	TCHAR date_str_buffer[MAX_BUF_COUNT] = {0};
+	_tcscpy_s(date_str_buffer, _countof(date_str_buffer), _date_str);
+	LPTSTR num_begin = date_str_buffer;
 
-	bool bSuccessed = true;
+	bool is_date_num = true;
 	memset(_date_ptr, 0, sizeof(SYSTEMTIME));
-	for (WORD wTime = 0, i = 0; i < 3/*年月日*/; ++i)
+	for (WORD date_num = 0, i = 0; i < 3/*年月日*/; ++i)
 	{
-		LPTSTR pszEnd = _tcschr(pszBegin, TEXT('-'));
-		if (NULL == pszEnd) {
-			pszEnd = szDate + nLen;
+		LPTSTR num_end = _tcschr(num_begin, TEXT('-'));
+		if (NULL == num_end) {
+			num_end = date_str_buffer + date_str_len;
 		}
 		else {
-			*pszEnd = TEXT('\0');
+			*num_end = TEXT('\0');
 		}
 
-		wTime = static_cast<WORD>(_ttoi(pszBegin));
-		if (0 == wTime)
+		date_num = static_cast<WORD>(_ttoi(num_begin));
+		if (0 == date_num)
 		{
-			bSuccessed = false;
+			is_date_num = false;
 			break;
 		}
 		switch (i)
 		{
-		case 0: _date_ptr->wYear  = wTime; break;
-		case 1: _date_ptr->wMonth = wTime; break;
-		case 2: _date_ptr->wDay   = wTime; break;
+		case 0: _date_ptr->wYear  = date_num; break;
+		case 1: _date_ptr->wMonth = date_num; break;
+		case 2: _date_ptr->wDay   = date_num; break;
 		default: break;
 		}
-		pszBegin = pszEnd + 1;
-		if (i < 2 && pszBegin > szDate + nLen)
+		num_begin = num_end + 1;
+		if (i < 2 && num_begin > date_str_buffer + date_str_len)
 		{
-			bSuccessed = false;
+			is_date_num = false;
 			break;
 		}
 	}
-	if (false == bSuccessed || 12 < _date_ptr->wMonth || 31 < _date_ptr->wDay)
+	if (false == is_date_num || 12 < _date_ptr->wMonth || 31 < _date_ptr->wDay)
 	{
 		return false;
 	}
 	return true;
 }
 
-bool CLog::RemoveExpiredLogFiles(void)
+bool CLogImpl::RemoveExpiredLogFiles(void)
 {
 	CAutoLock autoLock(this);
 
-	LPCTSTR pszRootDir = this->GetRootDir();
-	if (NULL == pszRootDir)
+	LPCTSTR root_dir_path = this->GetRootDir();
+	if (NULL == root_dir_path)
 	{
 		ASSERT(false);
 		return false;
 	}
 
-	TCHAR szPath[MAX_PATH] = {0};
-	_stprintf_s(szPath, _countof(szPath) - 1, TEXT("%s\\*.*"), pszRootDir);
+	TCHAR find_path[MAX_PATH] = {0};
+	_stprintf_s(find_path, _countof(find_path) - 1, TEXT("%s\\*.*"), root_dir_path);
 
 	WIN32_FIND_DATA wfd = {0};
-	HANDLE hFind = ::FindFirstFile(szPath, &wfd);
-	if (INVALID_HANDLE_VALUE == hFind)
+	HANDLE find_handle = ::FindFirstFile(find_path, &wfd);
+	if (INVALID_HANDLE_VALUE == find_handle)
 	{
 		ASSERT(false);
 		return false;
 	}
 
 	// 获取当天日期时间
-	FILETIME fileTime = {0};
-	SYSTEMTIME sysTime = {0};
-	SYSTEMTIME localTime = {0};
-	ULARGE_INTEGER ulgTime = {0};
-	::GetLocalTime(&localTime);
-	::TzSpecificLocalTimeToSystemTime(NULL, &localTime, &sysTime);
-	::SystemTimeToFileTime(&sysTime, &fileTime);
-	memcpy_s(&ulgTime, sizeof(ULARGE_INTEGER), &fileTime, sizeof(FILETIME));
-	const ULONGLONG ullToday = ulgTime.QuadPart / 10000000;
-
-	//TCHAR szFileName[MAX_PATH] = {0};
+	FILETIME file_time = {0};
+	SYSTEMTIME sys_time = {0};
+	SYSTEMTIME local_time = {0};
+	ULARGE_INTEGER large_time = {0};
+	::GetLocalTime(&local_time);
+	::TzSpecificLocalTimeToSystemTime(NULL, &local_time, &sys_time);
+	::SystemTimeToFileTime(&sys_time, &file_time);
+	memcpy_s(&large_time, sizeof(ULARGE_INTEGER), &file_time, sizeof(FILETIME));
+	const ULONGLONG today_since_1970 = large_time.QuadPart / 10000000;
 
 	do {
 		if (FILE_ATTRIBUTE_DIRECTORY != wfd.dwFileAttributes ||
@@ -711,38 +703,39 @@ bool CLog::RemoveExpiredLogFiles(void)
 			continue;
 		}
 
-		if (false == CLog::ParseDateString(&localTime, wfd.cFileName))
+		if (false == CLogImpl::ParseDateString(&local_time, wfd.cFileName))
 		{
 			continue;
 		}
 		
 		// 检测是否过期
-		::TzSpecificLocalTimeToSystemTime(NULL, &localTime, &sysTime);
-		::SystemTimeToFileTime(&sysTime, &fileTime);
-		memcpy_s(&ulgTime, sizeof(ULARGE_INTEGER), &fileTime, sizeof(FILETIME));
-		const ULONGLONG ullTime = ulgTime.QuadPart / 10000000;
-		if (ullTime < ullToday)
+		::TzSpecificLocalTimeToSystemTime(NULL, &local_time, &sys_time);
+		::SystemTimeToFileTime(&sys_time, &file_time);
+		memcpy_s(&large_time, sizeof(ULARGE_INTEGER), &file_time, sizeof(FILETIME));
+		const ULONGLONG second_since_1970 = large_time.QuadPart / 10000000;
+		if (second_since_1970 < today_since_1970)
 		{
-			DWORD dwDay = static_cast<DWORD>((ullToday-ullTime)/3600/24);
-			if (EXPIRED_DAY > dwDay)
+			DWORD diff_day = static_cast<DWORD>(
+				(today_since_1970 - second_since_1970) / 3600 / 24);
+			if (EXPIRED_DAY > diff_day)
 			{
 				continue;
 			}
 		}
 
 		// 删除超过一周的日志文件
-		_stprintf_s(szPath, 
-			_countof(szPath) - 1, TEXT("%s\\%s"), pszRootDir, wfd.cFileName);
-		this->RemoveDir(szPath);
+		_stprintf_s(find_path, _countof(find_path) - 1, 
+			TEXT("%s\\%s"), root_dir_path, wfd.cFileName);
+		this->RemoveDir(find_path);
 	} 
-	while (FALSE != ::FindNextFile(hFind, &wfd));
+	while (FALSE != ::FindNextFile(find_handle, &wfd));
 
-	::FindClose(hFind);
-	hFind= NULL;
+	::FindClose(find_handle);
+	find_handle= NULL;
 	return true;
 }
 
-bool CLog::RemoveDir(LPCTSTR _dir_path)
+bool CLogImpl::RemoveDir(LPCTSTR _dir_path)
 {
 	if (NULL == _dir_path)
 	{
@@ -754,12 +747,12 @@ bool CLog::RemoveDir(LPCTSTR _dir_path)
 		return false;
 	}
 
-	TCHAR szPath[MAX_PATH] = {0};
-	_stprintf_s(szPath, _countof(szPath) - 1, TEXT("%s\\*.*"), _dir_path);
+	TCHAR find_path[MAX_PATH] = {0};
+	_stprintf_s(find_path, _countof(find_path) - 1, TEXT("%s\\*.*"), _dir_path);
 
 	WIN32_FIND_DATA wfd = {0};
-	HANDLE hFind = ::FindFirstFile(szPath, &wfd);
-	if (INVALID_HANDLE_VALUE == hFind)
+	HANDLE find_handle = ::FindFirstFile(find_path, &wfd);
+	if (INVALID_HANDLE_VALUE == find_handle)
 	{
 		ASSERT(false);
 		return false;
@@ -774,24 +767,24 @@ bool CLog::RemoveDir(LPCTSTR _dir_path)
 		}
 		else
 		{
-			TCHAR szSubPath[MAX_PATH] = {0};
-			_stprintf_s(szSubPath, _countof(szSubPath) - 1, 
+			TCHAR sub_path[MAX_PATH] = {0};
+			_stprintf_s(sub_path, _countof(sub_path) - 1, 
 				TEXT("%s\\%s"), _dir_path, wfd.cFileName);
 
 			if (FILE_ATTRIBUTE_DIRECTORY == wfd.dwFileAttributes)
 			{
-				this->RemoveDir(szSubPath);
+				this->RemoveDir(sub_path);
 			}
 			else {
-				::SetFileAttributes(szSubPath, FILE_ATTRIBUTE_NORMAL);
-				::DeleteFile(szSubPath);
+				::SetFileAttributes(sub_path, FILE_ATTRIBUTE_NORMAL);
+				::DeleteFile(sub_path);
 			}
 		}
 	} 
-	while (FALSE != ::FindNextFile(hFind, &wfd));
+	while (FALSE != ::FindNextFile(find_handle, &wfd));
 
-	::FindClose(hFind);
-	hFind= NULL;
+	::FindClose(find_handle);
+	find_handle= NULL;
 
 	::SetFileAttributes(_dir_path, FILE_ATTRIBUTE_NORMAL);
 	return TRUE == ::RemoveDirectory(_dir_path);
@@ -800,7 +793,7 @@ bool CLog::RemoveDir(LPCTSTR _dir_path)
 //----------------------------------------------------------------------------
 // 确保日志根目录存在, 当检查到不存在的时候创建之, 并缓存其全路径.
 //----------------------------------------------------------------------------
-LPCTSTR CLog::GetRootDir(void)
+LPCTSTR CLogImpl::GetRootDir(void)
 {
 	if (TEXT('\0') != m_log_root_dir[0] && TRUE == ::PathFileExists(m_log_root_dir))
 	{
@@ -819,13 +812,13 @@ LPCTSTR CLog::GetRootDir(void)
 	::_tcscat_s(m_log_root_dir, 
 		sizeof(m_log_root_dir) / sizeof(TCHAR), TEXT("\\log"));
 
-	BOOL bDirExists = TRUE;
+	BOOL is_dir_exist = TRUE;
 	for (int i = 0; FALSE == ::PathFileExists(m_log_root_dir) && i < 2; ++i)
 	{
-		bDirExists = ::CreateDirectory(m_log_root_dir, NULL);
+		is_dir_exist = ::CreateDirectory(m_log_root_dir, NULL);
 	}
 
-	if (FALSE == bDirExists)
+	if (FALSE == is_dir_exist)
 	{
 		::MessageBox(NULL, 
 			TEXT("The log root directory does not exist and create failed."), 
@@ -839,7 +832,7 @@ LPCTSTR CLog::GetRootDir(void)
 //----------------------------------------------------------------------------
 // 获取今日的日志子目录, 当检查到不存在的时候创建之, 并缓存其全路径.
 //----------------------------------------------------------------------------
-LPCTSTR CLog::GetTodayDir(void)
+LPCTSTR CLogImpl::GetTodayDir(void)
 {
 	if (TEXT('\0') != m_today_dir && TRUE == ::PathFileExists(m_today_dir))
 	{
@@ -864,8 +857,8 @@ LPCTSTR CLog::GetTodayDir(void)
 		}
 	}
 
-	LPCTSTR pszRootDir = this->GetRootDir();
-	if (NULL == pszRootDir)
+	LPCTSTR root_dir_path = this->GetRootDir();
+	if (NULL == root_dir_path)
 	{
 		ASSERT(false);
 		return NULL;
@@ -873,15 +866,15 @@ LPCTSTR CLog::GetTodayDir(void)
 
 	m_today_num = st.wDay;
 	_stprintf_s(m_today_dir, _countof(m_today_dir) - 1, 
-		TEXT("%s\\%04d-%02d-%02d"), pszRootDir, st.wYear, st.wMonth, st.wDay);
+		TEXT("%s\\%04d-%02d-%02d"), root_dir_path, st.wYear, st.wMonth, st.wDay);
 
-	BOOL bDirExists = TRUE;
+	BOOL is_dir_exist = TRUE;
 	for (int i = 0; FALSE == ::PathFileExists(m_today_dir) && i < 2; ++i)
 	{
-		bDirExists = ::CreateDirectory(m_today_dir, NULL);
+		is_dir_exist = ::CreateDirectory(m_today_dir, NULL);
 	}
 
-	if (FALSE == bDirExists)
+	if (FALSE == is_dir_exist)
 	{
 		::MessageBox(NULL, 
 			TEXT("The log today directory does not exist and create failed."), 
@@ -895,7 +888,7 @@ LPCTSTR CLog::GetTodayDir(void)
 //----------------------------------------------------------------------------
 // 确保日志文件存在, 当检查到不存在的时候创建之, 并缓存其全路径.
 //----------------------------------------------------------------------------
-bool CLog::GetLogFile(LPTSTR _str_buffer, 
+bool CLogImpl::GetLogFile(LPTSTR _str_buffer, 
 						  size_t _size_in_words, 
 						  DirId _work_dir_id)
 {
@@ -907,9 +900,9 @@ bool CLog::GetLogFile(LPTSTR _str_buffer,
 
 	CAutoLock autoLock(this);
 
-	TCHAR szWorkDir[MAX_PATH] = {0};
-	LPCTSTR pszWorkDir = this->GetWorkDir(szWorkDir, _countof(szWorkDir), _work_dir_id);
-	if (NULL == pszWorkDir)
+	TCHAR work_dir_path[MAX_PATH] = {0};
+	if (NULL == this->GetWorkDir(
+		work_dir_path, _countof(work_dir_path), _work_dir_id))
 	{
 		ASSERT(false);
 		return false;
@@ -921,14 +914,9 @@ bool CLog::GetLogFile(LPTSTR _str_buffer,
 	}
 
 	_stprintf_s(_str_buffer, _size_in_words - 1, TEXT("%s\\%s_%s_%d.log"), 
-		pszWorkDir, this->GetModuleName(), 
+		work_dir_path, this->GetModuleName(), 
 		::PathFindFileName(this->GetTodayDir()), m_startup_count);
-// 	if (TRUE == ::PathFileExists(str_buffer))
-// 	{
-// 		return true;
-// 	}
 
-	//return this->EnsureLogFile(str_buffer);
 	return true;
 }
 
@@ -936,7 +924,7 @@ bool CLog::GetLogFile(LPTSTR _str_buffer,
 // 日志消息处理函数, 被日志消息循环线程调用.
 // 实现向日志文件中异步地写入日志.
 //----------------------------------------------------------------------------
-bool CALLBACK CLog::HandleMsg(PVOID _handler_param, LPCTSTR _msg, PVOID _msg_param)
+bool CALLBACK CLogImpl::HandleMsg(PVOID _handler_param, LPCTSTR _msg, PVOID _msg_param)
 {
 	if (NULL == _handler_param)
 	{
@@ -944,19 +932,20 @@ bool CALLBACK CLog::HandleMsg(PVOID _handler_param, LPCTSTR _msg, PVOID _msg_par
 		return false;
 	}
 
-	CLog* pThis = static_cast<CLog*>(_handler_param);
+	CLogImpl* this_ptr = static_cast<CLogImpl*>(_handler_param);
 	DirId work_dir_id = reinterpret_cast<DirId>(_msg_param);
 
-	TCHAR szFile[MAX_PATH] = {0};
+	TCHAR file_path[MAX_PATH] = {0};
 
 	// 打到其他工作目录的日志同时也会打到默认工作目录中
-	if (true == pThis->GetLogFile(szFile, MAX_PATH, 0))
+	if (true == this_ptr->GetLogFile(file_path, MAX_PATH, 0))
 	{
-		pThis->WriteLogFile(szFile, _msg);
+		this_ptr->WriteLogFile(file_path, _msg);
 	}
-	if (0 != work_dir_id && true == pThis->GetLogFile(szFile, MAX_PATH, work_dir_id))
+	if (0 != work_dir_id && 
+		true == this_ptr->GetLogFile(file_path, MAX_PATH, work_dir_id))
 	{
-		pThis->WriteLogFile(szFile, _msg);
+		this_ptr->WriteLogFile(file_path, _msg);
 	}
 
 	return true;
@@ -967,32 +956,32 @@ bool CALLBACK CLog::HandleMsg(PVOID _handler_param, LPCTSTR _msg, PVOID _msg_par
 //----------------------------------------------------------------------------
 bool SetGlobal(const Custom& _custom_ref)
 {
-	return s_rLog.SetGlobal(_custom_ref);
+	return s_log_impl_ref.SetGlobal(_custom_ref);
 }
 
 void GetGlobal(Custom& custom_ref)
 {
-	s_rLog.GetGlobal(custom_ref);
+	s_log_impl_ref.GetGlobal(custom_ref);
 }
 
 void ResetGlobal(void)
 {
-	s_rLog.ResetGlobal();
+	s_log_impl_ref.ResetGlobal();
 }
 
 bool GetRootDir(LPTSTR _dir_path, size_t _size_in_words)
 {
-	return s_rLog.GetRootDir(_dir_path, _size_in_words);
+	return s_log_impl_ref.GetRootDir(_dir_path, _size_in_words);
 }
 
 DirId AddWorkDir(LPCTSTR _dir_name)
 {
-	return s_rLog.AddWorkDir(_dir_name);
+	return s_log_impl_ref.AddWorkDir(_dir_name);
 }
 
 bool GetLogFile(LPTSTR _file_path, size_t _size_in_words, DirId _work_dir_id)
 {
-	return s_rLog.GetLogFile(_file_path, _size_in_words, _work_dir_id);
+	return s_log_impl_ref.GetLogFile(_file_path, _size_in_words, _work_dir_id);
 }
 
 DWORD GetLogFileHeaderSize(void)
@@ -1018,10 +1007,10 @@ bool Log(const Custom* _custom_ptr, LPCTSTR _format_str, ...)
 
 	va_list args;
 	va_start(args, _format_str);
-	bool bRetVal = s_rLog.Log(_custom_ptr, _format_str, args);
+	bool is_successed = s_log_impl_ref.Log(_custom_ptr, _format_str, args);
 	va_end(args);
 
-	return bRetVal;
+	return is_successed;
 }
 
 bool Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg_list_ref)
@@ -1032,7 +1021,7 @@ bool Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg_list_ref)
 		return false;
 	}
 
-	return s_rLog.Log(_custom_ptr, _format_str, _arg_list_ref);
+	return s_log_impl_ref.Log(_custom_ptr, _format_str, _arg_list_ref);
 }
 
 bool LogInfo(LPCTSTR _format_str, ...)
@@ -1048,10 +1037,10 @@ bool LogInfo(LPCTSTR _format_str, ...)
 
 	va_list args;
 	va_start(args, _format_str);
-	bool bRetVal = s_rLog.Log(&custom, _format_str, args);
+	bool is_sccessed = s_log_impl_ref.Log(&custom, _format_str, args);
 	va_end(args);
 
-	return bRetVal;
+	return is_sccessed;
 }
 
 bool LogWarn(LPCTSTR _format_str, ...)
@@ -1067,10 +1056,10 @@ bool LogWarn(LPCTSTR _format_str, ...)
 
 	va_list args;
 	va_start(args, _format_str);
-	bool bRetVal = s_rLog.Log(&custom, _format_str, args);
+	bool is_successed = s_log_impl_ref.Log(&custom, _format_str, args);
 	va_end(args);
 
-	return bRetVal;
+	return is_successed;
 }
 
 
@@ -1087,10 +1076,10 @@ bool LogError(LPCTSTR _format_str, ...)
 
 	va_list args;
 	va_start(args, _format_str);
-	bool bRetVal = s_rLog.Log(&custom, _format_str, args);
+	bool is_successed = s_log_impl_ref.Log(&custom, _format_str, args);
 	va_end(args);
 
-	return bRetVal;
+	return is_successed;
 }
 
 bool LogDebug(LPCTSTR _format_str, ...)
@@ -1110,15 +1099,15 @@ bool LogDebug(LPCTSTR _format_str, ...)
 
 	va_list args;
 	va_start(args, _format_str);
-	bool bRetVal = s_rLog.Log(&custom, _format_str, args);
+	bool is_successed = s_log_impl_ref.Log(&custom, _format_str, args);
 	va_end(args);
 
-	return bRetVal;
+	return is_successed;
 }
 
 bool ParseDateString(SYSTEMTIME* _date_ptr, LPCTSTR _date_str)
 {
-	return s_rLog.ParseDateString(_date_ptr, _date_str);
+	return s_log_impl_ref.ParseDateString(_date_ptr, _date_str);
 }
 
 W2X_DEFINE_NAME_SPACE_END(log)
