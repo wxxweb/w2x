@@ -10,7 +10,7 @@
 #define __W2X_COMMON_THREAD_H__
 
 #include "exports.h"
-#include "utility.h"
+#include "macros.h"
 
 W2X_NAME_SPACE_BEGIN
 

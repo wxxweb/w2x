@@ -9,6 +9,7 @@
 #define __W2X_COMMON_COMMON_H__
 
 #include "exports.h"
-#include "utility.h"
+#include "macros.h"
+#include "log.h"
 
 #endif /* __W2X_COMMON_COMMON_H__ */

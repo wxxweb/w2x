@@ -2,9 +2,7 @@
 //
 
 #include "stdafx.h"
-#include "common/debug.h"
-#include "common/utility.h"
-#include "common/log.h"
+#include "common/common.h"
 
 int _tmain(int argc, _TCHAR* argv[])
 {

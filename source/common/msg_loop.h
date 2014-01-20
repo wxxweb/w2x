@@ -10,7 +10,7 @@
 #define __W2X_COMMON_MSG_LOOP_H__
 
 #include "exports.h"
-#include "utility.h"
+#include "macros.h"
 #include <wtypes.h>
 
 class W2X_COMMON_API CMsgLoop
