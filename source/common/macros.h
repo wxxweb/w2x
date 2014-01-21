@@ -49,6 +49,15 @@
 #  endif
 #endif /* UNUSED */
 
+/* 根据UNICODE决定使用宽字符或多字符版C++字符串 */
+#ifndef TSTDSTR
+#  ifdef UNICODE
+#    define TSTDSTR std::wstring
+#  else
+#    define TSTDSTR std::string
+#  endif
+#endif
+
 
 /* 禁止使用拷贝构造函数和 operator= 赋值操作的宏应该类的 private: 中使用 */
 #ifndef W2X_DISALLOW_COPY_AND_ASSIGN
@@ -98,6 +107,18 @@
 /* 判断表达式 e 的结果是否为真 */
 #ifndef IS_TRUE
 #  define IS_TRUE(e) (static_cast<bool>(e))
+#endif
+
+
+/* 如果表达式 e 的结果为假, 弹出断言对话框, 并继续执行 if 语句体 */
+#ifndef IF_FALSE_ASSERT
+#  define IF_FALSE_ASSERT(e) ASSERT(IS_TRUE(e)); if (!IS_TRUE(e))
+#endif
+
+
+/* 如果指针 p 值为空,  弹出断言对话框, 并继续执行 if 语句体 */
+#ifndef IF_NULL_ASSERT
+#  define IF_NULL_ASSERT(p) IF_FALSE_ASSERT(NULL != (p))
 #endif
 
 
