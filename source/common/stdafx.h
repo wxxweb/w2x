@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <map>
 #include <queue>
+#include <string>
 
 // C 运行时头文件
 //#include <cassert>

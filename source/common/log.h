@@ -13,6 +13,7 @@
 #define __W2X_COMMON_LOG_H__
 
 #include "exports.h"
+#include <WTypes.h>
 
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(log)
