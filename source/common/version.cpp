@@ -9,12 +9,16 @@
 #include "stdafx.h"
 #include "version.h"
 #include "macros.h"
+#include "log.h"
+
+typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+
 
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(version)
 
 
-EOsVersion GetOsVersion(void)
+W2X_COMMON_API EOsVersion GetOsVersion(void)
 {
 	static DWORD s_os_version = OS_VER_EARLIER;
 
@@ -78,6 +82,39 @@ EOsVersion GetOsVersion(void)
 	}
 
 	return static_cast<EOsVersion>(s_os_version);
+}
+
+
+W2X_COMMON_API bool IsWow64(void)
+{
+	static int s_wow64_flag = -1;
+	
+	if (-1 != s_wow64_flag)
+	{
+		return TRUE == s_wow64_flag;
+	}
+
+	//IsWow64Process is not available on all supported versions of Windows.
+	//Use GetModuleHandle to get a handle to the DLL that contains the function
+	//and GetProcAddress to get a pointer to the function if available.
+
+	LPFN_ISWOW64PROCESS IsWow64Process = (LPFN_ISWOW64PROCESS)::GetProcAddress(
+		::GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+	IF_NULL_ASSERT (IsWow64Process)
+	{
+		const DWORD last_error = ::GetLastError();
+		w2x::log::LogError(
+			TEXT("Get 'IsWow64Process' from kernel32.dll faild(%d)."), last_error);
+		return false;
+	}
+
+	IF_FALSE_ASSERT (FALSE != IsWow64Process(::GetCurrentProcess(), &s_wow64_flag))
+	{
+		const DWORD last_error = ::GetLastError();
+		w2x::log::LogError(TEXT("Call 'IsWow64Process' faild(%d)."), last_error);
+	}
+
+	return TRUE == s_wow64_flag;
 }
 
 

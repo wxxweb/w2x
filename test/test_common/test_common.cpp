@@ -9,6 +9,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	//CDebug::set_report_mode(CDebug::kModeStderr);
 	w2x::debug::EnableLeakCheck(true);
 
+	ASSERT(true == w2x::version::IsWow64());
+	ASSERT(false == w2x::version::IsWow64());
 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_2000);
 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP);
 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP_SP2);

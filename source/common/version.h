@@ -16,6 +16,9 @@ W2X_DEFINE_NAME_SPACE_BEGIN(version)
 
 
 // 操作系统版本代号
+// 常量由操作系统主版本号、次版本号和 Service Package 的主版本号、次版本号组成。
+// 例如 OS_VER_WIN_XP_SP3 = 0x05010300 表示版本代号 “Windows XP”，
+// 操作系统主版本号 05、次版本号 01，Service Package 主版本号 03 次版本号 00。
 enum EOsVersion {
 	OS_VER_EARLIER					= 0x00000000,
 	OS_VER_LASTER					= 0x09999999,
@@ -60,6 +63,16 @@ enum EOsVersion {
 // 获取操作系统版本代号，获取成功返回 true，
 // 失败返回 false 且两个输出参数值均为 0
 W2X_COMMON_API EOsVersion GetOsVersion(void);
+
+
+// 判断操作系统是否为 64 位
+// WoW64 (Windows 32-bit on Windows 64-bit) is a subsystem of the Windows
+// operating system capable of running 32-bit applications and is included
+// on all 64-bit versions of Windows—including Windows XP Professional x64
+// Edition, IA-64 and x64 versions of Windows Server 2003, as well as 64-bit
+// versions of Windows Vista, Windows Server 2008, Windows 7 and Windows 8.
+// In Windows Server 2008 R2 Server Core, it is an optional component.
+W2X_COMMON_API bool IsWow64(void);
 
 
 W2X_DEFINE_NAME_SPACE_END(version)
