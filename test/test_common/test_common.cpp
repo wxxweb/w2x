@@ -9,6 +9,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	//CDebug::set_report_mode(CDebug::kModeStderr);
 	w2x::debug::EnableLeakCheck(true);
 
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_2000);
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP);
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP_SP2);
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP_SP3);
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_7);
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_7_SP1);
+
 	//char* pszNull = NULL;
 	//IF_NULL_ASSERT_RETURN(pszNull, -1);
 	char* psz1 = new char[100];

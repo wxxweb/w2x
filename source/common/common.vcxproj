@@ -93,6 +93,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="thread.h" />
     <ClInclude Include="macros.h" />
+    <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="command.cpp" />
@@ -117,6 +118,7 @@
     </ClCompile>
     <ClCompile Include="thread.cpp" />
     <ClCompile Include="macros.cpp" />
+    <ClCompile Include="version.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
