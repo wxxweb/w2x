@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "common/common.h"
+#include "common/command.h"
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -32,8 +33,19 @@ int _tmain(int argc, _TCHAR* argv[])
 	w2x::log::Log(NULL, TEXT("123988304890483"));
 	w2x::log::Log(NULL, TEXT(""));
 	w2x::log::Log(NULL, TEXT("SFSFSFDFJKLJSKLFJDSLKLDJSKLFJDKJDFD"));
+	w2x::log::LogWarn(TEXT("Warn Log Test!"));
+	w2x::log::LogError(TEXT("Error Log Test!"));
+	w2x::log::LogDebug(TEXT("Debug Log Test!"));
 
 	//MessageBox(NULL, NULL, NULL, 0);
+	w2x::CCommand command;
+	command.Execute(TEXT("D:\\ADB\\adb.exe"), TEXT("devices"));
+	TSTDSTR cmd_output = command.GetOutput();
+	w2x::log::LogInfo(cmd_output.c_str());
+
+	command.Execute(TEXT("D:\\Tools\\ADB\\adb.exe"), TEXT("devices"));
+	cmd_output = command.GetOutput();
+	w2x::log::LogInfo(cmd_output.c_str());
 
 	system("pause");
 	return 0;
