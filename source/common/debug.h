@@ -2,10 +2,10 @@
  * 文件：	debug.h
  *
  * 描述：	用于在 DEBUG 模式下对数据有效性、堆内存泄漏等进行检测，并输出检测报告。
- *		若想让程序在 Debug 模式下检测泄漏并输出报告，请将本头文件 include 在 
- *		系统头文件之后，用户头文件之前。 如果有 stdafx.h，可放在它之后。
- *		后要做的就是在程序入口处调用 w2x::debug::EnableLeakCheck()，
- *      可以调用w2x::debug::SetReportMode() 来设置输出报告的目标位置。
+ *		    若想让程序在 Debug 模式下检测泄漏并输出报告，请将本头文件 include 在 
+ *		    系统头文件之后，用户头文件之前。 如果有 stdafx.h，可放在它之后。
+ *		    后要做的就是在程序入口处调用 w2x::debug::EnableLeakCheck()，
+ *          可以调用w2x::debug::SetReportMode() 来设置输出报告的目标位置。
  *
  * 邮箱：	wxxweb@gmail.com
  * 作者：	wu.xiongxing
