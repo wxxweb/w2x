@@ -25,7 +25,7 @@ public:
 	~CImpl(void);
 
 public:
-	CCommand::EXECUTE_STATUS Execute(
+	CCommand::EExecuteStatus Execute(
 		LPCTSTR _app_path, 
 		LPCTSTR _cmd_line, 
 		DWORD _time_out, 
@@ -38,7 +38,7 @@ public:
 
 private:
 	inline int EnsureOutputIsUnicode(void);
-	CCommand::EXECUTE_STATUS ReadPipe(void);
+	CCommand::EExecuteStatus ReadPipe(void);
 	static DWORD WINAPI ReadPipeThread(PVOID _thread_param);
 
 private:
@@ -74,7 +74,7 @@ CCommand::CImpl::~CImpl(void)
 	}
 }
 
-CCommand::EXECUTE_STATUS CCommand::CImpl::Execute(
+CCommand::EExecuteStatus CCommand::CImpl::Execute(
 	LPCTSTR _app_path, 
 	LPCTSTR _app_args, 
 	DWORD _time_out, 
@@ -158,7 +158,7 @@ CCommand::EXECUTE_STATUS CCommand::CImpl::Execute(
 		//--------------------------------------------------------------------
 	}
 
-	CCommand::EXECUTE_STATUS exe_status = ES_SUCCESSED;
+	CCommand::EExecuteStatus exe_status = ES_SUCCESSED;
 	if (INFINITE == _time_out)
 	{
 		exe_status = this->ReadPipe();
@@ -192,7 +192,7 @@ CCommand::EXECUTE_STATUS CCommand::CImpl::Execute(
 			::GetExitCodeThread(m_read_thread_handle, &exit_code);
 			::CloseHandle(m_read_thread_handle);
 			m_read_thread_handle = NULL;
-			exe_status = static_cast<CCommand::EXECUTE_STATUS>(exit_code);
+			exe_status = static_cast<CCommand::EExecuteStatus>(exit_code);
 		}
 	}
 
@@ -207,7 +207,7 @@ CCommand::EXECUTE_STATUS CCommand::CImpl::Execute(
 }
 
 
-CCommand::EXECUTE_STATUS CCommand::CImpl::ReadPipe(void)
+CCommand::EExecuteStatus CCommand::CImpl::ReadPipe(void)
 {
 	BOOL is_read_successed = FALSE;
 	char read_buffer[PIPE_BUFFER_SIZE] = {0};
@@ -311,7 +311,7 @@ CCommand::~CCommand(void)
 	SAFE_DELETE(const_cast<CImpl*>(m_impl_ptr));
 }
 
-CCommand::EXECUTE_STATUS CCommand::Execute(
+CCommand::EExecuteStatus CCommand::Execute(
 	LPCTSTR _app_path, 
 	LPCTSTR _app_args,
 	DWORD _time_out,
@@ -320,7 +320,7 @@ CCommand::EXECUTE_STATUS CCommand::Execute(
 	return m_impl_ptr->Execute(_app_path, _app_args, _time_out, _is_save_output);
 }
 
-CCommand::EXECUTE_STATUS CCommand::Execute(
+CCommand::EExecuteStatus CCommand::Execute(
 	LPCTSTR _cmd_line, 
 	DWORD _time_out, 
 	bool _is_save_output)
