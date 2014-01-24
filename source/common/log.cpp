@@ -126,9 +126,12 @@ private:
 	DirMap	m_work_dir_name_map;		// 存放日志读写工作目录全路径, 不包含最后"\"
 	Custom	m_global_custom;			// 全局日志定制信息, 应用于每条做特殊定制的日志
 	CMsgLoop m_msg_loop;				// 日志消息循环处理对象
+
+	static std::auto_ptr<CLogImpl> sm_auto_this_ptr; 
 };
 
 ::w2x::CCriticalSection CLogImpl::sm_critical_section;
+std::auto_ptr<CLogImpl> CLogImpl::sm_auto_this_ptr;
 
 //----------------------------------------------------------------------------
 // 以下为日志模块实现类的构造和析构函数.
@@ -157,23 +160,23 @@ CLogImpl::~CLogImpl(void)
 //----------------------------------------------------------------------------
 CLogImpl& CLogImpl::GetInstance(void)
 {
-	static CLogImpl* s_instance_ptr = NULL;
+	static std::auto_ptr<CLogImpl> sm_auto_this_ptr;
 
 	// 使用DCLP(Double Checked Locking Pattern)保证线程安全
-	if (NULL == s_instance_ptr)
+	if (NULL == sm_auto_this_ptr.get())
 	{
 		sm_critical_section.Enter();
-		if (NULL == s_instance_ptr)
+		if (NULL == sm_auto_this_ptr.get())
 		{
 			// 日志对象在程序运行期间一直使用，
 			// 无需delete，交给操作系统最终销毁吧
-			s_instance_ptr = new CLogImpl();
+			sm_auto_this_ptr.reset(new CLogImpl());
 			//::atexit(UninitializeLog);
 		}
 		sm_critical_section.Leave();
 	}
 
-	return *s_instance_ptr;
+	return *sm_auto_this_ptr.get();
 }
 
 // 为了较早创建日志模块对象, 不要在其他析构函数里使用s_log_impl_ref.

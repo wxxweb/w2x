@@ -21,7 +21,7 @@ W2X_NAME_SPACE_BEGIN
 class W2X_COMMON_API CCommand
 {
 public:
-	enum EXECUTE_STATUS {
+	enum EExecuteStatus {
 		ES_SUCCESSED			= 0,	// 子进程成功返回
 		ES_CREATE_PIPE_FAILD	= 1,	// 创建管道失败
 		ES_CREATE_PROCESS		= 2,	// 创建子进程失败
@@ -36,14 +36,14 @@ public:
 W2X_DISALLOW_COPY_AND_ASSIGN(CCommand);
 
 public:
-	EXECUTE_STATUS Execute(
+	EExecuteStatus Execute(
 		LPCTSTR _app_path,			// 被运行的程序路径
 		LPCTSTR _app_args,			// 程序运行参数
 		DWORD _time_out = 5000,		// 程序运行的等待超时时间，单位毫秒
 		bool _is_save_output = true	// 是否保存程序输出结果
 	);
 
-	EXECUTE_STATUS Execute(
+	EExecuteStatus Execute(
 		LPCTSTR _cmd_line,			// 包含程序路径及参数的命令行
 		DWORD _time_out = 5000,		// 程序运行的等待超时时间，单位毫秒
 		bool _is_save_output = true	// 是否保存程序输出结果

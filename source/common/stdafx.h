@@ -22,6 +22,7 @@
 // C++¿âº¯Êý
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <queue>
 #include <string>
 
