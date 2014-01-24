@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "common/common.h"
+#include "common/command.h"
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -18,6 +19,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	//SAFE_DELETE_ARRAY(psz1);
 	ASSERT(NULL);
 	TRACE("------");
+	w2x::CCommand command;
+	command.Execute(TEXT("C:\\ADB\\adb.exe"), TEXT("devices"));
+	TSTDSTR output = command.GetOutput();
+	w2x::log::LogInfo(output.c_str());
 	w2x::log::Log(NULL, NULL);
 	w2x::log::Log(NULL, TEXT("日志文件测试"));
 	w2x::log::Log(NULL, TEXT("123988304890483"));
