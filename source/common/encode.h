@@ -27,6 +27,12 @@ W2X_COMMON_API int Ascii2Unicode(
 );
 
 
+// 生成文件 MD5 消息摘要
+W2X_COMMON_API bool GenerateFileMD5(
+	OUT TSTDSTR _md5_digest,
+	LPCTSTR _file_path
+);
+
 W2X_DEFINE_NAME_SPACE_END(encode)
 W2X_NAME_SPACE_END
 

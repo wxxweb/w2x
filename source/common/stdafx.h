@@ -16,7 +16,8 @@
 #include <ShlObj.h>
 #include <Shlwapi.h>
 #include <tchar.h>
-#include <windows.h>
+#include <Windows.h>
+#include <Wincrypt.h>
 #include <strsafe.h>
 
 // C++¿âº¯Êý
