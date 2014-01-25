@@ -61,6 +61,12 @@
       <ImportLibrary>$(SolutionDir)lib\$(Configuration)\$(TargetName).lib</ImportLibrary>
       <AdditionalDependencies>Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>$(SolutionDir)script\copy_third_party.bat $(SolutionDir) $(Configuration) dll</Command>
+    </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>$(SolutionDir)script\copy_third_party.bat $(SolutionDir) $(Configuration) lib</Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -80,6 +86,12 @@
       <ImportLibrary>$(SolutionDir)lib\$(Configuration)\$(TargetName).lib</ImportLibrary>
       <AdditionalDependencies>Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>$(SolutionDir)script\copy_third_party.bat $(SolutionDir) $(Configuration) dll</Command>
+    </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>$(SolutionDir)script\copy_third_party.bat $(SolutionDir) $(Configuration) lib</Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="command.h" />
