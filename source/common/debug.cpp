@@ -1,16 +1,23 @@
 /******************************************************************************
- * 文件：	crt_dbg.cpp
- * 描述：	参见 crt_dbg.h
+ * 文件：	debug.cpp
+ * 描述：	参见 debug.h
+ * 邮箱：	wxxweb@gmail.com
  * 作者：	wu.xiongxing
  * 时间：	2013-05-24
  ******************************************************************************/
 
 #include "stdafx.h"
 #include "debug.h"
+#include "log.h"
 
 
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(debug)
+
+
+// 保存自定义异常处理器函数
+static FExcptionHandler gs_handler_ptr = NULL;
+
 
 void SetReportMode(EReportMode mode)
 {
@@ -62,6 +69,62 @@ void EnableLeakCheck(bool delay)
 	// Set the new state for the flag.
 	_CrtSetDbgFlag(tmpDbgFlag);
 }
+
+
+static LONG WINAPI HandleTopLevelException(EXCEPTION_POINTERS *_excption_ptr)
+{
+	PEXCEPTION_RECORD record_ptr = _excption_ptr->ExceptionRecord;
+
+	HMODULE module_handle = NULL; 
+	TCHAR module_name[MAX_PATH] = TEXT("");  
+	::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, 
+		reinterpret_cast<LPCTSTR>(record_ptr->ExceptionAddress), &module_handle);
+	::GetModuleFileName(module_handle, module_name, sizeof(module_name));
+
+	if (NULL != gs_handler_ptr)
+	{
+		ExcptionInfo excption_info;
+		excption_info.module_name = module_name;
+		excption_info.excption_code = record_ptr->ExceptionCode;
+		excption_info.excption_address = record_ptr->ExceptionAddress;
+		excption_info.excption_flags = record_ptr->ExceptionFlags;
+
+		LONG return_value = (*gs_handler_ptr)(excption_info);
+		if (kPassToNextHandler != return_value)
+		{
+			return EXCEPTION_CONTINUE_SEARCH;
+		}
+		else {
+			return EXCEPTION_EXECUTE_HANDLER;
+		}
+	}
+
+	TCHAR excption_str[1024] = TEXT("");
+	_stprintf_s(excption_str,
+		TEXT("A excption occurs in module(%s), code(0x%08x), ")
+		TEXT("address(0x%08x), flags(0x%08x), %d parameters."),
+		module_name, record_ptr->ExceptionCode, record_ptr->ExceptionAddress,
+		record_ptr->ExceptionFlags, record_ptr->NumberParameters);
+
+	w2x::log::Custom custom;
+	custom.category = w2x::log::kCategoryWarn;
+	custom.priority = w2x::log::kPriorityUrgent;
+	custom.is_immediately = true;
+
+	w2x::log::Log(&custom, excption_str);
+
+	::MessageBox(NULL, excption_str, TEXT("Excption"), MB_ICONERROR);
+
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+
+
+W2X_COMMON_API void EnableExcptionHandle(FExcptionHandler _handler_ptr)
+{
+	gs_handler_ptr = _handler_ptr;
+	::SetUnhandledExceptionFilter(HandleTopLevelException);
+}
+
 
 W2X_DEFINE_NAME_SPACE_END(debug)
 W2X_NAME_SPACE_END

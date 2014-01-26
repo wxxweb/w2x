@@ -5,10 +5,23 @@
 #include "common/common.h"
 #include "common/command.h"
 
+w2x::debug::EExcptionReturn CALLBACK HandleExcption(
+	const w2x::debug::ExcptionInfo& _excption_info)
+{
+	MessageBox(NULL, _excption_info.module_name, TEXT("Excption"), MB_ICONERROR);
+	return w2x::debug::kPassToNextHandler;
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
-	//CDebug::set_report_mode(CDebug::kModeStderr);
+	w2x::debug::EnableExcptionHandle(/*HandleExcption*/);
+	w2x::debug::SetReportMode(w2x::debug::kModeStderr);
 	w2x::debug::EnableLeakCheck(true);
+
+// 	LPTSTR pszNull = NULL;
+// 	*pszNull = TEXT('1');
+// 	memset(pszNull, 0, 100);
+// 	_tcscpy_s(pszNull, 100, TEXT("12234443"));
 
 	ASSERT(true == w2x::version::IsWow64());
 	ASSERT(false == w2x::version::IsWow64());
@@ -30,8 +43,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	TRACE("------");
 	w2x::CCommand command;
 	command.Execute(TEXT("C:\\ADB\\adb.exe"), TEXT("devices"));
-	TSTDSTR output = command.GetOutput();
-	w2x::log::LogInfo(output.c_str());
+	TSTDSTR cmd_output = command.GetOutput();
+	w2x::log::LogInfo(cmd_output.c_str());
 	w2x::log::Log(NULL, NULL);
 	w2x::log::Log(NULL, TEXT("日志文件测试"));
 	w2x::log::Log(NULL, TEXT("123988304890483"));
@@ -42,11 +55,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	w2x::log::LogDebug(TEXT("Debug Log Test!"));
 
 	//MessageBox(NULL, NULL, NULL, 0);
-	w2x::CCommand command;
-	command.Execute(TEXT("D:\\ADB\\adb.exe"), TEXT("devices"));
-	TSTDSTR cmd_output = command.GetOutput();
-	w2x::log::LogInfo(cmd_output.c_str());
-
 	command.Execute(TEXT("D:\\Tools\\ADB\\adb.exe"), TEXT("devices"));
 	cmd_output = command.GetOutput();
 	w2x::log::LogInfo(cmd_output.c_str());

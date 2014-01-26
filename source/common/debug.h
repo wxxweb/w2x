@@ -12,8 +12,8 @@
  * 时间：	2013-05-24
  ******************************************************************************/
 
-#ifndef __W2X_COMMON_CRT_DBG_H__
-#define __W2X_COMMON_CRT_DBG_H__
+#ifndef __W2X_COMMON_DEBUG_H__
+#define __W2X_COMMON_DEBUG_H__
 
 #include "exports.h"
 
@@ -68,10 +68,36 @@
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(debug)
 
+/*
+* Debug 调试报告模式
+*/
 enum EReportMode {
-	kModeDebug,
-	kModeStderr,
+	kModeDebug,		// 弹出 Debug 对话框
+	kModeStderr,	// 重定向到标准错误输出
 };
+
+/*
+* 异常处理器返回值
+*/
+enum EExcptionReturn {
+	kPassToNextHandler,	// 将异常传递给下一个处理器
+	kEndProcess,		// 结束进程运行
+};
+
+/*
+* 程序异常信息结构
+*/
+struct ExcptionInfo {
+	LPCTSTR module_name;
+	PVOID excption_address;
+	DWORD excption_code;
+	DWORD excption_flags;
+};
+
+/*
+* 异常处理器函数类型，函数返回值见 EExcptionReturn
+*/
+typedef EExcptionReturn (CALLBACK* FExcptionHandler)(const ExcptionInfo&);
 
 /*
 * 设置输出检测报告的目标：VS 的 Debug 输出窗口，或者是标准错误输出 stderr
@@ -92,8 +118,22 @@ W2X_COMMON_API void SetReportMode(EReportMode mode);
 */
 W2X_COMMON_API void EnableLeakCheck(bool delay = false);
 
+
+/*
+* 该函数放在程序入口处，用于开启进程顶层异常处理，当出现异常时，将调用异常处理器函数。如果
+* 未设置自定义异常处理器函数 _handler_ptr，则使用默认异常处理器函数，弹框报告异常信息。
+* 异常相关信息如下：
+* 
+*	1.发生异常的模块全路径；
+*	2.异常编号；
+*	3.异常地址；
+*	4.异常标识。
+*/
+W2X_COMMON_API void EnableExcptionHandle(FExcptionHandler _handler_ptr = NULL);
+
+
 W2X_DEFINE_NAME_SPACE_END(debug)
 W2X_NAME_SPACE_END
 
 
-#endif /* __W2X_COMMON_CRT_DBG_H__ */
+#endif /* __W2X_COMMON_DEBUG_H__ */
