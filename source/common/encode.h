@@ -22,8 +22,7 @@ W2X_DEFINE_NAME_SPACE_BEGIN(encode)
 // 成功返回转换的 UNICODE 字符数，失败返回 0
 W2X_COMMON_API int Ascii2Unicode(
 	OUT std::wstring& _unicode_str, 
-	LPCSTR _ascii_str, 
-	int _ascii_str_bytes
+	LPCSTR _ascii_str
 );
 
 

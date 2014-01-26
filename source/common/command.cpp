@@ -248,7 +248,7 @@ int CCommand::CImpl::EnsureOutputIsUnicode(void)
 	if (false == m_output_str_ascii.empty() && true == m_output_str.empty())
 	{
 		return w2x::encode::Ascii2Unicode(m_output_str, 
-			m_output_str_ascii.c_str(), m_output_str_ascii.length() + 1);
+			m_output_str_ascii.c_str());
 	}
 	return m_output_str.length();
 }
