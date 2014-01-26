@@ -23,8 +23,6 @@
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(log)
 
-static const EPriority DEFAULT_LOG_PRIORITY = kPriorityNormal;
-static const ECategory DEFAULT_LOG_CATEGORY = kCategoryInfo;
 static TCHAR const DEFAULT_LOG_DIR_NAME[]	= TEXT("default");
 static TCHAR const STR_PRIORITY_NORMAL[]	= TEXT("normal");
 static TCHAR const STR_PRIORITY_URGENT[]	= TEXT("urgent");
@@ -36,6 +34,12 @@ static TCHAR const STR_CATEGORY_WARN[]		= TEXT("warn");
 static TCHAR const STR_CATEGORY_DEBUG[]		= TEXT("debug");
 static TCHAR const STR_LOG_LINE_END[]		= TEXT("\r\n");
 static BYTE  const BYTE_LOG_FILE_HEAD[]		= {0xFF, 0xFE};
+
+W2X_COMMON_API bool Log(
+	const Custom* _custom_ptr, 
+	LPCTSTR _format_str, 
+	va_list& _arg_list_ref
+);
 
 //----------------------------------------------------------------------------
 // 检查文件名是否合法, 规则如下: 
@@ -106,6 +110,10 @@ private:
 					   size_t _size_in_words, 
 					   DirId _dir_id);
 	
+	// 顶层异常处理器，用于捕获崩溃及异常
+	static LONG WINAPI HandleTopLevelException(_EXCEPTION_POINTERS *ExceptionInfo);
+
+	// 日志消息处理器
 	static bool CALLBACK HandleMsg(PVOID _handler_param, LPCTSTR _msg, PVOID _msg_param);
 
 private:
@@ -142,6 +150,8 @@ CLogImpl::CLogImpl(void)
 	, m_startup_count(0)
 	, m_log_record_count(0)
 {
+	// 用于捕获未经处理的异常
+	::SetUnhandledExceptionFilter(HandleTopLevelException);
 	m_process_id = ::GetCurrentProcessId();
 	::memset(m_log_root_dir, 0, sizeof(m_log_root_dir));
 	::memset(m_today_dir, 0, sizeof(m_today_dir));
@@ -243,10 +253,7 @@ const Custom& CLogImpl::GetGlobal(void)
 //----------------------------------------------------------------------------
 void CLogImpl::ResetGlobal(void)
 {
-	m_global_custom.priority = DEFAULT_LOG_PRIORITY;
-	m_global_custom.category = DEFAULT_LOG_CATEGORY;
-	m_global_custom.work_dir_id = 0;
-	m_global_custom.is_resue_file = false;
+	m_global_custom = Custom();
 }
 
 //----------------------------------------------------------------------------
@@ -368,7 +375,14 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 	::OutputDebugString(log_buffer);
 #endif
 
-	m_msg_loop.AddMsg(log_buffer, reinterpret_cast<PVOID>(custom_ref.work_dir_id));
+	PVOID msg_param = reinterpret_cast<PVOID>(custom_ref.work_dir_id);
+	if (false == custom_ref.is_immediately)
+	{
+		m_msg_loop.AddMsg(log_buffer, msg_param);
+	}
+	else {
+		CLogImpl::HandleMsg(static_cast<PVOID>(this), log_buffer, msg_param);
+	}
 
 	return 0 >= chars_written;
 }
@@ -955,44 +969,83 @@ bool CALLBACK CLogImpl::HandleMsg(PVOID _handler_param, LPCTSTR _msg, PVOID _msg
 }
 
 //----------------------------------------------------------------------------
+// 捕获顶层异常，并格式化输出异常位置等相关信息，以便定位崩溃。
+//----------------------------------------------------------------------------
+LONG WINAPI CLogImpl::HandleTopLevelException(EXCEPTION_POINTERS *ExceptionInfo)
+{
+	// 为了提前构建日志对象
+	CLogImpl& log_impl_ref = CLogImpl::GetInstance();
+	
+	PEXCEPTION_RECORD record_ptr = ExceptionInfo->ExceptionRecord;
+
+	HMODULE module_handle = NULL;  
+	TCHAR module_name[MAX_PATH] = TEXT("");  
+	::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, 
+		reinterpret_cast<LPCTSTR>(record_ptr->ExceptionAddress), &module_handle);
+	::GetModuleFileName(module_handle, module_name, sizeof(module_name)); 
+	
+	Custom custom;
+	custom.category = kCategoryError;
+	custom.priority = kPriorityUrgent;
+	w2x::log::Log(&custom,
+		TEXT("\r\n\tCODE: %08X")
+		TEXT("\r\n\tMODL: %s")
+		TEXT("\r\n\tADDR: %08X")
+		TEXT("\r\n\tFLAG: %08X")
+		TEXT("\r\n\tARGS: %d"),
+		record_ptr->ExceptionCode,
+		module_name,
+		record_ptr->ExceptionAddress,
+		record_ptr->ExceptionFlags,
+		record_ptr->NumberParameters);
+
+	MessageBox(NULL, TEXT("Excption"), TEXT("Excption"), MB_ICONERROR);
+
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+
+//----------------------------------------------------------------------------
 // 日志系统包装函数.
 //----------------------------------------------------------------------------
-bool SetGlobal(const Custom& _custom_ref)
+W2X_COMMON_API bool SetGlobal(const Custom& _custom_ref)
 {
 	return s_log_impl_ref.SetGlobal(_custom_ref);
 }
 
-void GetGlobal(Custom& custom_ref)
+W2X_COMMON_API void GetGlobal(Custom& custom_ref)
 {
 	s_log_impl_ref.GetGlobal(custom_ref);
 }
 
-void ResetGlobal(void)
+W2X_COMMON_API void ResetGlobal(void)
 {
 	s_log_impl_ref.ResetGlobal();
 }
 
-bool GetRootDir(LPTSTR _dir_path, size_t _size_in_words)
+W2X_COMMON_API bool GetRootDir(LPTSTR _dir_path, size_t _size_in_words)
 {
 	return s_log_impl_ref.GetRootDir(_dir_path, _size_in_words);
 }
 
-DirId AddWorkDir(LPCTSTR _dir_name)
+W2X_COMMON_API DirId AddWorkDir(LPCTSTR _dir_name)
 {
 	return s_log_impl_ref.AddWorkDir(_dir_name);
 }
 
-bool GetLogFile(LPTSTR _file_path, size_t _size_in_words, DirId _work_dir_id)
+W2X_COMMON_API bool GetLogFile(
+	LPTSTR _file_path, 
+	size_t _size_in_words, 
+	DirId _work_dir_id)
 {
 	return s_log_impl_ref.GetLogFile(_file_path, _size_in_words, _work_dir_id);
 }
 
-DWORD GetLogFileHeaderSize(void)
+W2X_COMMON_API DWORD GetLogFileHeaderSize(void)
 {
 	return sizeof(BYTE_LOG_FILE_HEAD);
 }
 
-bool GetLogFileHeader(PBYTE _byte_buffer, DWORD& _size_in_bytes)
+W2X_COMMON_API bool GetLogFileHeader(PBYTE _byte_buffer, DWORD& _size_in_bytes)
 {
 	if (NULL == _byte_buffer || sizeof(BYTE_LOG_FILE_HEAD) > _size_in_bytes)
 	{
@@ -1004,7 +1057,7 @@ bool GetLogFileHeader(PBYTE _byte_buffer, DWORD& _size_in_bytes)
 	return true;
 }
 
-bool Log(const Custom* _custom_ptr, LPCTSTR _format_str, ...)
+W2X_COMMON_API bool Log(const Custom* _custom_ptr, LPCTSTR _format_str, ...)
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_format_str, false);
 
@@ -1016,7 +1069,10 @@ bool Log(const Custom* _custom_ptr, LPCTSTR _format_str, ...)
 	return is_successed;
 }
 
-bool Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg_list_ref)
+W2X_COMMON_API bool Log(
+	const Custom* _custom_ptr, 
+	LPCTSTR _format_str, 
+	va_list& _arg_list_ref)
 {
 	if (NULL == _format_str)
 	{
@@ -1027,7 +1083,7 @@ bool Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg_list_ref)
 	return s_log_impl_ref.Log(_custom_ptr, _format_str, _arg_list_ref);
 }
 
-bool LogInfo(LPCTSTR _format_str, ...)
+W2X_COMMON_API bool LogInfo(LPCTSTR _format_str, ...)
 {
 	if (NULL == _format_str)
 	{
@@ -1046,7 +1102,7 @@ bool LogInfo(LPCTSTR _format_str, ...)
 	return is_sccessed;
 }
 
-bool LogWarn(LPCTSTR _format_str, ...)
+W2X_COMMON_API bool LogWarn(LPCTSTR _format_str, ...)
 {
 	if (NULL == _format_str)
 	{
@@ -1065,8 +1121,7 @@ bool LogWarn(LPCTSTR _format_str, ...)
 	return is_successed;
 }
 
-
-bool LogError(LPCTSTR _format_str, ...)
+W2X_COMMON_API bool LogError(LPCTSTR _format_str, ...)
 {
 	if (NULL == _format_str)
 	{
@@ -1085,7 +1140,7 @@ bool LogError(LPCTSTR _format_str, ...)
 	return is_successed;
 }
 
-bool LogDebug(LPCTSTR _format_str, ...)
+W2X_COMMON_API bool LogDebug(LPCTSTR _format_str, ...)
 {
 #ifndef _DEBUG
 	return true;
@@ -1108,10 +1163,6 @@ bool LogDebug(LPCTSTR _format_str, ...)
 	return is_successed;
 }
 
-bool ParseDateString(SYSTEMTIME* _date_ptr, LPCTSTR _date_str)
-{
-	return s_log_impl_ref.ParseDateString(_date_ptr, _date_str);
-}
 
 W2X_DEFINE_NAME_SPACE_END(log)
 W2X_NAME_SPACE_END
