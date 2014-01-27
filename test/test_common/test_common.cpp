@@ -14,8 +14,8 @@ w2x::debug::EExcptionReturn CALLBACK HandleExcption(
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	w2x::debug::EnableExcptionHandle(/*HandleExcption*/);
-	w2x::debug::SetReportMode(w2x::debug::kModeStderr);
+	w2x::debug::EnableExcptionHandle(HandleExcption);
+	//w2x::debug::SetReportMode(w2x::debug::kModeStderr);
 	w2x::debug::EnableLeakCheck(true);
 
 // 	LPTSTR pszNull = NULL;
