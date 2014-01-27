@@ -75,16 +75,39 @@ static LONG WINAPI HandleTopLevelException(EXCEPTION_POINTERS *_excption_ptr)
 {
 	PEXCEPTION_RECORD record_ptr = _excption_ptr->ExceptionRecord;
 
-	HMODULE module_handle = NULL; 
-	TCHAR module_name[MAX_PATH] = TEXT("");  
-	::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, 
+	/* 获取异常模块全路径 */ 
+	HMODULE module_handle = NULL;
+	::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
 		reinterpret_cast<LPCTSTR>(record_ptr->ExceptionAddress), &module_handle);
-	::GetModuleFileName(module_handle, module_name, sizeof(module_name));
 
+	TCHAR module_path[MAX_PATH] = TEXT("");
+	::GetModuleFileName(module_handle, module_path, sizeof(module_path));
+
+	/* 生成 MiniDump 文件 */
+	TCHAR dump_file_path[MAX_PATH] = TEXT("");
+	_tcscpy_s(dump_file_path, _countof(dump_file_path), module_path);
+	_tcscat_s(dump_file_path, _countof(dump_file_path), TEXT(".dmp"));
+
+	HANDLE dump_file_handle = ::CreateFile(dump_file_path, GENERIC_WRITE, 
+		0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if(INVALID_HANDLE_VALUE != dump_file_handle)
+	{
+		MINIDUMP_EXCEPTION_INFORMATION dump_info;
+		dump_info.ThreadId = ::GetCurrentThreadId();
+		dump_info.ExceptionPointers = _excption_ptr;
+		dump_info.ClientPointers = FALSE;
+
+		::MiniDumpWriteDump(::GetCurrentProcess(), ::GetCurrentProcessId(), 
+			dump_file_handle, MiniDumpNormal, &dump_info, NULL, NULL);
+		::CloseHandle(dump_file_handle);
+		dump_file_handle = NULL;
+	}
+
+	/* 回调自定义异常处理器函数 */
 	if (NULL != gs_handler_ptr)
 	{
 		ExcptionInfo excption_info;
-		excption_info.module_name = module_name;
+		excption_info.module_name = module_path;
 		excption_info.excption_code = record_ptr->ExceptionCode;
 		excption_info.excption_address = record_ptr->ExceptionAddress;
 		excption_info.excption_flags = record_ptr->ExceptionFlags;
@@ -99,11 +122,12 @@ static LONG WINAPI HandleTopLevelException(EXCEPTION_POINTERS *_excption_ptr)
 		}
 	}
 
+	/* 输出默认的异常信息 */
 	TCHAR excption_str[1024] = TEXT("");
 	_stprintf_s(excption_str,
 		TEXT("A excption occurs in module(%s), code(0x%08x), ")
 		TEXT("address(0x%08x), flags(0x%08x), %d parameters."),
-		module_name, record_ptr->ExceptionCode, record_ptr->ExceptionAddress,
+		module_path, record_ptr->ExceptionCode, record_ptr->ExceptionAddress,
 		record_ptr->ExceptionFlags, record_ptr->NumberParameters);
 
 	w2x::log::Custom custom;

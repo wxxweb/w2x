@@ -19,6 +19,7 @@
 #include <Windows.h>
 #include <Wincrypt.h>
 #include <strsafe.h>
+#include <Dbghelp.h>
 
 // C++¿âº¯Êý
 #include <algorithm>
