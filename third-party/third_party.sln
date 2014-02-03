@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crypto", "source\crypto\crypto.vcxproj", "{F255C1C7-F091-426E-B7FF-6B4A92D4B392}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "json", "source\json\json.vcxproj", "{B84F7231-16CE-41D8-8C08-7B523FF4225B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "source\zlib\zlib.vcxproj", "{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F255C1C7-F091-426E-B7FF-6B4A92D4B392}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F255C1C7-F091-426E-B7FF-6B4A92D4B392}.Debug|Win32.Build.0 = Debug|Win32
+		{F255C1C7-F091-426E-B7FF-6B4A92D4B392}.Release|Win32.ActiveCfg = Release|Win32
+		{F255C1C7-F091-426E-B7FF-6B4A92D4B392}.Release|Win32.Build.0 = Release|Win32
+		{B84F7231-16CE-41D8-8C08-7B523FF4225B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B84F7231-16CE-41D8-8C08-7B523FF4225B}.Debug|Win32.Build.0 = Debug|Win32
+		{B84F7231-16CE-41D8-8C08-7B523FF4225B}.Release|Win32.ActiveCfg = Release|Win32
+		{B84F7231-16CE-41D8-8C08-7B523FF4225B}.Release|Win32.Build.0 = Release|Win32
+		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Debug|Win32.Build.0 = Debug|Win32
+		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Release|Win32.ActiveCfg = Release|Win32
+		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
