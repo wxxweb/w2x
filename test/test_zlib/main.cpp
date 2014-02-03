@@ -3,7 +3,8 @@
 
 #include "stdafx.h"
 #include "common\common.h"
-
+#include "zlib\zlib.h"
+/*
 int _tmain(int argc, _TCHAR* argv[])
 {
 	w2x::debug::EnableExcptionHandle();
@@ -13,4 +14,4 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	system("pause");
 	return 0;
-}
+}*/
