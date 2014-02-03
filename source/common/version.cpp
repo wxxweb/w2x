@@ -118,5 +118,173 @@ W2X_COMMON_API bool IsWow64(void)
 }
 
 
+W2X_COMMON_API bool GetModuleVersionInfo(
+	OUT ModuleVersionInfo& _module_ver_info_ref,
+	LPCTSTR _module_path,
+	size_t _language_index)
+{
+	memset(&_module_ver_info_ref, 0, sizeof(ModuleVersionInfo));
+
+	IF_NULL_ASSERT_RETURN_VALUE(_module_path, false);
+	IF_FALSE_ASSERT_RETURN_VALUE(FALSE != ::PathFileExists(_module_path), false);
+
+	DWORD ver_info_size = ::GetFileVersionInfoSize(_module_path, NULL);
+	IF_FALSE_ASSERT_RETURN_VALUE(0 != ver_info_size, false);
+
+	BYTE* ver_info_ptr = new BYTE[ver_info_size];
+	IF_NULL_ASSERT_RETURN_VALUE(ver_info_ptr, false);
+
+	memset(ver_info_ptr, 0, ver_info_size);
+
+	IF_FALSE_ASSERT (FALSE != ::GetFileVersionInfo(
+		_module_path, 0L, ver_info_size, ver_info_ptr))
+	{
+		SAFE_DELETE_ARRAY(ver_info_ptr);
+		return false;
+	}
+
+	TCHAR sub_block[MAX_PATH] = TEXT("");
+	UINT str_len_read = 0;
+
+	// Structure used to store enumerated languages and code pages.
+  
+	struct LanguageInfo {
+		WORD language;
+		WORD code_page;
+	} *language_info_ptr;
+  
+	// Read the list of languages and code pages.
+
+	BOOL is_query_successed = ::VerQueryValue(
+		ver_info_ptr, TEXT("\\VarFileInfo\\Translation"),
+		reinterpret_cast<LPVOID*>(&language_info_ptr), &str_len_read);
+	IF_FALSE_ASSERT (FALSE != is_query_successed)
+	{
+		SAFE_DELETE_ARRAY(ver_info_ptr);
+		return false;
+	}
+
+	enum {
+		kCompanyName,
+		kFileDescription,
+		kFileVersion,
+		kInternalName,
+		kLegalCopyright,
+		kOriginalFileName,
+		kProductName,
+		kProductVersion,
+		kVersionInfoKeyTotal,
+	};
+
+	LPCTSTR version_info_keys[kVersionInfoKeyTotal] = {0};
+	version_info_keys[kCompanyName]			= TEXT("CompanyName");
+	version_info_keys[kFileDescription]		= TEXT("FileDescription");
+	version_info_keys[kFileVersion]			= TEXT("FileVersion");
+	version_info_keys[kInternalName]		= TEXT("InternalName");
+	version_info_keys[kLegalCopyright]		= TEXT("LegalCopyright");
+	version_info_keys[kOriginalFileName]	= TEXT("OriginalFilename");
+	version_info_keys[kProductName]			= TEXT("ProductName");
+	version_info_keys[kProductVersion]		= TEXT("ProductVersion");
+
+	LPTSTR ver_str_ptr = NULL;
+
+	// Read the version info for each language and code page.
+
+	const size_t language_count = str_len_read / sizeof(LanguageInfo);
+	IF_FALSE_ASSERT_RETURN_VALUE(language_count >= _language_index, false);
+
+	_module_ver_info_ref.language_id = language_info_ptr[_language_index].language;
+	_module_ver_info_ref.code_page = language_info_ptr[_language_index].code_page;
+
+	::VerLanguageName(_module_ver_info_ref.language_id, 
+		_module_ver_info_ref.language_name, 
+		_countof(_module_ver_info_ref.language_name));
+
+	for (size_t key_index = 0; key_index < kVersionInfoKeyTotal; ++key_index)
+	{
+		HRESULT result_handle = ::StringCchPrintf(sub_block, MAX_PATH,
+			TEXT("\\StringFileInfo\\%04x%04x\\%s"),
+			language_info_ptr[_language_index].language,
+			language_info_ptr[_language_index].code_page,
+			version_info_keys[key_index]);
+
+		IF_FALSE_ASSERT (SUCCEEDED(result_handle))
+		{
+			continue;
+		}
+
+		LPTSTR query_str_ptr = NULL;
+		is_query_successed = ::VerQueryValue(ver_info_ptr, sub_block,
+			reinterpret_cast<LPVOID*>(&query_str_ptr), &str_len_read);
+
+		IF_FALSE_ASSERT (FALSE != is_query_successed)
+		{
+			continue;
+		}
+
+		switch (key_index)
+		{
+		case kCompanyName:
+			_tcscpy_s(_module_ver_info_ref.company_name, query_str_ptr);
+			break;
+		case kFileDescription:
+			_tcscpy_s(_module_ver_info_ref.file_description, query_str_ptr);
+			break;
+		case kFileVersion:
+			break;
+		case kInternalName:
+			_tcscpy_s(_module_ver_info_ref.internal_name, query_str_ptr);
+			break;
+		case kLegalCopyright:
+			_tcscpy_s(_module_ver_info_ref.legal_copyright, query_str_ptr);
+			break;
+		case kOriginalFileName:
+			_tcscpy_s(_module_ver_info_ref.original_file_name, query_str_ptr);
+			break;
+		case kProductName:
+			_tcscpy_s(_module_ver_info_ref.product_name, query_str_ptr);
+			break;
+		case kProductVersion:
+			ver_str_ptr = query_str_ptr;
+			break;
+		default: break;
+		}
+	}
+
+	// ½âÎö°æ±¾ºÅ
+	if (NULL != ver_str_ptr)
+	{
+		::VerQueryValue(ver_info_ptr, sub_block,
+			reinterpret_cast<LPVOID*>(&ver_str_ptr), &str_len_read);
+			
+		TCHAR ver_code_str[8] = TEXT("");
+		LPCTSTR curr_ver_ptr = ver_str_ptr;
+		LPCTSTR curr_sep_ptr = ver_str_ptr;
+		WORD ver_code_array[4] = {0};
+		const INT_PTR ver_str_len = static_cast<INT_PTR>(_tcslen(ver_str_ptr));
+		for (size_t i = 0;
+				curr_ver_ptr - ver_str_ptr < ver_str_len; 
+				++i, curr_ver_ptr = ++curr_sep_ptr)
+		{
+			curr_sep_ptr = _tcschr(curr_ver_ptr, TEXT('.'));
+			if (NULL == curr_sep_ptr)
+			{
+				break;
+			}
+			_tcsncpy_s(ver_code_str, _countof(ver_code_str), 
+				curr_ver_ptr, curr_sep_ptr - curr_ver_ptr);
+			ver_code_array[i] = static_cast<WORD>(_ttoi(ver_code_str));
+		}
+		_module_ver_info_ref.major		= ver_code_array[0];
+		_module_ver_info_ref.minor		= ver_code_array[1];
+		_module_ver_info_ref.revision	= ver_code_array[2];
+		_module_ver_info_ref.build		= ver_code_array[3];
+	}
+
+	SAFE_DELETE_ARRAY(ver_info_ptr);
+	return true;
+}
+
+
 W2X_DEFINE_NAME_SPACE_END(version)
 W2X_NAME_SPACE_END

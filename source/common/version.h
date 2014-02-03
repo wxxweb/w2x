@@ -60,6 +60,23 @@ enum EOsVersion {
 	OS_VER_WIN_8_SP4				= 0x06020400,
 };
 
+// 保存文件版本信息
+struct ModuleVersionInfo {
+	WORD major;						// 主版本号
+	WORD minor;						// 次版本号
+	WORD revision;					// 修正版本号
+	WORD build;						// 编译版本号
+	WORD language_id;				// 语言编号
+	WORD code_page;					// 语言代码页
+	TCHAR language_name[32];		// 语言名称
+	TCHAR company_name[64];			// 公司名称
+	TCHAR file_description[128];	// 文件描述
+	TCHAR internal_name[32];		// 内部名称
+	TCHAR legal_copyright[64];		// 版权信息
+	TCHAR original_file_name[32];	// 原文件名
+	TCHAR product_name[32];			// 产品名称
+};
+
 // 获取操作系统版本代号，获取成功返回 true，
 // 失败返回 false 且两个输出参数值均为 0
 W2X_COMMON_API EOsVersion GetOsVersion(void);
@@ -73,6 +90,14 @@ W2X_COMMON_API EOsVersion GetOsVersion(void);
 // versions of Windows Vista, Windows Server 2008, Windows 7 and Windows 8.
 // In Windows Server 2008 R2 Server Core, it is an optional component.
 W2X_COMMON_API bool IsWow64(void);
+
+
+// 获取某个模块的版本信息
+W2X_COMMON_API bool GetModuleVersionInfo(
+	OUT ModuleVersionInfo& _module_ver_info_ref,
+	LPCTSTR _module_path,
+	size_t _language_index = 0
+);
 
 
 W2X_DEFINE_NAME_SPACE_END(version)
