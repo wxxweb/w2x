@@ -5,23 +5,61 @@
 #include "common/common.h"
 #include "common/command.h"
 
+class CDerived;
+class CBase
+{
+public:
+	CBase(CDerived *derived): m_pDerived(derived) {};
+	~CBase();
+	virtual void function(void) = 0;
+
+	CDerived * m_pDerived;
+};
+
+class CDerived : public CBase
+{
+public:
+	CDerived() : CBase(this) {};   // C4355
+	virtual void function(void) {};
+};
+
+CBase::~CBase()
+{
+	m_pDerived->function();
+}
+
 w2x::debug::EExcptionReturn CALLBACK HandleExcption(
 	const w2x::debug::ExcptionInfo& _excption_info)
 {
-	MessageBox(NULL, _excption_info.module_name, TEXT("Excption"), MB_ICONERROR);
+	//MessageBox(NULL, _excption_info.module_name, TEXT("Excption"), MB_ICONERROR);
 	return w2x::debug::kPassToNextHandler;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	w2x::debug::EnableExcptionHandle(HandleExcption);
+	w2x::debug::EnableExcptionHandle(/*HandleExcption*/);
 	//w2x::debug::SetReportMode(w2x::debug::kModeStderr);
 	w2x::debug::EnableLeakCheck(true);
 
+	// 无效参数调用测试
+	//LPSTR format_string = NULL;
+	//printf(format_string);  // 发生异常
+
+	// 纯虚函数调用测试
+	// CDerived myDerived;
+
+	//TCHAR app_path[MAX_PATH] = TEXT("");
+	//::GetModuleFileName(NULL, app_path, sizeof(app_path));
+	w2x::version::ModuleVersionInfo version_info = {0};
+	w2x::version::GetModuleVersionInfo(version_info,
+		TEXT("F:\\Workspace\\Project\\cmccsuite3.1.0\\Version3.1.0.0_07\\uu.exe"));
+
+	/* 测试异常捕获 */
 // 	LPTSTR pszNull = NULL;
 // 	*pszNull = TEXT('1');
 // 	memset(pszNull, 0, 100);
 // 	_tcscpy_s(pszNull, 100, TEXT("12234443"));
+//	printf("%s", 1);
 
 	ASSERT(true == w2x::version::IsWow64());
 	ASSERT(false == w2x::version::IsWow64());
