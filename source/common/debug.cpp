@@ -159,11 +159,16 @@ static void HandleInvalidParameter(
 {
 	// function_name、file_name、line_code 在 Release 下无效
 
-	TCHAR excption_str[1024] = TEXT("");
+	TCHAR excption_str[512] = TEXT("");
+
+#ifdef _DEBUG
 	_stprintf_s(excption_str,
 		TEXT("Invalid parameter detected in function(%s), ")
 		TEXT("file(%s), line(%d), expression: %s"), 
 		function_name, file_name, line_code, expression);
+#else  /* !_DEBUG */
+	_stprintf_s(excption_str, TEXT("Invalid parameter detected in function."));
+#endif /* _DEBUG */
 
 	w2x::log::Custom custom;
 	custom.category = w2x::log::kCategoryWarn;
@@ -180,7 +185,7 @@ static void HandleInvalidParameter(
 static void HandlePurecall(void)
 {
 	TCHAR excption_str[1024] = TEXT("");
-	_stprintf_s(excption_str, TEXT("In _purecall_handler."));
+	_stprintf_s(excption_str, TEXT("Pure virtual function call."));
 
 	w2x::log::Custom custom;
 	custom.category = w2x::log::kCategoryWarn;
