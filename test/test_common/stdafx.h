@@ -7,6 +7,14 @@
 
 #include "targetver.h"
 
+// 开启 DEBUG 模式下堆内存泄漏检测
+#define _CRTDBG_MAP_ALLOC
+#define _CRTDBG_MAP_ALLOC_NEW
+
+// C 运行时头文件
+#include <stdlib.h>
+#include <crtdbg.h>
+
 #include <Windows.h>
 #include <stdio.h>
 #include <string.h>

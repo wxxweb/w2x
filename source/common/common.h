@@ -10,7 +10,6 @@
 
 #include "exports.h"
 #include "encode.h"
-#include "functions.h"
 #include "macros.h"
 #include "log.h"
 #include "version.h"
