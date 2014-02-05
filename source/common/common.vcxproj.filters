@@ -45,9 +45,6 @@
     <ClInclude Include="command.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="functions.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="version.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -81,9 +78,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="command.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="functions.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="version.cpp">
