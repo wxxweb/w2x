@@ -50,9 +50,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//TCHAR app_path[MAX_PATH] = TEXT("");
 	//::GetModuleFileName(NULL, app_path, sizeof(app_path));
-	w2x::version::ModuleVersionInfo version_info = {0};
-	w2x::version::GetModuleVersionInfo(version_info,
-		TEXT("F:\\Workspace\\Project\\cmccsuite3.1.0\\Version3.1.0.0_07\\uu.exe"));
+// 	w2x::version::ModuleVersionInfo version_info = {0};
+// 	w2x::version::GetModuleVersionInfo(version_info,
+// 		TEXT("F:\\Workspace\\Project\\cmccsuite3.1.0\\Version3.1.0.0_07\\uu.exe"));
 
 	/* ²âÊÔÒì³£²¶»ñ */
 // 	LPTSTR pszNull = NULL;
@@ -61,14 +61,14 @@ int _tmain(int argc, _TCHAR* argv[])
 // 	_tcscpy_s(pszNull, 100, TEXT("12234443"));
 //	printf("%s", 1);
 
-	ASSERT(true == w2x::version::IsWow64());
-	ASSERT(false == w2x::version::IsWow64());
-	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_2000);
-	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP);
-	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP_SP2);
-	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP_SP3);
-	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_7);
-	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_7_SP1);
+// 	ASSERT(true == w2x::version::IsWow64());
+// 	ASSERT(false == w2x::version::IsWow64());
+// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_2000);
+// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP);
+// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP_SP2);
+// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP_SP3);
+// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_7);
+// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_7_SP1);
 
 	//char* pszNull = NULL;
 	//IF_NULL_ASSERT_RETURN(pszNull, -1);
