@@ -18,9 +18,11 @@ class W2X_COMMON_API CMsgLoop
 	// 消息处理器，消息被传入消息处理器中处理，
 	// 处理器函数体由用户自定，返回值目前无意义
 	typedef bool (CALLBACK *MsgHandler)(
-		PVOID /* _handler_param */,	// 处理器参数
-		LPCTSTR /* _msg */,			// 字符串消息
-		PVOID /* _msg_param */);	// 消息参数
+		PVOID /* _handler_param */,		// 处理器参数
+		LPCTSTR /* _msg */,				// 消息缓存区（不只为字符串）
+		size_t /* _bytes = 0 */,		// 消息字节数
+		PVOID /* _msg_param = NULL*/	// 消息参数
+	);
 
 public:
 	CMsgLoop(void);
@@ -38,9 +40,11 @@ public:
 	// 个消息处理完成后，才正常退出消息循环线程，未处理的消息将从队列中丢弃
 	void StopLoopThread(void);
 
-	// 向队列中添加消息，字符串消息 _msg 和消息参数 _msg_param 将会被传入
-	// 消息处理器回调函数中，_msg_param 可为 NULL，消息进入队列后返回 true
-	bool AddMsg(LPCTSTR _msg, PVOID _msg_param);
+	// 向队列中添加消息，消息 _msg、消息字节数 _bytes 和消息参数 _msg_param 
+	// 将会被传入消息处理器回调函数中，_msg 不只为字符串，也可以是二进制数据，
+	// 如果 _msg 为字符串，_bytes 可为 0，函数将计算字符串长度，_msg_param 
+	// 可为 NULL，消息进入队列后返回 true
+	bool AddMsg(LPCTSTR _msg, size_t _bytes = 0, PVOID _msg_param = NULL);
 
 private:
 	class CImpl;

@@ -20,12 +20,14 @@ private:
 	typedef bool (CALLBACK *MsgHandler)(
 		PVOID /* _handler_param */,
 		LPCTSTR /* _msg */,
-		PVOID /* _msg_param */);
+		size_t /* _bytes */, 
+		PVOID /* _msg_param */
+	);
 
 	// 消息信息结构
 	struct Msg {
-		size_t length;
 		LPCTSTR msg;
+		size_t bytes;
 		PVOID param;
 	};
 
@@ -39,7 +41,7 @@ public:
 W2X_DISALLOW_COPY_AND_ASSIGN(CImpl)
 
 public:
-	bool EnterMsg(LPCTSTR _msg, PVOID _msg_handler);
+	bool EnterMsg(LPCTSTR _msg, size_t _bytes, PVOID _msg_handler);
 	bool SetMsgHandler(MsgHandler _msg_handler, PVOID _handler_param);
 	bool StartLoopThread(void);
 	void StopLoopThread(void);
@@ -49,11 +51,11 @@ private:
 	size_t GetFrontMsgLength(void);
 	bool QuitMsg(void);
 	bool GetFrontMsg(LPCTSTR _buffer, 
-					 IN OUT size_t& _size_in_words, 
+					 IN OUT size_t& _bytes, 
 					 OUT PVOID& _msg_param);
 	bool WaitMsg(void);
 	void ExitLoop(void);
-	bool HandleMsg(LPCTSTR _msg, PVOID _msg_param);
+	bool HandleMsg(LPCTSTR _msg, size_t _bytes, PVOID _msg_param);
 
 	static DWORD WINAPI LoopThread(PVOID _thread_param);
 
@@ -95,15 +97,15 @@ bool CMsgLoop::CImpl::SetMsgHandler(MsgHandler _msg_handler, PVOID _handler_para
 	return NULL != m_msg_handler;
 }
 
-bool CMsgLoop::CImpl::HandleMsg(LPCTSTR _msg, PVOID _msg_param)
+bool CMsgLoop::CImpl::HandleMsg(LPCTSTR _msg, size_t _bytes, PVOID _msg_param)
 {
 	CAutoLock autoLock(this);
 
 	IF_NULL_ASSERT_RETURN_VALUE(m_msg_handler, true);
-	return m_msg_handler(m_handler_param, _msg, _msg_param);
+	return m_msg_handler(m_handler_param, _msg, _bytes, _msg_param);
 }
 
-bool CMsgLoop::CImpl::EnterMsg(LPCTSTR _msg, PVOID _msg_param)
+bool CMsgLoop::CImpl::EnterMsg(LPCTSTR _msg, size_t _bytes, PVOID _msg_param)
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_msg, false);
 
@@ -113,12 +115,10 @@ bool CMsgLoop::CImpl::EnterMsg(LPCTSTR _msg, PVOID _msg_param)
 	
 	Msg msg = {0};
 	msg.param = _msg_param;
-	msg.length = _tcslen(_msg);
-	size_t count = msg.length + 1;
-	LPTSTR buffer = new TCHAR[count];
+	msg.bytes = (0 == _bytes) ? ((_tcslen(_msg) + 1) * sizeof(TCHAR)) : _bytes;
+	LPTSTR buffer = reinterpret_cast<LPTSTR>(new BYTE[msg.bytes]);
 	msg.msg = buffer;
-	memcpy((void*)msg.msg, (void*)_msg, count * sizeof(TCHAR));
-	buffer[msg.length] = TEXT('\0');
+	memcpy((void*)msg.msg, (void*)_msg, msg.bytes);
 	m_msg_queue.push(msg);
 
 	if (NULL == m_msg_event_handle)
@@ -146,14 +146,14 @@ size_t CMsgLoop::CImpl::GetFrontMsgLength(void)
 	if (false == m_msg_queue.empty())
 	{
 		Msg& msg_ref = m_msg_queue.front();
-		return msg_ref.length;
+		return msg_ref.bytes;
 	}
 
 	return 0;
 }
 
 bool CMsgLoop::CImpl::GetFrontMsg(LPCTSTR _buffer, 
-								  IN OUT size_t& _size_in_words, 
+								  IN OUT size_t& _bytes, 
 								  OUT PVOID& _msg_param)
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_buffer, false);
@@ -162,21 +162,21 @@ bool CMsgLoop::CImpl::GetFrontMsg(LPCTSTR _buffer,
 
 	if (true == m_msg_queue.empty())
 	{
-		memset((void*)_buffer, 0, _size_in_words * sizeof(TCHAR));
+		memset((void*)_buffer, 0, _bytes);
 		return false;
 	}
 
 	Msg& msg_ref = m_msg_queue.front();
 	_msg_param = msg_ref.param;
-	if (_size_in_words > msg_ref.length)
+	if (_bytes >= msg_ref.bytes)
 	{
-		_size_in_words = msg_ref.length + 1;
-		memcpy((void*)_buffer, (void*)msg_ref.msg, _size_in_words * sizeof(TCHAR));
+		_bytes = msg_ref.bytes;
+		memcpy((void*)_buffer, (void*)msg_ref.msg, _bytes);
 
 		return true;
 	}
 
-	memset((void*)_buffer, 0, _size_in_words * sizeof(TCHAR));
+	memset((void*)_buffer, 0, _bytes);
 	return false;
 }
 
@@ -264,18 +264,18 @@ DWORD CMsgLoop::CImpl::LoopThread(PVOID _thread_param)
 
 	while (true == this_ptr->WaitMsg())
 	{
-		size_t count = this_ptr->GetFrontMsgLength() + 1;
-		if (1 == count)
+		size_t bytes = this_ptr->GetFrontMsgLength();
+		if (0 == bytes)
 		{
 			continue;
 		}
-		LPTSTR msg_buffer = new TCHAR[count];
+		LPTSTR msg_buffer = reinterpret_cast<LPTSTR>(new BYTE[bytes]);
 		PVOID msg_param = NULL;
-		if (false == this_ptr->GetFrontMsg(msg_buffer, count, msg_param))
+		if (false == this_ptr->GetFrontMsg(msg_buffer, bytes, msg_param))
 		{
 			continue;
 		}
-		this_ptr->HandleMsg(msg_buffer, msg_param);
+		this_ptr->HandleMsg(msg_buffer, bytes, msg_param);
 		delete[] msg_buffer;
 		msg_buffer = NULL;
 		this_ptr->QuitMsg();
@@ -298,9 +298,9 @@ CMsgLoop::~CMsgLoop(void)
 	SAFE_DELETE(const_cast<CImpl*>(m_impl_ptr));
 }
 
-bool CMsgLoop::AddMsg(LPCTSTR _msg, PVOID _msg_param)
+bool CMsgLoop::AddMsg(LPCTSTR _msg, size_t _bytes, PVOID _msg_param)
 {
-	return m_impl_ptr->EnterMsg(_msg, _msg_param);
+	return m_impl_ptr->EnterMsg(_msg, _bytes, _msg_param);
 }
 
 bool CMsgLoop::StartLoopThread(MsgHandler _msg_handler, PVOID _handler_param)

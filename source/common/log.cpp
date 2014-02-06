@@ -114,7 +114,12 @@ private:
 	static LONG WINAPI HandleTopLevelException(_EXCEPTION_POINTERS *ExceptionInfo);
 
 	// 日志消息处理器
-	static bool CALLBACK HandleMsg(PVOID _handler_param, LPCTSTR _msg, PVOID _msg_param);
+	static bool CALLBACK HandleMsg(
+		PVOID _handler_param, 
+		LPCTSTR _msg, 
+		size_t _bytes,
+		PVOID _msg_param
+	);
 
 private:
 W2X_IMPLEMENT_LOCKING(CLogImpl, CAutoLock)
@@ -378,10 +383,10 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 	PVOID msg_param = reinterpret_cast<PVOID>(custom_ref.work_dir_id);
 	if (false == custom_ref.is_immediately)
 	{
-		m_msg_loop.AddMsg(log_buffer, msg_param);
+		m_msg_loop.AddMsg(log_buffer, 0, msg_param);
 	}
 	else {
-		CLogImpl::HandleMsg(static_cast<PVOID>(this), log_buffer, msg_param);
+		CLogImpl::HandleMsg(static_cast<PVOID>(this), log_buffer, 0, msg_param);
 	}
 
 	return 0 >= chars_written;
@@ -941,7 +946,11 @@ bool CLogImpl::GetLogFile(LPTSTR _str_buffer,
 // 日志消息处理函数, 被日志消息循环线程调用.
 // 实现向日志文件中异步地写入日志.
 //----------------------------------------------------------------------------
-bool CALLBACK CLogImpl::HandleMsg(PVOID _handler_param, LPCTSTR _msg, PVOID _msg_param)
+bool CALLBACK CLogImpl::HandleMsg(
+	PVOID _handler_param, 
+	LPCTSTR _msg,
+	size_t _bytes,
+	PVOID _msg_param)
 {
 	if (NULL == _handler_param)
 	{

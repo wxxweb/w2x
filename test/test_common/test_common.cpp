@@ -60,15 +60,16 @@ int _tmain(int argc, _TCHAR* argv[])
 // 	memset(pszNull, 0, 100);
 // 	_tcscpy_s(pszNull, 100, TEXT("12234443"));
 //	printf("%s", 1);
-
-// 	ASSERT(true == w2x::version::IsWow64());
-// 	ASSERT(false == w2x::version::IsWow64());
-// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_2000);
-// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP);
-// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP_SP2);
-// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP_SP3);
-// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_7);
-// 	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_7_SP1);
+	
+	ASSERT(true);
+	ASSERT(true == w2x::version::IsWow64());
+	ASSERT(false == w2x::version::IsWow64());
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_2000);
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP);
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP_SP2);
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_XP_SP3);
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_7);
+	ASSERT(w2x::version::GetOsVersion() > w2x::version::OS_VER_WIN_7_SP1);
 
 	//char* pszNull = NULL;
 	//IF_NULL_ASSERT_RETURN(pszNull, -1);
