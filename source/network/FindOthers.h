@@ -1,40 +1,26 @@
-//******************************************************************************
-// File Name		: FindOthers.h
-//
-// Description		: 该模块中包含两个导出的接口函数findOthers和echoServer。下
-//					  面称调用findOthers函数的本地主机为客户端，调用echoServer
-//					  函数的远程主机为服务器端。该模块功能是客户端通过调用
-//					  findOthers函数发送UDP广播包，并在服务器端调用echoServer
-//					  函数来回应客户端的广播包。此时，客户端和服务器端将获知对
-//					  方的地址，包括IP地址和用于发送UDP数据包的端口号。
-//
-// date created		: 2010-11-21
-// Last Changed By	: $ Author : wxxweb $
-// Last Changed On	: $ Date : 2010-11-24 16:53 $
-//******************************************************************************
-
-/*
-Copyright (C) 2010 - 2011 By wxxweb, wxxweb@163.com
-*/
+/*******************************************************************************
+ * 文件：	FindOthers.h
+ * 
+ * 描述：	该模块中包含两个导出的接口函数findOthers和echoServer。下面称调用
+ *          findOthers函数的本地主机为客户端，调用echoServer 函数的远程主机为
+ *          服务器端。该模块功能是客户端通过调用 findOthers函数发送UDP广播包，
+ *          并在服务器端调用 echoServer 函数来回应客户端的广播包。此时，客户端
+ *          和服务器端将获知对方的地址，包括IP地址和用于发送UDP数据包的端口号。
+ * 
+ * 邮箱：	wxxweb@gmail.com
+ * 作者：	wu.xiongxing
+ * 时间：	2014-04-05
+ ******************************************************************************/
 
 #pragma once
 
 #include "exports.h"
+#include "..\common\macros.h"
 
-/* 入口参数标志 */
-#ifndef IN
-#define IN
-#endif
 
-/* 出口参数标志 */
-#ifndef OUT
-#define OUT
-#endif
+W2X_NAME_SPACE_BEGIN
+W2X_DEFINE_NAME_SPACE_BEGIN(network)
 
-/* 出入口参数标志 */
-#ifndef IN_OUT
-#define IN_OUT
-#endif
 
 /***********************************************************
    methor 		: findServer
@@ -105,4 +91,7 @@ echoServer(
 	IN	const WORD wAgreedPort,
 	IN	const DWORD dwTimeOut,
 	IN	const DWORD dwNumEcho
-	);
+);
+
+W2X_DEFINE_NAME_SPACE_END(network)
+W2X_NAME_SPACE_END

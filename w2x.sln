@@ -9,6 +9,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "source\common\common.vcxproj", "{F255C1C7-F091-426E-B7FF-6B4A92D4B392}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "network", "source\network\network.vcxproj", "{1677EE2E-8080-4D25-9E8F-4AD6F8463390}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F255C1C7-F091-426E-B7FF-6B4A92D4B392} = {F255C1C7-F091-426E-B7FF-6B4A92D4B392}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

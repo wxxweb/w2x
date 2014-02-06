@@ -112,7 +112,7 @@
 
 /* 如果表达式 e 的结果为假, 弹出断言对话框, 并继续执行 if 语句体 */
 #ifndef IF_FALSE_ASSERT
-#  define IF_FALSE_ASSERT(e) ASSERT(IS_TRUE(e)); if (!IS_TRUE(e))
+#  define IF_FALSE_ASSERT(e) if (IS_TRUE(e) ? false : (ASSERT(!("IF_FALSE: "#e)), true))
 #endif
 
 
@@ -136,13 +136,13 @@
 
 /* 如果表达式 e 的结果为假, 弹出断言对话框, 并返回 */
 #ifndef IF_FALSE_ASSERT_RETURN
-#  define IF_FALSE_ASSERT_RETURN(e) ASSERT(IS_TRUE(e)); if (!IS_TRUE(e)) {return;}
+#  define IF_FALSE_ASSERT_RETURN(e) IF_FALSE_ASSERT(e) {return;}
 #endif
 
 
 /* 如果表达式 e 的结果为假, 弹出断言对话框, 并返回指定值 r */
 #ifndef IF_FALSE_ASSERT_RETURN_VALUE
-#  define IF_FALSE_ASSERT_RETURN_VALUE(e,r) ASSERT(IS_TRUE(e)); if (!IS_TRUE(e)) {return (r);}
+#  define IF_FALSE_ASSERT_RETURN_VALUE(e,r) IF_FALSE_ASSERT(e) {return (r);}
 #endif
 
 

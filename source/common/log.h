@@ -108,6 +108,16 @@ W2X_COMMON_API bool LogWarn(LPCTSTR _format_str, ...);
 W2X_COMMON_API bool LogError(LPCTSTR _format_str, ...);
 W2X_COMMON_API bool LogDebug(LPCTSTR _format_str, ...);
 
+/* 将系统给出的出错编码 _error_code 格式化成出错描述信息，
+ * 保存在字符串缓存 _msg_buffer 中，成功则返回保存的描述
+ * 信息的字符个数（不包括 NULL），否则返回 0。
+ */
+W2X_COMMON_API size_t FormatError(
+	LPTSTR _msg_buffer,
+	size_t _size_in_words,
+	DWORD _error_code
+);
+
 
 W2X_DEFINE_NAME_SPACE_END(log)
 W2X_NAME_SPACE_END

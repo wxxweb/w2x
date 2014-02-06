@@ -19,8 +19,13 @@ Copyright (C) 2010 - 2011 By wxxweb, wxxweb@163.com
 */
 
 #include "StdAfx.h"		// 标准头文件
-#include "MyDefine.h"
-#include "MySockets.h"
+#include "tiny_socket.h"
+#include "utility.h"
+
+
+W2X_NAME_SPACE_BEGIN
+W2X_DEFINE_NAME_SPACE_BEGIN(network)
+
 
 /* 双方约定好的自定义回应消息GUID */
 static const GUID gc_guidEchoMessage[] = {0x37ff70ac,					// data1
@@ -66,40 +71,48 @@ findOthers(
 {
 	int			nLoopCount = 0;					// 循环计数
 	int			iRetVal;						// 返回值
-	char		szIPAddrString[_MAX_STRING];	// 地址字符串
+	TCHAR		szIPAddrString[MAX_IP_ADDR_STR];	// 地址字符串
 	char		szRecvBuf[SO_MAX_MSG_SIZE];		// 接收数据缓存
 	DWORD		dwBeginTime;					// 开始时间
 	DWORD		dwEndTime;						// 结束时间
 	DWORD		dwBCastIPAddr;					// 本局域网广播IP地址
-	SOCKET		localSocket;					// 本机Socket描述符
 	SOCKADDR_IN	saBCastAddr;					// 广播地址
 	
 	dwBeginTime = GetTickCount();	// 取得首次等待回应开始时间
 	
 	/* 初始化WinSock DLL */
-	if (FALSE == initSocket()){
+	if (FALSE == CTinySocket::Initialize()){
 		return FALSE;
 	}
+
+	CTinySocket tiny_socket;
 		
 	/* 创建用于收发UDP数据包的本地Socket */
-	if (FALSE == createUDPSocket(&localSocket)){
+	if (false == tiny_socket.CreateUdp()){
 		return FALSE;
 	}
 
 	/* 将localSocket绑定到本机地址，绑定1024-5000之间的固定端口 */
-	if (FALSE == bindLocalAddr(localSocket, 0)){
+	if (false == tiny_socket.Bind()){
 		return FALSE;
 	}
 
 	/* 启用localSocket广播功能，并获取本局域网广播IP地址 */
-	if (FALSE == enableBCast(localSocket, &dwBCastIPAddr)){
+	if (FALSE == tiny_socket.EnableBroadcast(dwBCastIPAddr)){
 		return FALSE;
 	}
+
+	DWORD ip_addr = 0;
+	internal::GetBroadcastIpAddress(ip_addr);
+	internal::ParseIpAddressString(szIPAddrString, 
+		_countof(szIPAddrString), ip_addr);
 
 	/* 设置接收UDP广播包的广播地址 */
 	saBCastAddr.sin_family		= AF_INET;
 	saBCastAddr.sin_addr.s_addr	= dwBCastIPAddr;		// 本局域网广播IP地址
 	saBCastAddr.sin_port		= htons(wAgreedPort);	// 远程主机广播包接收端口
+
+	CTinySocket::EAsyncRecvStatus recv_status = CTinySocket::kAsyncRecvComplete;
 
 	// [--
 	// 发送广播消息，等待远程主机回应
@@ -108,67 +121,69 @@ findOthers(
 			dwEndTime = GetTickCount()					// 获得某次等待回应的结束时间
 		 )
 	{
-		printf("[%d] ", ++nLoopCount);
+		_tprintf_s(TEXT("[%d] "), ++nLoopCount);
 
 		/* 发送广播消息 */
-		iRetVal = sendUDPPacket(localSocket, &saBCastAddr, 
-								 (LPSTR)&gc_guidEchoMessage, 
+		iRetVal = tiny_socket.SendUdpPacket(&saBCastAddr, 
+								 (PBYTE)&gc_guidEchoMessage, 
 								 sizeof(GUID));
 		
 		/* 发送失败 */
 		if (SOCKET_ERROR == iRetVal) 
 		{
-			printf("消息发送失败.\n");
-			releaseSocket(localSocket);		// 释放Socket资源
+			_tprintf_s(TEXT("Send UDP packet faild.\n"));
 			return FALSE;
 		}
 		/* 发送成功 */
 		else
 		{
-			printf("发送广播消息[%d Bytes].\n", iRetVal);
+			_tprintf_s(TEXT("Send broadcast msg [%d Bytes].\n"), iRetVal);
 		}
+
+		Sleep(500); // 延迟0.5秒
 		
 		/* 接收远程主机消息 */
-		iRetVal = asycRecvUDPPacket(localSocket, psaRemoteAddr, 
-									szRecvBuf, sizeof(szRecvBuf));
+		//if (CTinySocket::kAsyncRecvComplete == recv_status)
+		//{
+			//::Sleep(1000);
+			recv_status = tiny_socket.AsyncRecvUdpPacket(psaRemoteAddr, 
+				(PBYTE)szRecvBuf, sizeof(szRecvBuf));
+		//}
 
 		/* 接收过程中出错 */
-		if (FALSE == iRetVal) 
+		if (CTinySocket::kAsyncRecvError == recv_status) 
 		{
-			printf("消息接收过程中出错.\n");
-			releaseSocket(localSocket);		// 释放Socket资源
+			_tprintf_s(TEXT("Async receive UDP packet faild.\n"));
 			return FALSE;
 		}
 		/* 接收到消息 */
-		else 
+		else if (CTinySocket::kAsyncRecvComplete == recv_status)
 		{
 			/* 接收到回应消息 */
 			if (0 == memcmp(&gc_guidEchoMessage, szRecvBuf, sizeof(GUID)))
 			{
-				getIPAddrString(psaRemoteAddr->sin_addr.s_addr, 
-								szIPAddrString, sizeof(szIPAddrString));
-
-				printf("接收到回应消息.\n远程主机地址：%s:%d\n", 
+				DWORD ip_addr = 0;
+				internal::GetBroadcastIpAddress(ip_addr);
+				internal::ParseIpAddressString(szIPAddrString, 
+					_countof(szIPAddrString), ip_addr);
+				_tprintf_s(TEXT("Received ack msg.\nRemote host IP: %s:%d\n"), 
 						szIPAddrString, ntohs(psaRemoteAddr->sin_port));
 
-				releaseSocket(localSocket);
+				CTinySocket::Uninitialize();
 				return TRUE;
 			}
 			/* 等待接收回应消息 */
 			else
 			{
-				printf("等待接收回应消息.\n");
+				_tprintf_s(TEXT("Wait for ack msg.\n"));
 			}
 		}
-
-		Sleep(500);		// 延迟0.5秒
 	} // for
 	// 发送广播消息，等待远程主机回应
 	// --]
 
 	/* 超时 */
-	printf("接收超时.\n");
-	releaseSocket(localSocket);
+	_tprintf_s(TEXT("Wait time out for ack msg.\n"));
 	return FALSE;
 } /* findServer */
 
@@ -210,28 +225,29 @@ echoServer(
 	)
 {
 	int			iRetVal;						// 返回值
-	char		szIPAddrString[_MAX_STRING];	// 地址字符串
+	TCHAR		szIPAddrString[internal::MAX_IP_ADDR_STR];	// 地址字符串
 	char		szRecvBuf[SO_MAX_MSG_SIZE];		// 接收数据缓存
 	DWORD		cEchoCount = 0;					// 回应计数
 	DWORD		dwBeginTime;					// 开始时间
 	DWORD		dwEndTime;						// 结束时间
-	SOCKET		localSocket;					// 本机Socket描述符
 	SOCKADDR_IN	saRemoteAddr;					// 远程主机地址
 
 	dwBeginTime = GetTickCount();	// 取得开始时间
 	
 	/* 初始化WinSock DLL */
-	if (FALSE == initSocket()){
+	if (false == CTinySocket::Initialize()){
 		return FALSE;
 	}
+
+	CTinySocket tiny_socket;
 		
 	/* 创建本地Socket */
-	if (FALSE == createUDPSocket(&localSocket)){
+	if (FALSE == tiny_socket.CreateUdp()){
 		return FALSE;
 	}
 
 	/* 绑定localSocket至本地主机地址，使用约定端口接收数据 */
-	if (FALSE == bindLocalAddr(localSocket, wAgreedPort)) {
+	if (FALSE == tiny_socket.Bind(wAgreedPort)) {
 		return FALSE;
 	}
 
@@ -240,14 +256,17 @@ echoServer(
 			dwEndTime = GetTickCount()
 		)
 	{
+		_tprintf_s(TEXT("Receiving UDP packet...\n"));
+
 		/* 接收UDP消息 */
-		iRetVal = asycRecvUDPPacket(localSocket, &saRemoteAddr, 
-									szRecvBuf, sizeof(szRecvBuf));
+		const int recv_status 
+			= tiny_socket.SyncRecvUdpPacket(&saRemoteAddr, 
+				(PBYTE)szRecvBuf, sizeof(szRecvBuf));
 
 		/* 接收失败 */
-		if (FALSE == iRetVal) 
+		if (SOCKET_ERROR == recv_status) 
 		{
-			printf("消息接收过程中出错.\n");
+			_tprintf_s(TEXT("Receive UDP packet faild.\n"));
 			return FALSE;
 		}
 		/* 接收成功 */ 
@@ -256,31 +275,31 @@ echoServer(
 			/* 接收到待回应消息 */
 			if (0 == memcmp(&gc_guidEchoMessage, szRecvBuf, sizeof(GUID)))
 			{
-				getIPAddrString(saRemoteAddr.sin_addr.s_addr, 
-								szIPAddrString, sizeof(szIPAddrString));
+				internal::ParseIpAddressString(szIPAddrString, 
+					sizeof(szIPAddrString), saRemoteAddr.sin_addr.s_addr);
 
-				printf("接收到待回应消息.\n远程主机地址：%s:%d\n", 
-						szIPAddrString, ntohs(saRemoteAddr.sin_port));
+				_tprintf_s(
+					TEXT("Received the ack msg.\nRemote host IP: %s:%d\n"), 
+					szIPAddrString, ntohs(saRemoteAddr.sin_port));
 
 				/* 发送回应消息 */
-				iRetVal = sendUDPPacket(localSocket, &saRemoteAddr, 
-										 szRecvBuf, sizeof(GUID));
+				iRetVal = tiny_socket.SendUdpPacket(&saRemoteAddr, 
+										 (PBYTE)szRecvBuf, sizeof(GUID));
 
 				/* 发送失败 */
 				if (SOCKET_ERROR == iRetVal)
 				{
-					printf("消息发送失败.\n");
+					_tprintf_s(TEXT("Send UDP packet faild.\n"));
 					return FALSE;
 				}
 				/* 发送成功 */
 				else
 				{
-					printf("发送回应消息[%d Bytes].\n", iRetVal);
+					_tprintf_s(TEXT("Send response msg [%d Bytes].\n"), iRetVal);
 
 					/* 回应计数 */
 					if (++cEchoCount == dwNumEcho)
 					{
-						releaseSocket(localSocket);
 						return TRUE;
 					}
 				}
@@ -288,14 +307,18 @@ echoServer(
 			/* 等待接收待回应消息 */
 			else
 			{
-				printf("等待接收待回应消息.\n");
+				_tprintf_s(TEXT("wait for receive ack.\n"));
 			}
 		}
-		Sleep(500);		// 延迟0.5秒
+		Sleep(1000);		// 延迟0.5秒
 	} // for
 
 	/* 超时 */
-	printf("接收超时.\n");
-	releaseSocket(localSocket);
+	_tprintf_s(TEXT("接收超时.\n"));
+
 	return TRUE;
 } /* echoServer */
+
+
+W2X_DEFINE_NAME_SPACE_END(network)
+W2X_NAME_SPACE_END

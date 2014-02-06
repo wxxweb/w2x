@@ -21,16 +21,13 @@
     <ClCompile Include="FindOthers.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="HandleError.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="MyDefine.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="MySockets.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="StdAfx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="tiny_socket.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="utility.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,19 +38,16 @@
     <ClInclude Include="FindOthers.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="HandleError.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="MyDefine.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="MySockets.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="StdAfx.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="tiny_socket.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="utility.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

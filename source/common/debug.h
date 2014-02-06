@@ -43,12 +43,11 @@
  */
 #ifndef ASSERT
 #  ifdef _DEBUG
-#    define ASSERT(expression) \
-	   do { \
-	     if ( !(expression) && \
-	       _CrtDbgReport(_CRT_ASSERT, __FILE__, __LINE__, NULL, #expression) ) \
-		 { __asm {int 3}; } \
-	   } while(0)
+#    define ASSERT(expression) (void) \
+	   ( (!!(expression)) || \
+	     (_CrtDbgReport(_CRT_ASSERT, __FILE__, __LINE__, NULL, #expression)) && \
+		 ([](){__asm int 3}(), 0) \
+       )
 #  else
 #    define ASSERT(expression) ((void)0)
 #  endif

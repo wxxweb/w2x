@@ -10,8 +10,4 @@
 
 W2X_NAME_SPACE_BEGIN
 
-// static CRITICAL_SECTION gs_csLog;
-// 
-// class AutoInitialize
-
 W2X_NAME_SPACE_END

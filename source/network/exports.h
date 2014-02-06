@@ -39,4 +39,13 @@
 #endif
 
 
+#ifdef W2X_NETWORK_EXPORTS
+	W2X_NAME_SPACE_BEGIN
+	W2X_DEFINE_NAME_SPACE_BEGIN(network)
+	W2X_DEFINE_NAME_SPACE_END(network)
+	W2X_NAME_SPACE_END
+	namespace internal = w2x::network;
+#endif
+
+
 #endif /* __W2X_NETWORK_EXPORTS_H__ */

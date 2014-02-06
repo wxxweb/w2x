@@ -12,10 +12,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	w2x::debug::EnableLeakCheck(true);
 
 	SOCKADDR_IN sock_addr_in = {0};
-	while (FALSE == findOthers(22222, 2000, &sock_addr_in))
-	{
-		printf("find...");
-	}
+	w2x::network::findOthers(22222, 100000, &sock_addr_in);
 
 	system("pause");
 	return 0;
