@@ -24,6 +24,7 @@
 #include <Windows.h>
 
 // C++库函数
+#include <list>
 
 // C 运行时头文件
 #include <stdio.h>
