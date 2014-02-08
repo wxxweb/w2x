@@ -56,6 +56,9 @@
     <ClInclude Include="interfaces_of_tiny_socket.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="default_tiny_socket_dispatcher.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="FindOthers.def">

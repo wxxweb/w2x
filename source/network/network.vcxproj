@@ -22,6 +22,7 @@
     <ClCompile Include="utility.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="default_tiny_socket_dispatcher.h" />
     <ClInclude Include="exports.h" />
     <ClInclude Include="FindOthers.h" />
     <ClInclude Include="tiny_socket.h" />
