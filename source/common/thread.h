@@ -38,22 +38,38 @@ private:
 W2X_NAME_SPACE_END
 
 //-----------------------------------------------------------------------------
-// 该宏提供了一个互斥锁的实现过程.通过使用 lock() 和 unlock() 方法来达到在多线程同步访问
-// 时保护一段代码的目的. class_lock 类是一个帮助器,用于在作用域内持有互斥锁.
+// 该宏提供了一个互斥锁的实现过程。class_parent 是拥有互斥锁的父类，它将拥有两个互斥锁，一
+// 个为 class_parent 的实例成员变量，另一个为 class_parent 的静态成员变量，分别对实例及
+// 类本身进行加锁保护。class_lock 类是一个帮助器，你需要给它取个名字，比如叫 CAutoLock，
+// 它的实例用于在作用域内持有互斥锁，它通过调用函数 LockThis() 和 UnlockThis() 来实现在
+// 多线程同步访问时，保护类 class_parent 实例的一段代码。通过调用函数 LockClass() 和
+// UnlockClass() 来实现在多线程同步访问时，保护类 class_parent 本身的一段代码。
 //-----------------------------------------------------------------------------
 #define W2X_IMPLEMENT_LOCKING(class_parent, class_lock)                      \
 protected:                                                                   \
 	class class_lock {                                                       \
 	public:                                                                  \
-		explicit class_lock(class_parent* parent) : m_parent(parent)         \
-		{ m_parent->Lock(); }                                                \
-		~class_lock(void) { m_parent->Unlock(); }							 \
+		explicit class_lock(class_parent* parent) : m_parent(parent) {       \
+			NULL != m_parent ? m_parent->LockThis()                          \
+				: class_parent::LockClass();                                 \
+        }                                                                    \
+		~class_lock(void) {                                                  \
+			NULL != m_parent ? m_parent->UnlockThis()                        \
+				: class_parent::UnlockClass();                               \
+        }                                                                    \
 	private:                                                                 \
 		class_parent* m_parent;                                              \
 	};                                                                       \
-	void Lock() { m_critical_section_##class_lock.Enter(); }                 \
-	void Unlock() { m_critical_section_##class_lock.Leave(); }               \
+	void LockThis() { m_cs_of_this_by_##class_lock.Enter(); }                \
+	void UnlockThis() { m_cs_of_this_by_##class_lock.Leave(); }              \
+	static void LockClass() { sm_cs_of_class_by_##class_lock.Enter(); }      \
+    static void UnlockClass() { sm_cs_of_class_by_##class_lock.Leave(); }    \
 private:                                                                     \
-	w2x::CCriticalSection m_critical_section_##class_lock;
+	w2x::CCriticalSection m_cs_of_this_by_##class_lock;                      \
+	static w2x::CCriticalSection sm_cs_of_class_by_##class_lock;
+
+#define W2X_IMPLEMENT_LOCKING_CLASS(class_parent, class_lock)                \
+	w2x::CCriticalSection class_parent::sm_cs_of_class_by_##class_lock;
+
 
 #endif /* __W2X_COMMON_THREAD_H__ */

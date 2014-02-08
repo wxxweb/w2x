@@ -69,6 +69,8 @@ private:
 W2X_IMPLEMENT_LOCKING(CImpl, CAutoLock)
 };
 
+W2X_IMPLEMENT_LOCKING_CLASS(CMsgLoop::CImpl, CAutoLock)
+
 CMsgLoop::CImpl::CImpl(void)
 	: m_msg_event_handle(NULL)
 	, m_loop_thread_handle(NULL)

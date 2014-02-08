@@ -143,6 +143,8 @@ private:
 	static std::auto_ptr<CLogImpl> sm_auto_this_ptr; 
 };
 
+W2X_IMPLEMENT_LOCKING_CLASS(CLogImpl, CAutoLock)
+
 ::w2x::CCriticalSection CLogImpl::sm_critical_section;
 std::auto_ptr<CLogImpl> CLogImpl::sm_auto_this_ptr;
 
