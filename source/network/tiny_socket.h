@@ -1,9 +1,9 @@
 /*******************************************************************************
  * 文件：	tiny_socket.h
- * 描述：	对 socket 调用的一个小小的封装。
+ * 描述：	轻量级的封装类，实现对重叠异步 socket 的封装。
  * 邮箱：	wxxweb@gmail.com
  * 作者：	wu.xiongxing
- * 时间：	2014-04-05
+ * 时间：	2014-02-05
  ******************************************************************************/
 
 #ifndef __W2X_NETWORK_TINY_SOCKET_H__
@@ -16,25 +16,12 @@
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(network)
 
-/*
- * 侦听器接口类，定义了一个处理器函数接口，当 CTinySocket 对象异步接收消息后，
- * 会把消息放到消息队列中，接着处理器函数将异步回调，用于处理接收到的消息。
- * 当 ITinySocketListener 子类对象构造时，将会自动注册侦听器，析构自动注销。
- */
-class W2X_NETWORK_API ITinySocketListener
-{
-public:
-	ITinySocketListener(void);
-	virtual ~ITinySocketListener(void);
 
-public:
-	virtual void HandleReceivedMessage(const BYTE* _msg_ptr, size_t _msg_bytes) = 0;
-};
+class ITinySocketDispatcher;
+
 
 class W2X_NETWORK_API CTinySocket
 {
-	friend class W2X_NETWORK_API ITinySocketListener;
-
 public:
 	enum {
 		MAX_MSG_BUF_SIZE = 0x2000,	// 数据包消息缓存大小
@@ -64,6 +51,10 @@ public:
 	 * 进程调用该函数释放WinSock DLL，若成功则返回 true, 否则返回 false。
 	 */
 	static bool Uninitialize(void);
+
+	static bool RegisterDispatcher(ITinySocketDispatcher* _dispatcher_ptr);
+
+	static bool UnregisterDispatcher(ITinySocketDispatcher* _dispatcher_ptr);
 
 	/* 
 	 * 创建用于收发 UDP 数据包的 Socket，并将本地 IP 地址绑定到 Socket。

@@ -3,12 +3,13 @@
  * 描述：	参见 tiny_socket.h
  * 邮箱：	wxxweb@gmail.com
  * 作者：	wu.xiongxing
- * 时间：	2014-04-05
+ * 时间：	2014-02-05
  ******************************************************************************/
 
 #include "stdafx.h"
 #include "..\common\common.h"
 #include "tiny_socket.h"
+#include "interfaces_of_tiny_socket.h"
 #include "utility.h"
 
 
@@ -18,12 +19,12 @@ W2X_DEFINE_NAME_SPACE_BEGIN(network)
 
 class CTinySocket::CImpl
 {
-	friend class W2X_NETWORK_API ITinySocketListener;
-
 	/*
-	 * 存放侦听器
+	 * 存放分发器
 	 */
-	typedef std::list<ITinySocketListener*> Listeners;
+	typedef std::list<ITinySocketDispatcher*> Dispatchers;
+
+	typedef std::set<UINT> MessageSet;
 
 	/*
 	 * 该结构保存异步 Socket 的相关信息传递给回调函数，
@@ -47,9 +48,9 @@ public:
 
 	static bool Uninitialize(void);
 
-	static bool RegisterListener(ITinySocketListener* _listener_ptr);
+	static bool RegisterDispatcher(ITinySocketDispatcher* _dispatcher_ptr);
 
-	static bool UnregisterListener(ITinySocketListener* _listener_ptr);
+	static bool UnregisterDispatcher(ITinySocketDispatcher* _dispatcher_ptr);
 
 	bool CreateUdp(WORD _local_port, bool _is_broadcast);
 
@@ -118,25 +119,29 @@ private:
 	);
 
 private:
-	static bool		 sm_is_initalized;
-	static size_t	 sm_recv_msg_count;
-	static CMsgLoop  sm_recv_msg_loop;
-	static Listeners sm_listeners;
+	static bool			sm_is_initalized;
+	static size_t		sm_recv_msg_count;
+	static CMsgLoop		sm_recv_msg_loop;
+	static Dispatchers	sm_dispatchers;
+	static MessageSet	sm_msg_set;
 
 	SOCKET		m_local_socket;
 	SOCKADDR_IN	m_remote_sock_addr;
 	CHAR		m_recv_msg_buffer[MAX_MSG_BUF_SIZE];
 	size_t		m_recv_msg_bytes;
-	
 	SocketInfo	m_socket_info;
 	HANDLE		m_recv_thread_handle;
 	HANDLE		m_recv_thread_exit_event;
 };
 
+W2X_IMPLEMENT_LOCKING_CLASS(CTinySocket::CImpl, CAutoLock)
 
-bool	 CTinySocket::CImpl::sm_is_initalized	= false;
-size_t	 CTinySocket::CImpl::sm_recv_msg_count	= 0;
-CMsgLoop CTinySocket::CImpl::sm_recv_msg_loop;
+
+bool	    CTinySocket::CImpl::sm_is_initalized = false;
+size_t	    CTinySocket::CImpl::sm_recv_msg_count = 0;
+CMsgLoop    CTinySocket::CImpl::sm_recv_msg_loop;
+CTinySocket::CImpl::MessageSet	CTinySocket::CImpl::sm_msg_set;
+CTinySocket::CImpl::Dispatchers CTinySocket::CImpl::sm_dispatchers;
 
 
 CTinySocket::CImpl::CImpl(void)
@@ -159,6 +164,8 @@ CTinySocket::CImpl::~CImpl(void)
 
 bool CTinySocket::CImpl::Initialize(void)
 {
+	CAutoLock class_lock(NULL);
+
 	IF_FALSE_ASSERT_RETURN_VALUE (false == sm_is_initalized, false);
 
 	// 初始化WinSock DLL 2.2
@@ -190,6 +197,8 @@ bool CTinySocket::CImpl::Initialize(void)
 
 bool CTinySocket::CImpl::Uninitialize(void)
 {
+	CAutoLock class_lock(NULL);
+
 	IF_FALSE_ASSERT_RETURN_VALUE (true == sm_is_initalized, false);
 
 	sm_recv_msg_loop.StopLoopThread();
@@ -216,32 +225,40 @@ bool CTinySocket::CImpl::Uninitialize(void)
 }
 
 
-bool CTinySocket::CImpl::RegisterListener(ITinySocketListener* _listener_ptr)
+bool CTinySocket::CImpl::RegisterDispatcher(
+	ITinySocketDispatcher* _dispatcher_ptr
+	)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_listener_ptr, false);
+	CAutoLock class_lock(NULL);
 
-	for (CImpl::Listeners::iterator it = sm_listeners.begin();
-		 sm_listeners.end() != it; ++it)
+	IF_NULL_ASSERT_RETURN_VALUE(_dispatcher_ptr, false);
+
+	for (CImpl::Dispatchers::iterator it = sm_dispatchers.begin();
+		sm_dispatchers.end() != it; ++it)
 	{
-		IF_FALSE_ASSERT_RETURN_VALUE(_listener_ptr != *it, false);
+		IF_FALSE_ASSERT_RETURN_VALUE(_dispatcher_ptr != *it, false);
 	}
 
-	sm_listeners.push_back(_listener_ptr);
+	sm_dispatchers.push_back(_dispatcher_ptr);
 
 	return true;
 }
 
 
-bool CTinySocket::CImpl::UnregisterListener(ITinySocketListener* _listener_ptr)
+bool CTinySocket::CImpl::UnregisterDispatcher(
+	ITinySocketDispatcher* _dispatcher_ptr
+	)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_listener_ptr, false);
+	CAutoLock class_lock(NULL);
 
-	for (CImpl::Listeners::iterator it = sm_listeners.begin();
-		sm_listeners.end() != it; ++it)
+	IF_NULL_ASSERT_RETURN_VALUE(_dispatcher_ptr, false);
+
+	for (CImpl::Dispatchers::iterator it = sm_dispatchers.begin();
+		sm_dispatchers.end() != it; ++it)
 	{
-		if (_listener_ptr == *it)
+		if (_dispatcher_ptr == *it)
 		{
-			sm_listeners.erase(it);
+			sm_dispatchers.erase(it);
 			return true;
 		}
 	}
@@ -394,6 +411,8 @@ int CTinySocket::CImpl::SyncRecvUdpPacket(
 	const DWORD _size_in_bytes
 	)
 {
+	CAutoLock class_lock(NULL);
+
 	IF_NULL_ASSERT_RETURN_VALUE(_remote_addr_ptr, SOCKET_ERROR);
 	IF_NULL_ASSERT_RETURN_VALUE(_packet_buffer, SOCKET_ERROR);
 	IF_FALSE_ASSERT_RETURN_VALUE(INVALID_SOCKET != m_local_socket, SOCKET_ERROR);
@@ -426,6 +445,8 @@ int CTinySocket::CImpl::SyncRecvUdpPacket(
 
 CTinySocket::ERecvStatus CTinySocket::CImpl::RecvUdpPacket(void)
 {
+	CAutoLock class_lock(NULL);
+
 	IF_FALSE_ASSERT_RETURN_VALUE(INVALID_SOCKET != m_local_socket, kAsyncRecvError);
 
 	memset(&m_remote_sock_addr, 0, sizeof(m_remote_sock_addr));
@@ -506,6 +527,8 @@ int CTinySocket::CImpl::SendUdpPacket(
 	const DWORD _size_in_bytes
 	)
 {
+	CAutoLock class_lock(NULL);
+
 	IF_NULL_ASSERT_RETURN_VALUE(_remote_addr_ptr, SOCKET_ERROR);
 	IF_NULL_ASSERT_RETURN_VALUE(_packet_buffer, SOCKET_ERROR);
 	IF_FALSE_ASSERT_RETURN_VALUE(INVALID_SOCKET != m_local_socket, SOCKET_ERROR);
@@ -536,6 +559,8 @@ int CTinySocket::CImpl::SendUdpPacket(
 
 bool CTinySocket::CImpl::EnableBroadcast(bool _is_enable)
 {
+	CAutoLock class_lock(NULL);
+
 	// 启用Socket广播功能
 
 	BOOL is_enable_broadcast = _is_enable ? TRUE : FALSE;
@@ -589,6 +614,7 @@ inline bool CTinySocket::CImpl::SetRecvMsgEnd(void)
 inline bool CTinySocket::CImpl::AddToRecvMsgLoop(void)
 {
 	CAutoLock auto_lock(this);
+
 	static size_t s_prev_recv_msg_count = sm_recv_msg_count;
 
 	IF_FALSE_ASSERT_RETURN_VALUE(s_prev_recv_msg_count < sm_recv_msg_count, false);
@@ -617,18 +643,20 @@ bool CALLBACK CTinySocket::CImpl::HandleRecvMsg(
 	PVOID _msg_param
 	)
 {
+	CAutoLock class_lock(NULL);
+
 	IF_NULL_ASSERT_RETURN_VALUE(_msg, false);
 
-	for (CImpl::Listeners::iterator it = sm_listeners.begin();
-		sm_listeners.end() != it; ++it)
+	for (CImpl::Dispatchers::iterator it = sm_dispatchers.begin();
+		sm_dispatchers.end() != it; ++it)
 	{
-		ITinySocketListener* listener_ptr = *it;
-		IF_NULL_ASSERT (listener_ptr)
+		ITinySocketDispatcher* dispatcher_ptr = *it;
+		IF_NULL_ASSERT (dispatcher_ptr)
 		{
 			continue;
 		}
 
-		listener_ptr->HandleReceivedMessage(
+		dispatcher_ptr->DispatchReceviedMessage(
 			reinterpret_cast<const BYTE*>(_msg), _bytes);
 	}
 
@@ -678,18 +706,6 @@ void CALLBACK CTinySocket::CImpl::HandleRecvCompletion(
 }
 
 
-ITinySocketListener::ITinySocketListener(void)
-{
-	CTinySocket::CImpl::RegisterListener(this);
-}
-
-
-ITinySocketListener::~ITinySocketListener(void)
-{
-	CTinySocket::CImpl::UnregisterListener(this);
-}
-
-
 CTinySocket::CTinySocket(void)
 	: m_impl_ptr(new CImpl())
 {
@@ -712,6 +728,18 @@ bool CTinySocket::Initialize(void)
 bool CTinySocket::Uninitialize(void)
 {
 	return CImpl::Uninitialize();
+}
+
+
+bool CTinySocket::RegisterDispatcher(ITinySocketDispatcher* _dispatcher_ptr)
+{
+	return CImpl::RegisterDispatcher(_dispatcher_ptr);
+}
+
+
+bool CTinySocket::UnregisterDispatcher(ITinySocketDispatcher* _dispatcher_ptr)
+{
+	return CImpl::UnregisterDispatcher(_dispatcher_ptr);
 }
 
 

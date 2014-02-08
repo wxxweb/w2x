@@ -87,18 +87,15 @@ findOthers(
 
 	CTinySocket tiny_socket;
 		
-	/* 创建用于收发UDP数据包的本地Socket */
-	if (false == tiny_socket.CreateUdp()){
+	// 创建用于收发 UDP 数据包的 Socket，
+	// 绑定 1024-5000 之间的固定端口，
+	// 启用局域网广播数据包发送功能
+	if (false == tiny_socket.CreateUdp(0, true)){
 		return FALSE;
 	}
 
-	/* 将localSocket绑定到本机地址，绑定1024-5000之间的固定端口 */
-	if (false == tiny_socket.Bind()){
-		return FALSE;
-	}
-
-	/* 启用localSocket广播功能，并获取本局域网广播IP地址 */
-	if (FALSE == tiny_socket.EnableBroadcast(dwBCastIPAddr)){
+	// 获取本局域网广播 IP 地址
+	if (FALSE == w2x::network::GetBroadcastIpAddress(dwBCastIPAddr)){
 		return FALSE;
 	}
 
@@ -112,7 +109,7 @@ findOthers(
 	saBCastAddr.sin_addr.s_addr	= dwBCastIPAddr;		// 本局域网广播IP地址
 	saBCastAddr.sin_port		= htons(wAgreedPort);	// 远程主机广播包接收端口
 
-	CTinySocket::EAsyncRecvStatus recv_status = CTinySocket::kAsyncRecvComplete;
+	CTinySocket::ERecvStatus recv_status = CTinySocket::kAsyncRecvComplete;
 
 	// [--
 	// 发送广播消息，等待远程主机回应
@@ -143,12 +140,8 @@ findOthers(
 		Sleep(500); // 延迟0.5秒
 		
 		/* 接收远程主机消息 */
-		//if (CTinySocket::kAsyncRecvComplete == recv_status)
-		//{
-			//::Sleep(1000);
-			recv_status = tiny_socket.AsyncRecvUdpPacket(psaRemoteAddr, 
-				(PBYTE)szRecvBuf, sizeof(szRecvBuf));
-		//}
+		recv_status = tiny_socket.AsyncRecvUdpPacket(psaRemoteAddr, 
+			(PBYTE)szRecvBuf, sizeof(szRecvBuf));
 
 		/* 接收过程中出错 */
 		if (CTinySocket::kAsyncRecvError == recv_status) 

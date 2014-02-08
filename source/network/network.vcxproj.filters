@@ -30,6 +30,9 @@
     <ClCompile Include="utility.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="interfaces_of_tiny_socket.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="exports.h">
@@ -48,6 +51,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="utility.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="interfaces_of_tiny_socket.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -25,6 +25,7 @@
 
 // C++库函数
 #include <list>
+#include <set>
 
 // C 运行时头文件
 #include <stdio.h>
