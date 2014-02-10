@@ -18,7 +18,8 @@ W2X_DEFINE_NAME_SPACE_BEGIN(encode)
 
 W2X_COMMON_API int Ascii2Unicode(
 	OUT std::wstring& _unicode_str,
-	LPCSTR _ascii_str)
+	LPCSTR _ascii_str
+	)
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_ascii_str, 0);
 
@@ -43,6 +44,38 @@ W2X_COMMON_API int Ascii2Unicode(
 	SAFE_DELETE_ARRAY(unicode_buffer);
 
 	return unicode_str_length;
+}
+
+
+W2X_COMMON_API int Unicode2Ascii(
+	OUT std::string& _ascii_str,
+	LPCTSTR _unicode_str
+	)
+{
+	IF_NULL_ASSERT_RETURN_VALUE(_unicode_str, 0);
+
+	int ascii_str_length = ::WideCharToMultiByte(
+		CP_ACP, 0, _unicode_str, -1, NULL, 0, NULL, NULL);  
+	IF_FALSE_ASSERT (0 < ascii_str_length)
+	{
+		const DWORD last_error = ::GetLastError();
+		w2x::log::LogError(TEXT("Convert the UNICODE to ASCII faild(%d)."),
+			last_error);
+		return 0;
+	}
+
+	LPSTR ascii_buffer = new char[ascii_str_length + 1];
+	IF_NULL_ASSERT_RETURN_VALUE(ascii_buffer, 0);
+
+	int unicode_str_bytes = (_tcslen(_unicode_str) + 1) * sizeof(TCHAR);
+	::WideCharToMultiByte(CP_ACP, 0, _unicode_str, 
+		unicode_str_bytes, ascii_buffer, ascii_str_length, NULL, NULL); 
+	ascii_buffer[ascii_str_length] = 0;
+
+	_ascii_str = ascii_buffer;
+	SAFE_DELETE_ARRAY(ascii_buffer);
+
+	return ascii_str_length;
 }
 
 

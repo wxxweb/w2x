@@ -18,19 +18,32 @@ W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(encode)
 
 
-// 将 ASCII 字符编码转换为 UNICODE 字符串编码，
-// 成功返回转换的 UNICODE 字符数，失败返回 0
+/*
+ * 将 ASCII 字符编码转换为 UNICODE 字符串编码，
+ * 成功返回转换的 UNICODE 字符数，失败返回 0。
+ */
 W2X_COMMON_API int Ascii2Unicode(
 	OUT std::wstring& _unicode_str, 
 	LPCSTR _ascii_str
 );
 
+/*
+ * 将 UNICODE 字符编码转换为 ASCII 字符串编码，
+ * 成功返回转换的 ASCII 字符数，失败返回 0。
+ */
+W2X_COMMON_API int Unicode2Ascii(
+	OUT std::string& _ascii_str,
+	LPCTSTR _unicode_str
+);
 
-// 生成文件 MD5 消息摘要
+/*
+ * 生成文件 MD5 消息摘要
+ */
 W2X_COMMON_API bool GenerateFileMD5(
 	OUT TSTDSTR _md5_digest,
 	LPCTSTR _file_path
 );
+
 
 W2X_DEFINE_NAME_SPACE_END(encode)
 W2X_NAME_SPACE_END
