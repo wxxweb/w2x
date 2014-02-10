@@ -22,6 +22,7 @@
 #include <winsock2.h>
 #include <Iphlpapi.h>
 #include <Windows.h>
+#include <Ws2tcpip.h>
 
 // C++¿âº¯Êý
 #include <list>

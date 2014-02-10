@@ -9,7 +9,8 @@
 #ifndef __W2X_NETWORK_INTERFACES_OF_TINY_SOCKET_H__
 #define __W2X_NETWORK_INTERFACES_OF_TINY_SOCKET_H__
 
-#include "tiny_socket.h"
+#include "exports.h"
+#include "..\common\macros.h"
 
 
 W2X_NAME_SPACE_BEGIN
@@ -68,16 +69,57 @@ public:
 class W2X_NETWORK_API ITinySocketMessage
 {
 public:
-	ITinySocketMessage(UINT _msg_id);
+	enum {
+		MAX_MSG_DATA = 1024,	// 消息数据最大字节数
+		INVALID_MSG_ID = 0,		// 无效的消息 ID
+	};
+
+public:
+	ITinySocketMessage(void);
 	virtual ~ITinySocketMessage(void);
 
 W2X_DISALLOW_COPY_AND_ASSIGN(ITinySocketMessage)
 
 public:
-	UINT GetMsgId(void) const;
+	virtual void Handle(const BYTE* _msg_data) = 0;
+
+	/*
+	 * 构建消息数据结构，构建成功返回 true，否则返回 false。
+	 */
+	virtual bool Create(
+		WORD _msg_id, 
+		const BYTE* _msg_data_ptr, 
+		WORD _data_bytes
+	);
+
+	/*
+	 * 消息数据结构有效返回 true，否则返回 false。
+	 */
+	virtual bool IsValid(void) const;
+
+	/*
+	 * 向远程主机发送 UDP 消息。
+	 * _is_broadcast 表示是否发送广播消息，如果要发送广播消息，则 _host 和 _port 
+	 * 使用默认值，即 _host 值为 NULL，_port 值为 0。如果不发送广播消息，则 _host
+	 * 和 _port 均要设置，_host 可为 IP 地址字符串，如 "192.168.1.121"，
+	 * 也可以为主机名或域名，如 "www.baidu.com"；_port 为远程主机端口号。
+	 * 若成功则返回发送字节数，若失败则并返回 SOCKET_ERROR(-1)。
+	 */
+	virtual bool SendUdp(
+		bool _is_broadcast = false,
+		LPCTSTR _host = NULL,
+		WORD _port = 0
+	) const;
+	
+	
+	WORD GetId(void) const;
+	WORD GetSize(void) const;
+	const BYTE* GetData(void) const;
+	bool GetData(OUT PBYTE _data_bufer_ptr, OUT size_t& _data_bytes) const;
 
 private:
-	UINT m_msg_id;
+	class CImpl;
+	CImpl* const m_impl_ptr;
 };
 
 /*

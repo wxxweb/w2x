@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="DllMain.cpp" />
     <ClCompile Include="FindOthers.cpp" />
+    <ClCompile Include="lan_neighbor.cpp" />
     <ClCompile Include="tiny_socket.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -25,6 +26,7 @@
     <ClInclude Include="default_tiny_socket_dispatcher.h" />
     <ClInclude Include="exports.h" />
     <ClInclude Include="FindOthers.h" />
+    <ClInclude Include="lan_neighbor.h" />
     <ClInclude Include="tiny_socket.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="targetver.h" />

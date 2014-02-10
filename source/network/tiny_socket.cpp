@@ -166,7 +166,10 @@ bool CTinySocket::CImpl::Initialize(void)
 {
 	CAutoLock class_lock(NULL);
 
-	IF_FALSE_ASSERT_RETURN_VALUE (false == sm_is_initalized, false);
+	if (true == sm_is_initalized)
+	{
+		return true;
+	}
 
 	// ≥ı ºªØWinSock DLL 2.2
 

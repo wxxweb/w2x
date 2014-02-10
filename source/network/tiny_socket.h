@@ -44,6 +44,7 @@ W2X_DISALLOW_COPY_AND_ASSIGN(CTinySocket)
 public:
 	/* 
 	 * 进程调用该函数初始化 WinSock DLL，若成功则返回 true, 否则返回 false。
+	 * 只被调用一次，不过重复调用不会有影响，内部已做处理，不会重复初始化。
 	 */
 	static bool Initialize(void);
 

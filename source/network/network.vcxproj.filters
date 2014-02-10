@@ -33,6 +33,9 @@
     <ClCompile Include="interfaces_of_tiny_socket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="lan_neighbor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="exports.h">
@@ -57,6 +60,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="default_tiny_socket_dispatcher.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="lan_neighbor.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
