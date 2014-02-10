@@ -15,6 +15,30 @@ W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(network)
 
 
+W2X_NETWORK_API bool IsValidIpAddress(LPCTSTR _ip_addr_str)
+{
+	std::string ascii_ip_addr;
+	if (0 == w2x::encode::Unicode2Ascii(ascii_ip_addr, _ip_addr_str))
+	{
+		return false;
+	}
+
+	addrinfo addr_info = {0};
+	memset(&addr_info, 0, sizeof(addr_info));
+	addr_info.ai_family = PF_UNSPEC;
+	addr_info.ai_flags = AI_NUMERICHOST;
+
+	addrinfo* addr_info_ptr = NULL;
+	if (0 != getaddrinfo(ascii_ip_addr.c_str(), NULL, &addr_info, &addr_info_ptr)) 
+	{
+		return false;
+	}
+
+	freeaddrinfo(addr_info_ptr);
+	return true;
+}
+
+
 W2X_NETWORK_API bool GetBroadcastIpAddress(OUT DWORD& _ip_address)
 {
 	bool is_alloc_enough = false;

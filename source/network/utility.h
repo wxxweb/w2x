@@ -22,6 +22,13 @@ enum {
 };
 
 /*
+ * 判断一个字符串是否为有效的 IP 地址，有效返回 true, 否则返回 false。
+ */
+W2X_NETWORK_API bool IsValidIpAddress(
+	LPCTSTR _ip_addr_str
+);
+
+/*
  * 从IP地址表中获取本机IP地址和子网掩码，
  * 并从中计算出本局域网广播IP地址。
  * _ip_address 存放广播地址。
