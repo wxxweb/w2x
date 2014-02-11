@@ -39,6 +39,49 @@ W2X_NETWORK_API bool IsValidIpAddress(LPCTSTR _ip_addr_str)
 }
 
 
+W2X_NETWORK_API bool ParseHostToIpAddress(
+	OUT DWORD& _ip_address,
+	LPCTSTR _host
+	)
+{
+	char ip_addr_str[MAX_IP_ADDR_STR] = "";
+
+	if (true == internal::IsValidIpAddress(_host))
+	{
+		std::string ascii_ip_addr;
+		if (false == w2x::encode::Unicode2Ascii(ascii_ip_addr, _host))
+		{
+			return false;
+		}
+		strcpy_s(ip_addr_str, MAX_IP_ADDR_STR, ascii_ip_addr.c_str());
+	}
+	else
+	{
+		std::string host_name;
+		if (false == w2x::encode::Unicode2Ascii(host_name, _host))
+		{
+			return false;
+		}
+
+		HOSTENT* host_ent_ptr = gethostbyname(host_name.c_str());
+		IF_FALSE_ASSERT (NULL != host_ent_ptr && NULL != host_ent_ptr->h_addr_list[0])
+		{
+			w2x::log::LogError(TEXT("Get IP address by name(%s) failed."), 
+				_host);
+			return false;
+		}
+
+		memcpy(&ip_addr_str, 
+			inet_ntoa(*(in_addr*)host_ent_ptr->h_addr_list[0]), 
+			MAX_IP_ADDR_STR);
+	}
+
+	_ip_address = inet_addr(ip_addr_str);
+
+	return true;
+}
+
+
 W2X_NETWORK_API bool GetBroadcastIpAddress(OUT DWORD& _ip_address)
 {
 	bool is_alloc_enough = false;
