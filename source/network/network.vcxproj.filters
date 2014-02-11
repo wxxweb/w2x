@@ -18,9 +18,6 @@
     <ClCompile Include="DllMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="FindOthers.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="StdAfx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -41,9 +38,6 @@
     <ClInclude Include="exports.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="FindOthers.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="StdAfx.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -59,16 +53,8 @@
     <ClInclude Include="interfaces_of_tiny_socket.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="default_tiny_socket_dispatcher.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="lan_neighbor.h">
       <Filter>头文件</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="FindOthers.def">
-      <Filter>源文件</Filter>
-    </None>
   </ItemGroup>
 </Project>

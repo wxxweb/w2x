@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "common\common.h"
-#include "network\FindOthers.h"
+#include "network\lan_neighbor.h"
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -12,7 +12,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	w2x::debug::EnableLeakCheck(true);
 
 	SOCKADDR_IN sock_addr_in = {0};
-	w2x::network::findOthers(22222, 100000, &sock_addr_in);
+	w2x::network::CLanNeighbor lan_neighbor;
+	do {
+		lan_neighbor.SayHello(22222);
+		::Sleep(1000);
+	} while (true);
 
 	system("pause");
 	return 0;

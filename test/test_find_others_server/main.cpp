@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "common\common.h"
-#include "network\FindOthers.h"
+#include "network\lan_neighbor.h"
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -11,7 +11,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	//w2x::debug::SetReportMode(w2x::debug::kModeStderr);
 	w2x::debug::EnableLeakCheck(true);
 
-	w2x::network::echoServer(22222, 1000000, 124);
+	w2x::network::CLanNeighbor lan_neighbor;
+	lan_neighbor.Listen(22222);
 
 	system("pause");
 	return 0;

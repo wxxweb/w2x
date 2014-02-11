@@ -12,7 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DllMain.cpp" />
-    <ClCompile Include="FindOthers.cpp" />
     <ClCompile Include="lan_neighbor.cpp" />
     <ClCompile Include="tiny_socket.cpp" />
     <ClCompile Include="StdAfx.cpp">
@@ -23,18 +22,13 @@
     <ClCompile Include="utility.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="default_tiny_socket_dispatcher.h" />
     <ClInclude Include="exports.h" />
-    <ClInclude Include="FindOthers.h" />
     <ClInclude Include="lan_neighbor.h" />
     <ClInclude Include="tiny_socket.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="interfaces_of_tiny_socket.h" />
     <ClInclude Include="utility.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="FindOthers.def" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1677EE2E-8080-4D25-9E8F-4AD6F8463390}</ProjectGuid>
@@ -87,7 +81,8 @@
       <ImportLibrary>$(SolutionDir)lib\$(Configuration)\$(TargetName).lib</ImportLibrary>
       <AdditionalDependencies>WS2_32.lib;Iphlpapi.lib;common.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>FindOthers.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>$(SolutionDir)script\copy_third_party.bat $(SolutionDir) $(Configuration) dll</Command>
@@ -114,7 +109,8 @@
       <ImportLibrary>$(SolutionDir)lib\$(Configuration)\$(TargetName).lib</ImportLibrary>
       <AdditionalDependencies>WS2_32.lib;Iphlpapi.lib;common.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(Configuration)\</AdditionalLibraryDirectories>
-      <ModuleDefinitionFile>FindOthers.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>$(SolutionDir)script\copy_third_party.bat $(SolutionDir) $(Configuration) dll</Command>
