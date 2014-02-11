@@ -17,18 +17,6 @@ W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(network)
 
 
-ITinySocketDispatcher::ITinySocketDispatcher(void)
-{
-	CTinySocket::RegisterDispatcher(this);
-}
-
-
-ITinySocketDispatcher::~ITinySocketDispatcher(void)
-{
-	CTinySocket::UnregisterDispatcher(this);
-}
-
-
 struct MsgInfo {
 	WORD msg_id;
 	WORD data_bytes;
@@ -44,14 +32,33 @@ public:
 W2X_DISALLOW_COPY_AND_ASSIGN(CImpl)
 
 public:
-	bool m_is_valid;
-	MsgInfo* m_msg_info_ptr;
+	bool Create(
+		WORD _msg_id, 
+		const BYTE* _msg_data_ptr, 
+		WORD _data_bytes
+	);
+
+	inline int SendUdp(LPCTSTR _remote_addr_str, WORD _remote_port) const;
+
+	static CTinySocket* GetGlobalTinySocket(void);
+
+	static bool Initialize(WORD _local_port);
+
+public:
+	bool		 m_is_valid;
+	MsgInfo*	 m_msg_info_ptr;
+	static bool sm_is_socket_valid;
+	static CTinySocket* sm_tiny_socket_ptr;
 };
 
 
+bool ITinySocketMessage::CImpl::sm_is_socket_valid = false;
+CTinySocket* ITinySocketMessage::CImpl::sm_tiny_socket_ptr = NULL;
+
+
 ITinySocketMessage::CImpl::CImpl(void)
-	: m_msg_info_ptr(NULL)
-	, m_is_valid(false)
+	: m_is_valid(false)
+	, m_msg_info_ptr(NULL)
 {
 
 }
@@ -60,6 +67,71 @@ ITinySocketMessage::CImpl::CImpl(void)
 ITinySocketMessage::CImpl::~CImpl(void)
 {
 	SAFE_DELETE(m_msg_info_ptr);
+}
+
+
+bool ITinySocketMessage::CImpl::Create(
+	WORD _msg_id, 
+	const BYTE* _msg_data_ptr, 
+	WORD _data_bytes)
+{
+	IF_FALSE_ASSERT (true == sm_is_socket_valid &&
+		INVALID_MSG_ID != _msg_id && NULL != _msg_data_ptr && 
+		0 < _data_bytes && _data_bytes <= MAX_MSG_DATA)
+	{
+		return m_is_valid = false;
+	}
+
+	SAFE_DELETE(m_msg_info_ptr);
+	MsgInfo* const msg_info_ptr = m_msg_info_ptr = new MsgInfo;
+	memset(msg_info_ptr, 0, sizeof(MsgInfo));
+	msg_info_ptr->msg_id = _msg_id;
+	msg_info_ptr->data_bytes = _data_bytes;
+
+	memcpy_s(&msg_info_ptr->data_buffer, MAX_MSG_DATA,
+		_msg_data_ptr, _data_bytes);
+
+	m_is_valid = true;
+
+	return true;
+}
+
+
+inline int ITinySocketMessage::CImpl::SendUdp(
+	LPCTSTR _remote_addr_str,
+	WORD _remote_port
+	) const
+{
+	IF_FALSE_ASSERT_RETURN_VALUE(m_is_valid, SOCKET_ERROR);
+
+	return CImpl::GetGlobalTinySocket()->SendUdpPacket(
+		_remote_addr_str, _remote_port,
+		m_msg_info_ptr->data_buffer, m_msg_info_ptr->data_bytes);
+}
+
+
+CTinySocket* ITinySocketMessage::CImpl::GetGlobalTinySocket(void)
+{
+	IF_FALSE_ASSERT_RETURN_VALUE(sm_is_socket_valid, NULL);
+
+	return sm_tiny_socket_ptr;
+}
+
+
+bool ITinySocketMessage::CImpl::Initialize(WORD _local_port)
+{
+	if (NULL == sm_tiny_socket_ptr)
+	{
+		sm_tiny_socket_ptr = new CTinySocket();
+		IF_NULL_ASSERT_RETURN_VALUE(sm_tiny_socket_ptr, false);
+
+		if (false == sm_tiny_socket_ptr->CreateUdp(_local_port))
+		{
+			return false;
+		}
+	}
+
+	return sm_is_socket_valid = true;
 }
 
 
@@ -75,91 +147,31 @@ ITinySocketMessage::~ITinySocketMessage(void)
 }
 
 
+bool ITinySocketMessage::Create(
+	WORD _msg_id, 
+	const BYTE* _msg_data_ptr, 
+	WORD _data_bytes
+	)
+{
+	return m_impl_ptr->Create(_msg_id, _msg_data_ptr, _data_bytes);
+}
+
+
 bool ITinySocketMessage::IsValid(void) const
 {
 	return m_impl_ptr->m_is_valid;
 }
 
 
-bool ITinySocketMessage::Create(
-	WORD _msg_id, 
-	const BYTE* _msg_data_ptr, 
-	WORD _data_bytes)
+bool ITinySocketMessage::Initialize(WORD _local_port)
 {
-	IF_FALSE_ASSERT (
-		INVALID_MSG_ID != _msg_id && NULL != _msg_data_ptr && 
-		0 < _data_bytes && _data_bytes <= MAX_MSG_DATA)
-	{
-		return m_impl_ptr->m_is_valid = false;
-	}
-
-	SAFE_DELETE(m_impl_ptr->m_msg_info_ptr);
-	MsgInfo* const msg_info_ptr = m_impl_ptr->m_msg_info_ptr = new MsgInfo;
-	msg_info_ptr->msg_id = _msg_id;
-	msg_info_ptr->data_bytes = _data_bytes;
-
-	memcpy_s(&msg_info_ptr->data_buffer, MAX_MSG_DATA,
-		_msg_data_ptr, _data_bytes);
-
-	return true;
+	return CImpl::Initialize(_local_port);
 }
 
 
-bool ITinySocketMessage::SendUdp(
-	bool _is_broadcast,
-	LPCTSTR _host,
-	WORD _port
-	) const
+int ITinySocketMessage::SendUdp(LPCTSTR _remote_addr_str, WORD _reomte_port) const
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_host, false);
-	IF_FALSE_ASSERT_RETURN_VALUE(m_impl_ptr->m_is_valid, false);
-	
-	CTinySocket tiny_socket;
-	if (false == tiny_socket.CreateUdp(_port, _is_broadcast))
-	{
-		return false;
-	}
-
-	char ip_addr_str[MAX_IP_ADDR_STR] = "";
-
-	if (true == internal::IsValidIpAddress(_host))
-	{
-		std::string ascii_ip_addr;
-		if (false == w2x::encode::Unicode2Ascii(ascii_ip_addr, _host))
-		{
-			return false;
-		}
-		strcpy_s(ip_addr_str, MAX_IP_ADDR_STR, ascii_ip_addr.c_str());
-	}
-	else
-	{
-		std::string host_name;
-		if (false == w2x::encode::Unicode2Ascii(host_name, _host))
-		{
-			return false;
-		}
-
-		HOSTENT* host_ent_ptr = gethostbyname(host_name.c_str());
-		IF_FALSE_ASSERT (NULL != host_ent_ptr && NULL != host_ent_ptr->h_addr_list[0])
-		{
-			w2x::log::LogError(TEXT("Get IP address by name(%s) failed."), 
-				_host);
-			return false;
-		}
-
-		memcpy(&ip_addr_str, 
-			inet_ntoa(*(in_addr*)host_ent_ptr->h_addr_list[0]), 
-			MAX_IP_ADDR_STR);
-	}
-	
-	SOCKADDR_IN sock_addr_in;
-	sock_addr_in.sin_addr.S_un.S_addr = inet_addr(ip_addr_str);
-	sock_addr_in.sin_family = AF_INET;
-	sock_addr_in.sin_port = htons(_port);
-
-	return tiny_socket.SendUdpPacket(&sock_addr_in, 
-		m_impl_ptr->m_msg_info_ptr->data_buffer,
-		m_impl_ptr->m_msg_info_ptr->data_bytes);
+	return m_impl_ptr->SendUdp(_remote_addr_str, _reomte_port);
 }
 
 
@@ -207,28 +219,30 @@ bool ITinySocketMessage::GetData(
 }
 
 
-ITinySocketListener::ITinySocketListener(ITinySocketDispatcher* _dispatcher_ptr)
-	: m_tiny_socket_dispatcher_ptr(_dispatcher_ptr)
+int ITinySocketMessage::SendUdp(
+	LPCTSTR _remote_addr_str,
+	WORD _remote_port,
+	const BYTE* _packet_buffer,
+	DWORD _size_in_bytes
+	)
 {
-	IF_NULL_ASSERT (m_tiny_socket_dispatcher_ptr)
-	{
-		// 啥都不做
-	}
-	else {
-		m_tiny_socket_dispatcher_ptr->RegisterListener(this);
-	}
+	CTinySocket* tiny_socket_ptr = CImpl::GetGlobalTinySocket();
+	IF_NULL_ASSERT_RETURN_VALUE(tiny_socket_ptr, SOCKET_ERROR);
+
+	return tiny_socket_ptr->SendUdpPacket(
+		_remote_addr_str, _remote_port, _packet_buffer, _size_in_bytes);
+}
+
+
+ITinySocketListener::ITinySocketListener(void)
+{
+	CTinySocket::RegisterListener(this);
 }
 
 
 ITinySocketListener::~ITinySocketListener(void)
 {
-	IF_NULL_ASSERT (m_tiny_socket_dispatcher_ptr)
-	{
-		// 啥都不做
-	}
-	else {
-		m_tiny_socket_dispatcher_ptr->UnregisterListener(this);
-	}
+	CTinySocket::UnregisterListener(this);
 }
 
 

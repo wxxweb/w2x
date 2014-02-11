@@ -17,7 +17,7 @@ W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(network)
 
 
-class ITinySocketDispatcher;
+class ITinySocketListener;
 
 
 class W2X_NETWORK_API CTinySocket
@@ -34,6 +34,13 @@ public:
 		kAsyncRecvPending	= 0,	// 正在接收中，未完成
 		kAsyncRecvComplete	= 1,	// 接收数据完成
 	};
+
+	typedef bool (CALLBACK *FPacketParser)(
+		ITinySocketListener* _listener_ptr,
+		const BYTE* _packet_ptr,
+		size_t _packet_bytes,
+		DWORD _remote_ip_addr
+	);
 
 public:
 	CTinySocket(void);
@@ -53,17 +60,18 @@ public:
 	 */
 	static bool Uninitialize(void);
 
-	static bool RegisterDispatcher(ITinySocketDispatcher* _dispatcher_ptr);
+	static bool SetPacketParser(FPacketParser _packet_parser_fn_ptr);
 
-	static bool UnregisterDispatcher(ITinySocketDispatcher* _dispatcher_ptr);
+	static bool RegisterListener(ITinySocketListener* _listener_ptr);
+
+	static bool UnregisterListener(ITinySocketListener* _listener_ptr);
 
 	/* 
 	 * 创建用于收发 UDP 数据包的 Socket，并将本地 IP 地址绑定到 Socket。
 	 * _local_port 为本地端口号，如果值为 0 则自动分配 1024-5000 间端口号。
-	 * _is_enable_broadcast 用于设置是否发送广播消息，默认为 false 不发送
 	 * 若成功则返回 true, 否则释放创建过程中的资源并返回 false。
 	 */
-	bool CreateUdp(WORD _local_port = 0, bool _is_broadcast = false);
+	bool CreateUdp(WORD _local_port = 0);
 
 	/*
 	 * 销毁已创建的 Socket 资源， 若成功则返回 true, 否则返回 false。
@@ -83,18 +91,39 @@ public:
 		const DWORD _size_in_bytes
 	);
 
+	/* 
+	 * 异步接收 UDP 数据包，返回值见 ERecvStatus。
+	 */
+	ERecvStatus RecvUdpPacket(void);
+
 	/*
 	 * 发送 UDP 数据包。
-	 * _remote_addr_ptr 远程主机地址；
+	 * _remote_addr_str 远程主机地址，可以是 IP 地址，如 "192.168.1.121"，也可以是
+	 * 域名，如 "www.baidu.com"。当值为空（NULL）是发送局域网广播消息；
+	 * _port 远程主机端口号；
 	 * _packet_buffer 要发送数据的缓冲区；
-	 * _size_in_bytes 要发送的字节数。
+	 * _size_in_bytes 要发送的字节数；
 	 * 若成功则返回发送字节数，若失败则并返回 SOCKET_ERROR(-1)。
 	 */
 	int SendUdpPacket(
-		const PSOCKADDR_IN _remote_addr_ptr,
-		const PBYTE _packet_buffer,
-		const DWORD _size_in_bytes
+		LPCTSTR _remote_addr_str,
+		WORD _port,
+		const BYTE* _packet_buffer,
+		DWORD _size_in_bytes
 	);
+
+	/*
+	 * 启用或禁用 Socket 发送广播数据包功能。
+	 * _is_enable 为 true 表示启用，为 false 表示禁用。
+	 * 若成功返回 true, 否则返回 false。
+	 */
+	bool EnableBroadcast(bool _is_enable);
+
+	/*
+	 * 检测 Socket 发送广播数据包功能是否开启。
+	 * 返回 true 表示启用，false 表示禁用。
+	 */
+	bool IsBroadcastEnable(void) const;
 
 private:
 	class CImpl;
