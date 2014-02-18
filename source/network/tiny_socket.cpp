@@ -20,7 +20,7 @@ W2X_DEFINE_NAME_SPACE_BEGIN(network)
 class CTinySocket::CImpl
 {
 	/*
-	 * 存放分发器
+	 * 存放消息监听器
 	 */
 	typedef std::list<ITinySocketListener*> Listeners;
 
@@ -42,9 +42,9 @@ W2X_DISALLOW_COPY_AND_ASSIGN(CImpl)
 W2X_IMPLEMENT_LOCKING(CImpl, CAutoLock)
 
 public:
-	static bool Initialize(void);
+	static bool InitWinSock(void);
 
-	static bool Uninitialize(void);
+	static bool UninitWinSock(void);
 
 	static bool RegisterListener(ITinySocketListener* _listener_ptr);
 
@@ -52,19 +52,20 @@ public:
 
 	static bool SetPacketParser(CTinySocket::FPacketParser _packet_parser_fn_ptr);
 
-	bool CreateUdp(WORD _local_port);
+	/*
+	 * 确保 WinSock DLL 被初始化。
+	 */
+	inline void EnsureWinSock(void);
+
+	bool Create(WORD _local_port, bool _is_udp);
+
+	inline bool IsValid(void) const;
 
 	bool Destory(void);
-	
-	int SyncRecvUdpPacket(
-		OUT	PSOCKADDR_IN _remote_addr_ptr,
-		OUT	PBYTE _packet_buffer,
-		const DWORD _size_in_bytes
-	);
 
-	ERecvStatus RecvUdpPacket(void);
+	ERecvStatus RecvPacket(void);
 
-	int SendUdpPacket(
+	int SendPacket(
 		LPCTSTR _remote_addr_str,
 		WORD _remote_port,
 		const BYTE* _packet_buffer,
@@ -91,7 +92,7 @@ private:
 	/*
 	 * 线程函数，处理异步重叠 UDP 接收请求。
 	 */
-	static DWORD CALLBACK RecvUdpPacketThread(PVOID _param);
+	static DWORD CALLBACK RecvPacketThread(PVOID _param);
 
 	/*
 	 * 处理接收到的消息。
@@ -114,16 +115,17 @@ private:
 	);
 
 private:
-	static bool			 sm_is_initalized;
+	static bool			 sm_is_win_sock_init;
 	static size_t		 sm_recv_msg_count;
 	static CMsgLoop		 sm_recv_msg_loop;
 	static Listeners	 sm_listeners;
 	static FPacketParser sm_packet_parser_fn_ptr;
 
+	bool		m_is_udp;
 	bool		m_is_broadcast_enable;
 	SOCKET		m_local_socket;
 	SOCKADDR_IN	m_remote_sock_addr;
-	CHAR		m_recv_msg_buffer[MAX_MSG_BUF_SIZE];
+	CHAR		m_recv_msg_buffer[MAX_UDP_MSG_SIZE];
 	size_t		m_recv_msg_bytes;
 	SocketInfo	m_socket_info;
 	HANDLE		m_recv_thread_handle;
@@ -134,7 +136,7 @@ private:
 W2X_IMPLEMENT_LOCKING_CLASS(CTinySocket::CImpl, CAutoLock)
 
 
-bool	    CTinySocket::CImpl::sm_is_initalized = false;
+bool	    CTinySocket::CImpl::sm_is_win_sock_init = false;
 size_t	    CTinySocket::CImpl::sm_recv_msg_count = 0;
 CMsgLoop    CTinySocket::CImpl::sm_recv_msg_loop;
 CTinySocket::CImpl::Listeners CTinySocket::CImpl::sm_listeners;
@@ -146,6 +148,7 @@ CTinySocket::CImpl::CImpl(void)
 	, m_recv_thread_handle(NULL)
 	, m_recv_thread_exit_event(NULL)
 	, m_is_broadcast_enable(false)
+	, m_is_udp(false)
 {
 	memset(&m_remote_sock_addr, 0, sizeof(m_remote_sock_addr));
 	memset(&m_socket_info, 0, sizeof(m_socket_info));
@@ -165,11 +168,11 @@ CTinySocket::CImpl::~CImpl(void)
 }
 
 
-bool CTinySocket::CImpl::Initialize(void)
+bool CTinySocket::CImpl::InitWinSock(void)
 {
 	CAutoLock class_lock(NULL);
 
-	if (true == sm_is_initalized)
+	if (true == sm_is_win_sock_init)
 	{
 		return true;
 	}
@@ -192,7 +195,7 @@ bool CTinySocket::CImpl::Initialize(void)
 		return false;
 	}
 
-	sm_is_initalized = true;
+	sm_is_win_sock_init = true;
 	w2x::log::LogInfo(TEXT("Initialize WinSock DLL 2.2 successed."));
 
 	sm_recv_msg_loop.StartLoopThread(CImpl::HandleRecvMsg, NULL);
@@ -201,11 +204,11 @@ bool CTinySocket::CImpl::Initialize(void)
 }
 
 
-bool CTinySocket::CImpl::Uninitialize(void)
+bool CTinySocket::CImpl::UninitWinSock(void)
 {
 	CAutoLock class_lock(NULL);
 
-	IF_FALSE_ASSERT_RETURN_VALUE (true == sm_is_initalized, false);
+	IF_FALSE_ASSERT_RETURN_VALUE (true == sm_is_win_sock_init, false);
 
 	sm_recv_msg_loop.StopLoopThread();
 
@@ -224,10 +227,21 @@ bool CTinySocket::CImpl::Uninitialize(void)
 		return false;
 	}
 
-	sm_is_initalized = false;
+	sm_is_win_sock_init = false;
 
 	w2x::log::LogInfo(TEXT("Uninitialize WinSock DLL 2.2 successed."));
 	return true;
+}
+
+
+inline void CTinySocket::CImpl::EnsureWinSock(void)
+{
+	if (true == sm_is_win_sock_init)
+	{
+		return;
+	}
+
+	CImpl::InitWinSock();
 }
 
 
@@ -282,26 +296,28 @@ bool CTinySocket::CImpl::SetPacketParser(
 }
 
 
-bool CTinySocket::CImpl::CreateUdp(WORD _local_port)
+bool CTinySocket::CImpl::Create(WORD _local_port, bool _is_udp)
 {
 	CAutoLock this_lock(this);
 
-	CImpl::Initialize();
+	this->EnsureWinSock();
 
 	// 销毁已创建的 Socket
 	this->Destory();
 
+	m_is_udp = _is_udp;
+
 	// 创建 Socket
-	m_local_socket = ::WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, 
-		NULL, 0, WSA_FLAG_OVERLAPPED);
+	m_local_socket = ::WSASocket(AF_INET, (m_is_udp ? SOCK_DGRAM : SOCK_STREAM), 
+		(m_is_udp ? IPPROTO_UDP : IPPROTO_TCP), NULL, 0, WSA_FLAG_OVERLAPPED);
 
 	IF_FALSE_ASSERT (INVALID_SOCKET != m_local_socket)
 	{
 		TCHAR error_msg[MAX_PATH] = TEXT("");
 		const DWORD error_code = ::WSAGetLastError();
 		w2x::log::FormatError(error_msg, MAX_PATH, error_code);
-		w2x::log::LogError(TEXT("Create UDP socket faild. %d - %s."), 
-			error_code, error_msg);
+		w2x::log::LogError(TEXT("Create %s socket faild. %d - %s."), 
+			(m_is_udp ? TEXT("UDP") : TEXT("TCP")), error_code, error_msg);
 
 		return false;
 	}
@@ -314,12 +330,30 @@ bool CTinySocket::CImpl::CreateUdp(WORD _local_port)
 
 	// 创建异步重叠接收数据线程
 	m_recv_thread_handle = ::CreateThread(
-		NULL, 0, CImpl::RecvUdpPacketThread, 
+		NULL, 0, CImpl::RecvPacketThread, 
 		reinterpret_cast<LPVOID>(this), 0, NULL);
+	IF_NULL_ASSERT (m_recv_thread_handle)
+	{
+		TCHAR error_msg[MAX_PATH] = TEXT("");
+		const DWORD error_code = ::GetLastError();
+		w2x::log::FormatError(error_msg, MAX_PATH, error_code);
+		w2x::log::LogError(TEXT("Create UDP socket receive thread faild. %d - %s."), 
+			error_code, error_msg);
+
+		this->Destory();
+
+		return false;
+	}
 
 	m_recv_thread_exit_event = ::CreateEvent(NULL, TRUE, FALSE, NULL);
 
 	return true;
+}
+
+
+inline bool CTinySocket::CImpl::IsValid(void) const
+{
+	return INVALID_SOCKET != m_local_socket;
 }
 
 
@@ -333,7 +367,6 @@ bool CTinySocket::CImpl::Destory(void)
 	}
 
 	IF_FALSE_ASSERT_RETURN_VALUE(INVALID_SOCKET != m_local_socket, false);
-	IF_FALSE_ASSERT_RETURN_VALUE(true == sm_is_initalized, false);
 
 	w2x::log::LogInfo(TEXT("Destoring socket(%d) ..."), m_local_socket);
 
@@ -390,11 +423,8 @@ bool CTinySocket::CImpl::BindLocalAddress(WORD _port)
 	sock_addr_in.sin_addr.s_addr	= ::htonl(INADDR_ANY);	// 自动分配主机地址
 	sock_addr_in.sin_port			= ::htons(_port);		// 分配端口号
 
-	TCHAR ip_addr_str[MAX_IP_ADDR_STR] = TEXT("");
-	internal::ParseIpAddressString(ip_addr_str, MAX_IP_ADDR_STR, 
-		sock_addr_in.sin_addr.s_addr);
 	w2x::log::LogInfo(
-		TEXT("Binding a local address(%s) with the socket."), ip_addr_str);
+		TEXT("Binding a local port(%d) with the socket."), _port);
 
 	// 绑定本地地址到 Socket
 
@@ -405,61 +435,25 @@ bool CTinySocket::CImpl::BindLocalAddress(WORD _port)
 		TCHAR error_msg[MAX_PATH] = TEXT("");
 		w2x::log::FormatError(error_msg, MAX_PATH, error_code);
 		w2x::log::LogError(
-			TEXT("Bind a local address(%s) with the socket faild. %d - %s."),
-			ip_addr_str, error_code, error_msg);
+			TEXT("Bind a local port(%d) with the socket faild. %d - %s."),
+			_port, error_code, error_msg);
+
+		this->Destory();
 
 		return false;
 	}
 
 	w2x::log::LogInfo(
-		TEXT("Bind a local address(%s) with the socket successed."), ip_addr_str);
+		TEXT("Bind a local port(%s) with the socket successed."), _port);
 
 	return true;
 }
 
 
-int CTinySocket::CImpl::SyncRecvUdpPacket(
-	OUT	PSOCKADDR_IN _remote_addr_ptr,
-	OUT	PBYTE _packet_buffer,
-	const DWORD _size_in_bytes
-	)
-{
-	CAutoLock this_lock(this);
-
-	IF_NULL_ASSERT_RETURN_VALUE(_remote_addr_ptr, SOCKET_ERROR);
-	IF_NULL_ASSERT_RETURN_VALUE(_packet_buffer, SOCKET_ERROR);
-	IF_FALSE_ASSERT_RETURN_VALUE(INVALID_SOCKET != m_local_socket, SOCKET_ERROR);
-
-	int remote_addr_bytes = sizeof(SOCKADDR);
-
-	// 同步接收UDP数据包
-
-	const int bytes_received = ::recvfrom(m_local_socket, 
-		reinterpret_cast<char*>(_packet_buffer),  _size_in_bytes, 0, 
-		reinterpret_cast<PSOCKADDR>(_remote_addr_ptr), &remote_addr_bytes);
-
-	IF_FALSE_ASSERT (SOCKET_ERROR != bytes_received)
-	{
-		const DWORD error_code = ::WSAGetLastError();
-		TCHAR error_msg[MAX_PATH] = TEXT("");
-		w2x::log::FormatError(error_msg, MAX_PATH, error_code);
-		w2x::log::LogError(
-			TEXT("Sync receive UDP packet falid. %d - %s."),
-			error_code, error_msg);
-
-		return SOCKET_ERROR;
-	}
-
-	sm_recv_msg_loop.AddMsg(reinterpret_cast<LPCTSTR>(_packet_buffer), bytes_received);
-
-	return bytes_received;
-}
-
-
-CTinySocket::ERecvStatus CTinySocket::CImpl::RecvUdpPacket(void)
+CTinySocket::ERecvStatus CTinySocket::CImpl::RecvPacket(void)
 {
 	// 由于后面有个等待时间，如果这里直接用 CAutoLock this_lock(this) 会死锁
-	m_cs_of_this_by_CAutoLock.Enter();
+	this->LockThis();
 
 	IF_FALSE_ASSERT_RETURN_VALUE(INVALID_SOCKET != m_local_socket, kAsyncRecvError);
 
@@ -502,7 +496,7 @@ CTinySocket::ERecvStatus CTinySocket::CImpl::RecvUdpPacket(void)
 	}
 
 	// 由于后面有个等待时间，如果这里直接用 CAutoLock this_lock(this) 会死锁
-	m_cs_of_this_by_CAutoLock.Leave();
+	this->UnlockThis();
 	
 	if (false == this->WaitRecvPacket(WSA_INFINITE))
 	{
@@ -552,7 +546,7 @@ bool CTinySocket::CImpl::WaitRecvPacket(DWORD _timeout)
 }
 
 
-int CTinySocket::CImpl::SendUdpPacket(
+int CTinySocket::CImpl::SendPacket(
 	LPCTSTR _remote_addr_str,
 	WORD _remote_port,
 	const BYTE* _packet_buffer,
@@ -563,6 +557,11 @@ int CTinySocket::CImpl::SendUdpPacket(
 	
 	IF_NULL_ASSERT_RETURN_VALUE(_packet_buffer, SOCKET_ERROR);
 	IF_FALSE_ASSERT_RETURN_VALUE(INVALID_SOCKET != m_local_socket, SOCKET_ERROR);
+
+	IF_FALSE_ASSERT (false == m_is_udp && NULL == _remote_addr_str)
+	{
+		return SOCKET_ERROR;
+	}
 
 	const bool is_broadcast = NULL == _remote_addr_str;
 	
@@ -579,7 +578,10 @@ int CTinySocket::CImpl::SendUdpPacket(
 		return false;
 	}
 
-	this->EnableBroadcast(is_broadcast);
+	if (true == m_is_udp)
+	{
+		this->EnableBroadcast(is_broadcast);
+	}
 
 	DWORD bytes_sent = 0;
 	WSABUF wsa_buf = {0};
@@ -695,12 +697,12 @@ inline bool CTinySocket::CImpl::AddToRecvMsgLoop(void)
 }
 
 
-DWORD CALLBACK CTinySocket::CImpl::RecvUdpPacketThread(PVOID _param)
+DWORD CALLBACK CTinySocket::CImpl::RecvPacketThread(PVOID _param)
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_param, 1);
 
 	CImpl* const this_ptr = reinterpret_cast<CImpl*>(_param);
-	this_ptr->RecvUdpPacket();
+	this_ptr->RecvPacket();
 
 	return 0;
 }
@@ -785,7 +787,7 @@ void CALLBACK CTinySocket::CImpl::HandleRecvCompletion(
 	this_ptr->SetRecvMsgBytes(_bytes_transferred);
 	this_ptr->SetRecvMsgEnd();
 	this_ptr->AddToRecvMsgLoop();
-	this_ptr->RecvUdpPacket(); // 再次投递接收数据请求
+	this_ptr->RecvPacket(); // 再次投递接收数据请求
 }
 
 
@@ -802,15 +804,15 @@ CTinySocket::~CTinySocket(void)
 }
 
 
-bool CTinySocket::Initialize(void)
+bool CTinySocket::InitWinSock(void)
 {
-	return CImpl::Initialize();
+	return CImpl::InitWinSock();
 }
 
 
-bool CTinySocket::Uninitialize(void)
+bool CTinySocket::UninitWinSock(void)
 {
-	return CImpl::Uninitialize();
+	return CImpl::UninitWinSock();
 }
 
 
@@ -826,9 +828,15 @@ bool CTinySocket::UnregisterListener(ITinySocketListener* _listener_ptr)
 }
 
 
-bool CTinySocket::CreateUdp(WORD _local_port)
+bool CTinySocket::Create(WORD _local_port, bool _is_udp)
 {
-	return m_impl_ptr->CreateUdp(_local_port);
+	return m_impl_ptr->Create(_local_port, _is_udp);
+}
+
+
+bool CTinySocket::IsValid(void) const
+{
+	return m_impl_ptr->IsValid();
 }
 
 
@@ -838,31 +846,20 @@ bool CTinySocket::Destory(void)
 }
 
 
-int CTinySocket::SyncRecvUdpPacket(
-	OUT	PSOCKADDR_IN _remote_addr_ptr,
-	OUT	PBYTE _packet_buffer,
-	const DWORD _size_in_bytes
-	)
+CTinySocket::ERecvStatus CTinySocket::RecvPacket(void)
 {
-	return m_impl_ptr->SyncRecvUdpPacket(
-		_remote_addr_ptr, _packet_buffer, _size_in_bytes);
+	return m_impl_ptr->RecvPacket();
 }
 
 
-CTinySocket::ERecvStatus CTinySocket::RecvUdpPacket(void)
-{
-	return m_impl_ptr->RecvUdpPacket();
-}
-
-
-int CTinySocket::SendUdpPacket(
+int CTinySocket::SendPacket(
 	LPCTSTR _remote_addr_str,
 	WORD _remote_port,
 	const BYTE* _packet_buffer,
 	DWORD _size_in_bytes
 	)
 {
-	return m_impl_ptr->SendUdpPacket(
+	return m_impl_ptr->SendPacket(
 		_remote_addr_str, _remote_port, _packet_buffer, _size_in_bytes);
 }
 

@@ -59,7 +59,7 @@ void CMsgNeighbor::Handle(DWORD _remote_ip_addr, const BYTE* _msg_data)
 		ip_addr_str_buf);
 
 	// 发送回应消息
-	const int sent_result = ITinySocketMessage::SendUdp(
+	const int sent_result = ITinySocketMessage::Send(
 		ip_addr_str_buf, 22222, (PBYTE)msg_data_buf, sizeof(GUID));
 	if (SOCKET_ERROR == sent_result)
 	{
@@ -132,7 +132,7 @@ void CLanNeighbor::HandleReceivedMessage(
 
 bool CLanNeighbor::CImpl::SayHello(WORD _remote_port)
 {
-	ITinySocketMessage::Initialize(0);
+	ITinySocketMessage::InitializeUdp(0);
 
 	CMsgNeighbor msg_neighbor;
 	if (false == msg_neighbor.Create(1, (PBYTE)&AUTHENTCATION_GUID, sizeof(GUID)))
@@ -140,7 +140,7 @@ bool CLanNeighbor::CImpl::SayHello(WORD _remote_port)
 		return false;
 	}
 
-	const int send_bytes = msg_neighbor.SendUdp(NULL, _remote_port);
+	const int send_bytes = msg_neighbor.Send(NULL, _remote_port);
 	if (SOCKET_ERROR == send_bytes)
 	{
 		_tprintf_s(TEXT("Send UDP packet faild.\n"));
@@ -159,7 +159,7 @@ bool CLanNeighbor::CImpl::Listen(WORD _local_port)
 {
 	_tprintf_s(TEXT("Receiving UDP packet...\n"));
 
-	ITinySocketMessage::Initialize(_local_port);
+	ITinySocketMessage::InitializeUdp(_local_port);
 
 	return true;
 }

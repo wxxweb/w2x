@@ -38,22 +38,20 @@ public:
 		WORD _data_bytes
 	);
 
-	inline int SendUdp(LPCTSTR _remote_addr_str, WORD _remote_port) const;
+	inline int Send(LPCTSTR _remote_addr_str, WORD _remote_port) const;
 
-	static CTinySocket* GetGlobalTinySocket(void);
-
-	static bool Initialize(WORD _local_port);
+	static bool Initialize(WORD _local_port, bool _is_udp);
 
 public:
 	bool		 m_is_valid;
 	MsgInfo*	 m_msg_info_ptr;
-	static bool sm_is_socket_valid;
-	static CTinySocket* sm_tiny_socket_ptr;
+	static CTinySocket sm_udp_socket;
+	static CTinySocket sm_tcp_socket;
 };
 
 
-bool ITinySocketMessage::CImpl::sm_is_socket_valid = false;
-CTinySocket* ITinySocketMessage::CImpl::sm_tiny_socket_ptr = NULL;
+CTinySocket ITinySocketMessage::CImpl::sm_udp_socket;
+CTinySocket ITinySocketMessage::CImpl::sm_tcp_socket;
 
 
 ITinySocketMessage::CImpl::CImpl(void)
@@ -75,8 +73,7 @@ bool ITinySocketMessage::CImpl::Create(
 	const BYTE* _msg_data_ptr, 
 	WORD _data_bytes)
 {
-	IF_FALSE_ASSERT (true == sm_is_socket_valid &&
-		INVALID_MSG_ID != _msg_id && NULL != _msg_data_ptr && 
+	IF_FALSE_ASSERT (INVALID_MSG_ID != _msg_id && NULL != _msg_data_ptr && 
 		0 < _data_bytes && _data_bytes <= MAX_MSG_DATA)
 	{
 		return m_is_valid = false;
@@ -90,48 +87,50 @@ bool ITinySocketMessage::CImpl::Create(
 
 	memcpy_s(&msg_info_ptr->data_buffer, MAX_MSG_DATA,
 		_msg_data_ptr, _data_bytes);
-
-	m_is_valid = true;
-
-	return true;
+	
+	return m_is_valid = true;
 }
 
 
-inline int ITinySocketMessage::CImpl::SendUdp(
+inline int ITinySocketMessage::CImpl::Send(
 	LPCTSTR _remote_addr_str,
 	WORD _remote_port
 	) const
 {
 	IF_FALSE_ASSERT_RETURN_VALUE(m_is_valid, SOCKET_ERROR);
-
-	return CImpl::GetGlobalTinySocket()->SendUdpPacket(
-		_remote_addr_str, _remote_port,
-		m_msg_info_ptr->data_buffer, m_msg_info_ptr->data_bytes);
-}
-
-
-CTinySocket* ITinySocketMessage::CImpl::GetGlobalTinySocket(void)
-{
-	IF_FALSE_ASSERT_RETURN_VALUE(sm_is_socket_valid, NULL);
-
-	return sm_tiny_socket_ptr;
-}
-
-
-bool ITinySocketMessage::CImpl::Initialize(WORD _local_port)
-{
-	if (NULL == sm_tiny_socket_ptr)
+	if (NULL == _remote_addr_str)
 	{
-		sm_tiny_socket_ptr = new CTinySocket();
-		IF_NULL_ASSERT_RETURN_VALUE(sm_tiny_socket_ptr, false);
+		IF_FALSE_ASSERT_RETURN_VALUE(sm_udp_socket.IsValid(), SOCKET_ERROR);
 
-		if (false == sm_tiny_socket_ptr->CreateUdp(_local_port))
-		{
-			return false;
-		}
+		return sm_udp_socket.SendPacket(_remote_addr_str, _remote_port,
+			m_msg_info_ptr->data_buffer, m_msg_info_ptr->data_bytes);
+	}
+	else
+	{
+		IF_FALSE_ASSERT_RETURN_VALUE(sm_tcp_socket.IsValid(), SOCKET_ERROR);
+
+// 		return CImpl::sm_tcp_socket->SendUdpPacket(
+// 			_remote_addr_str, _remote_port,
+// 			m_msg_info_ptr->data_buffer, m_msg_info_ptr->data_bytes);
 	}
 
-	return sm_is_socket_valid = true;
+	return SOCKET_ERROR;
+}
+
+
+bool ITinySocketMessage::CImpl::Initialize(WORD _local_port, bool _is_udp)
+{
+	if (true == _is_udp && false == sm_udp_socket.IsValid())
+	{
+		return sm_udp_socket.Create(_local_port, _is_udp);
+	}
+
+	if (false == _is_udp && false == sm_tcp_socket.IsValid())
+	{
+		return sm_tcp_socket.Create(_local_port, _is_udp);
+	}
+
+	return true;
 }
 
 
@@ -163,15 +162,15 @@ bool ITinySocketMessage::IsValid(void) const
 }
 
 
-bool ITinySocketMessage::Initialize(WORD _local_port)
+bool ITinySocketMessage::InitializeUdp(WORD _local_port)
 {
-	return CImpl::Initialize(_local_port);
+	return CImpl::Initialize(_local_port, true);
 }
 
 
-int ITinySocketMessage::SendUdp(LPCTSTR _remote_addr_str, WORD _reomte_port) const
+int ITinySocketMessage::Send(LPCTSTR _remote_addr_str, WORD _reomte_port) const
 {
-	return m_impl_ptr->SendUdp(_remote_addr_str, _reomte_port);
+	return m_impl_ptr->Send(_remote_addr_str, _reomte_port);
 }
 
 
@@ -219,18 +218,28 @@ bool ITinySocketMessage::GetData(
 }
 
 
-int ITinySocketMessage::SendUdp(
+int ITinySocketMessage::Send(
 	LPCTSTR _remote_addr_str,
 	WORD _remote_port,
 	const BYTE* _packet_buffer,
 	DWORD _size_in_bytes
 	)
 {
-	CTinySocket* tiny_socket_ptr = CImpl::GetGlobalTinySocket();
-	IF_NULL_ASSERT_RETURN_VALUE(tiny_socket_ptr, SOCKET_ERROR);
+	if (NULL == _remote_addr_str && 
+		false == ITinySocketMessage::CImpl::sm_udp_socket.IsValid())
+	{
+		return ITinySocketMessage::CImpl::sm_udp_socket.SendPacket(
+			NULL, _remote_port, _packet_buffer, _size_in_bytes);
+	}
 
-	return tiny_socket_ptr->SendUdpPacket(
-		_remote_addr_str, _remote_port, _packet_buffer, _size_in_bytes);
+	if (NULL != _remote_addr_str  && 
+		false == ITinySocketMessage::CImpl::sm_tcp_socket.IsValid())
+	{
+		return ITinySocketMessage::CImpl::sm_tcp_socket.SendPacket(
+			_remote_addr_str, _remote_port, _packet_buffer, _size_in_bytes);
+	}
+	
+	return SOCKET_ERROR;
 }
 
 

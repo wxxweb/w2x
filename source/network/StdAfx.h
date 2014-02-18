@@ -9,14 +9,6 @@
 
 #define WIN32_LEAN_AND_MEAN             // 从 Windows 头文件中排除极少使用的信息
 
-// 开启 DEBUG 模式下堆内存泄漏检测
-#define _CRTDBG_MAP_ALLOC
-#define _CRTDBG_MAP_ALLOC_NEW
-
-// C 运行时头文件
-#include <stdlib.h>
-#include <crtdbg.h>
-
 // Windows 头文件:
 #include <tchar.h>
 #include <winsock2.h>

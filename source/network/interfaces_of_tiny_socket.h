@@ -52,13 +52,13 @@ public:
 	virtual bool IsValid(void) const;
 
 	/*
-	 * 向远程主机发送 UDP 消息。
+	 * 向远程主机发送消息。
 	 * _remote_addr_str 可为 IP 地址字符串，如 "192.168.1.121"， 也可以
 	 * 为主机名或域名，如 "www.baidu.com"；_reomte_port 为远程主机端口号。
 	 * 如果 _remote_addr_str 值为 NULL 则发送局域网广播消息。
 	 * 若成功则返回发送字节数，若失败则并返回 SOCKET_ERROR(-1)。
 	 */
-	virtual int SendUdp(
+	virtual int Send(
 		LPCTSTR _remote_addr_str,
 		WORD _reomte_port
 	) const;
@@ -69,11 +69,11 @@ public:
 	const BYTE* GetData(void) const;
 	bool GetData(OUT PBYTE _data_bufer_ptr, OUT size_t& _data_bytes) const;
 
-	static bool Initialize(WORD _local_port);
+	static bool InitializeUdp(WORD _local_port);
 
-	static int SendUdp(
+	static int Send(
 		LPCTSTR _remote_addr_str,
-		WORD _port,
+		WORD _remote_port,
 		const BYTE* _packet_buffer,
 		DWORD _size_in_bytes);
 

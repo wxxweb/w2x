@@ -24,7 +24,14 @@ class W2X_NETWORK_API CTinySocket
 {
 public:
 	enum {
-		MAX_MSG_BUF_SIZE = 0x2000,	// 数据包消息缓存大小
+		/*
+		 * 以太网（Ethernet）的 MTU（最大传输单元）为 1500 字节，
+		 * IP 数据报的首部为 20 字节，UDP数据报的首部 8 字节，
+		 * 所以 UDP 数据报的数据区最大长度为 1472 字节。
+		 * Internet上的标准 MTU 值为 576 字节
+		 * 此时 UDP 的数据报的最大长度长度为 548 字节。
+		 */
+		MAX_UDP_MSG_SIZE = 512,
 	};
 	/*
 	 * 异步接收数据的返回状态
@@ -53,25 +60,40 @@ public:
 	 * 进程调用该函数初始化 WinSock DLL，若成功则返回 true, 否则返回 false。
 	 * 只被调用一次，不过重复调用不会有影响，内部已做处理，不会重复初始化。
 	 */
-	static bool Initialize(void);
+	static bool InitWinSock(void);
 
 	/* 
-	 * 进程调用该函数释放WinSock DLL，若成功则返回 true, 否则返回 false。
+	 * 进程调用该函数释放 WinSock DLL，若成功则返回 true, 否则返回 false。
 	 */
-	static bool Uninitialize(void);
+	static bool UninitWinSock(void);
 
+	/* 
+	 * 设置数据包解析器，数据包解析器用于将消息数据分拆出来。
+	 */
 	static bool SetPacketParser(FPacketParser _packet_parser_fn_ptr);
 
+	/* 
+	 * 注册消息侦听器，当收到侦听器指定的消息时将会传递给侦听器处理。
+	 */
 	static bool RegisterListener(ITinySocketListener* _listener_ptr);
 
+	/* 
+	 * 注销消息侦听器，不再接收消息通知。
+	 */
 	static bool UnregisterListener(ITinySocketListener* _listener_ptr);
 
 	/* 
-	 * 创建用于收发 UDP 数据包的 Socket，并将本地 IP 地址绑定到 Socket。
+	 * 创建用于收发数据包的 Socket，并将本地 IP 地址绑定到 Socket。
 	 * _local_port 为本地端口号，如果值为 0 则自动分配 1024-5000 间端口号。
-	 * 若成功则返回 true, 否则释放创建过程中的资源并返回 false。
+	 * _is_udp 用于指定 Socket 的传输方式是否为 UDP，默认 false 为 TCP。
+	 * 若创建成功则返回 true, 否则释放创建过程中的资源并返回 false。
 	 */
-	bool CreateUdp(WORD _local_port = 0);
+	bool Create(WORD _local_port = 0, bool _is_udp = false);
+
+	/* 
+	 * 检测 Socket 是否创建成功并有效可用，有效返回 true，否则返回 false。
+	 */
+	bool IsValid(void) const;
 
 	/*
 	 * 销毁已创建的 Socket 资源， 若成功则返回 true, 否则返回 false。
@@ -79,25 +101,12 @@ public:
 	bool Destory(void);
 
 	/* 
-	 * 同步接收 UDP 数据包。
-	 * _remote_addr_ptr 存放远程主机地址， 
-	 * _packet_buffer 存放接收到的数据，
-	 * _size_in_bytes 数据缓冲区字节数。
-	 * 若接收到数据包，则返回数据字节数，若接收过程中出错则返回 SOCKET_ERROR(-1)。
+	 * 异步接收数据包，返回值见 ERecvStatus。
 	 */
-	int SyncRecvUdpPacket(
-		OUT	PSOCKADDR_IN _remote_addr_ptr,
-		OUT	PBYTE _packet_buffer,
-		const DWORD _size_in_bytes
-	);
-
-	/* 
-	 * 异步接收 UDP 数据包，返回值见 ERecvStatus。
-	 */
-	ERecvStatus RecvUdpPacket(void);
+	ERecvStatus RecvPacket(void);
 
 	/*
-	 * 发送 UDP 数据包。
+	 * 发送数据包。
 	 * _remote_addr_str 远程主机地址，可以是 IP 地址，如 "192.168.1.121"，也可以是
 	 * 域名，如 "www.baidu.com"。当值为空（NULL）是发送局域网广播消息；
 	 * _port 远程主机端口号；
@@ -105,7 +114,7 @@ public:
 	 * _size_in_bytes 要发送的字节数；
 	 * 若成功则返回发送字节数，若失败则并返回 SOCKET_ERROR(-1)。
 	 */
-	int SendUdpPacket(
+	int SendPacket(
 		LPCTSTR _remote_addr_str,
 		WORD _port,
 		const BYTE* _packet_buffer,
