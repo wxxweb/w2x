@@ -17,9 +17,6 @@ W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(network)
 
 
-class ITinySocketListener;
-
-
 class W2X_NETWORK_API CTinySocket
 {
 public:
@@ -42,12 +39,11 @@ public:
 		kAsyncRecvComplete	= 1,	// 接收数据完成
 	};
 
-	typedef bool (CALLBACK *FPacketParser)(
-		ITinySocketListener* _listener_ptr,
-		const BYTE* _packet_ptr,
-		size_t _packet_bytes,
-		DWORD _remote_ip_addr
-	);
+	typedef bool (CALLBACK *FPacketDispatcher)(
+		DWORD _remote_ip_addr,
+		const BYTE* _packet_data_ptr,
+		WORD _data_bytes
+	); 
 
 public:
 	CTinySocket(void);
@@ -56,32 +52,6 @@ public:
 W2X_DISALLOW_COPY_AND_ASSIGN(CTinySocket)
 
 public:
-	/* 
-	 * 进程调用该函数初始化 WinSock DLL，若成功则返回 true, 否则返回 false。
-	 * 只被调用一次，不过重复调用不会有影响，内部已做处理，不会重复初始化。
-	 */
-	static bool InitWinSock(void);
-
-	/* 
-	 * 进程调用该函数释放 WinSock DLL，若成功则返回 true, 否则返回 false。
-	 */
-	static bool UninitWinSock(void);
-
-	/* 
-	 * 设置数据包解析器，数据包解析器用于将消息数据分拆出来。
-	 */
-	static bool SetPacketParser(FPacketParser _packet_parser_fn_ptr);
-
-	/* 
-	 * 注册消息侦听器，当收到侦听器指定的消息时将会传递给侦听器处理。
-	 */
-	static bool RegisterListener(ITinySocketListener* _listener_ptr);
-
-	/* 
-	 * 注销消息侦听器，不再接收消息通知。
-	 */
-	static bool UnregisterListener(ITinySocketListener* _listener_ptr);
-
 	/* 
 	 * 创建用于收发数据包的 Socket，并将本地 IP 地址绑定到 Socket。
 	 * _local_port 为本地端口号，如果值为 0 则自动分配 1024-5000 间端口号。
@@ -116,7 +86,7 @@ public:
 	 */
 	int SendPacket(
 		LPCTSTR _remote_addr_str,
-		WORD _port,
+		WORD _remote_port,
 		const BYTE* _packet_buffer,
 		DWORD _size_in_bytes
 	);
@@ -133,6 +103,8 @@ public:
 	 * 返回 true 表示启用，false 表示禁用。
 	 */
 	bool IsBroadcastEnable(void) const;
+
+	bool SetPacketDispatcher(FPacketDispatcher _dispatcher);
 
 private:
 	class CImpl;

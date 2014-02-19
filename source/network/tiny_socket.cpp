@@ -9,7 +9,6 @@
 #include "stdafx.h"
 #include "..\common\common.h"
 #include "tiny_socket.h"
-#include "interfaces_of_tiny_socket.h"
 #include "utility.h"
 
 
@@ -19,10 +18,9 @@ W2X_DEFINE_NAME_SPACE_BEGIN(network)
 
 class CTinySocket::CImpl
 {
-	/*
-	 * 存放消息监听器
-	 */
-	typedef std::list<ITinySocketListener*> Listeners;
+	enum {
+		MAX_MSG_BUF_SIZE = 1024,
+	};
 
 	/*
 	 * 该结构保存异步 Socket 的相关信息传递给回调函数，
@@ -42,15 +40,16 @@ W2X_DISALLOW_COPY_AND_ASSIGN(CImpl)
 W2X_IMPLEMENT_LOCKING(CImpl, CAutoLock)
 
 public:
+	/* 
+	 * 进程调用该函数初始化 WinSock DLL，若成功则返回 true, 否则返回 false。
+	 * 只被调用一次，不过重复调用不会有影响，内部已做处理，不会重复初始化。
+	 */
 	static bool InitWinSock(void);
 
-	static bool UninitWinSock(void);
-
-	static bool RegisterListener(ITinySocketListener* _listener_ptr);
-
-	static bool UnregisterListener(ITinySocketListener* _listener_ptr);
-
-	static bool SetPacketParser(CTinySocket::FPacketParser _packet_parser_fn_ptr);
+	/* 
+	 * 进程调用该函数释放 WinSock DLL，若成功则返回 true, 否则返回 false。
+	 */
+	static void UninitWinSock(void);
 
 	/*
 	 * 确保 WinSock DLL 被初始化。
@@ -63,8 +62,6 @@ public:
 
 	bool Destory(void);
 
-	ERecvStatus RecvPacket(void);
-
 	int SendPacket(
 		LPCTSTR _remote_addr_str,
 		WORD _remote_port,
@@ -72,22 +69,28 @@ public:
 		DWORD _size_in_bytes
 	);
 
-	bool EnableBroadcast(bool _is_enable);
+	ERecvStatus RecvPacket(void);
 
-	bool WaitRecvPacket(DWORD _timeout);
+	bool EnableBroadcast(bool _is_enable);
 
 	inline bool IsBroadcastEnable(void) const;
 
-	inline size_t SetRecvMsgBytes(size_t _bytes);
+	inline size_t SetRecvPacketBytes(size_t _bytes);
 
-	// 为接收到的消息设置结束符
-	inline bool SetRecvMsgEnd(void);
+	// 为接收到的数据包设置结束符
+	inline bool SetRecvPacketEnd(void);
 
 	// 将接收到的消息添加到消息队列中
-	inline bool AddToRecvMsgLoop(void);
+	inline bool AddToMsgLoop(void);
+
+	inline bool SetPacketDispatcher(FPacketDispatcher _dispatcher);
 
 private:
 	bool BindLocalAddress(WORD _local_port);
+
+	bool WaitRecvPacket(DWORD _timeout);
+
+	bool CreateRecvPacketThread(void);
 
 	/*
 	 * 线程函数，处理异步重叠 UDP 接收请求。
@@ -95,9 +98,9 @@ private:
 	static DWORD CALLBACK RecvPacketThread(PVOID _param);
 
 	/*
-	 * 处理接收到的消息。
+	 * 处理消息循环中的出队消息。
 	 */
-	static bool CALLBACK HandleRecvMsg(
+	static bool CALLBACK HandlePopPacket(
 		PVOID _handler_param,	// 处理器参数
 		LPCTSTR _msg,			// 消息缓存区（二进制数据）
 		size_t _bytes,			// 消息字节数
@@ -116,49 +119,55 @@ private:
 
 private:
 	static bool			 sm_is_win_sock_init;
-	static size_t		 sm_recv_msg_count;
-	static CMsgLoop		 sm_recv_msg_loop;
-	static Listeners	 sm_listeners;
-	static FPacketParser sm_packet_parser_fn_ptr;
 
 	bool		m_is_udp;
 	bool		m_is_broadcast_enable;
 	SOCKET		m_local_socket;
 	SOCKADDR_IN	m_remote_sock_addr;
-	CHAR		m_recv_msg_buffer[MAX_UDP_MSG_SIZE];
-	size_t		m_recv_msg_bytes;
+	CHAR		m_msg_buffer[MAX_MSG_BUF_SIZE];
+	size_t		m_msg_bytes;
 	SocketInfo	m_socket_info;
-	HANDLE		m_recv_thread_handle;
+	size_t		m_packet_count;
+	CMsgLoop	m_packet_loop;
+	HANDLE		m_recv_thread_handle; 
 	HANDLE		m_recv_thread_exit_event;
-	 
+
+	FPacketDispatcher m_packet_dispatcher;
 };
 
 W2X_IMPLEMENT_LOCKING_CLASS(CTinySocket::CImpl, CAutoLock)
 
 
-bool	    CTinySocket::CImpl::sm_is_win_sock_init = false;
-size_t	    CTinySocket::CImpl::sm_recv_msg_count = 0;
-CMsgLoop    CTinySocket::CImpl::sm_recv_msg_loop;
-CTinySocket::CImpl::Listeners CTinySocket::CImpl::sm_listeners;
-CTinySocket::FPacketParser CTinySocket::CImpl::sm_packet_parser_fn_ptr = NULL;
+bool CTinySocket::CImpl::sm_is_win_sock_init = false;
+
 
 CTinySocket::CImpl::CImpl(void)
 	: m_local_socket(INVALID_SOCKET)
-	, m_recv_msg_bytes(0)
+	, m_msg_bytes(0)
 	, m_recv_thread_handle(NULL)
 	, m_recv_thread_exit_event(NULL)
 	, m_is_broadcast_enable(false)
 	, m_is_udp(false)
+	, m_packet_dispatcher(NULL)
 {
 	memset(&m_remote_sock_addr, 0, sizeof(m_remote_sock_addr));
 	memset(&m_socket_info, 0, sizeof(m_socket_info));
-	memset(&m_recv_msg_buffer, 0, sizeof(m_recv_msg_buffer));
+	memset(&m_msg_buffer, 0, sizeof(m_msg_buffer));
 }
 
 
 CTinySocket::CImpl::~CImpl(void)
 {
-	::WSASetEvent(m_socket_info.wsa_overlapped.hEvent);
+	if (NULL != m_recv_thread_exit_event)
+	{
+		::WSASetEvent(m_recv_thread_exit_event);
+	}
+	IF_FALSE_ASSERT (m_socket_info.wsa_overlapped.hEvent == m_recv_thread_exit_event)
+	{
+		::WSASetEvent(m_socket_info.wsa_overlapped.hEvent);
+	}
+	m_socket_info.wsa_overlapped.hEvent = m_recv_thread_exit_event = NULL;
+	
 	if (WAIT_TIMEOUT == ::WaitForSingleObject(m_recv_thread_handle, 5000))
 	{
 		::TerminateThread(m_recv_thread_handle, 0);
@@ -170,7 +179,7 @@ CTinySocket::CImpl::~CImpl(void)
 
 bool CTinySocket::CImpl::InitWinSock(void)
 {
-	CAutoLock class_lock(NULL);
+	CAutoLock class_lock(NULL, __FUNCTION__);
 
 	if (true == sm_is_win_sock_init)
 	{
@@ -198,19 +207,17 @@ bool CTinySocket::CImpl::InitWinSock(void)
 	sm_is_win_sock_init = true;
 	w2x::log::LogInfo(TEXT("Initialize WinSock DLL 2.2 successed."));
 
-	sm_recv_msg_loop.StartLoopThread(CImpl::HandleRecvMsg, NULL);
+	::atexit(CImpl::UninitWinSock);
 
 	return true;
 }
 
 
-bool CTinySocket::CImpl::UninitWinSock(void)
+void CTinySocket::CImpl::UninitWinSock(void)
 {
-	CAutoLock class_lock(NULL);
+	CAutoLock class_lock(NULL, __FUNCTION__);
 
-	IF_FALSE_ASSERT_RETURN_VALUE (true == sm_is_win_sock_init, false);
-
-	sm_recv_msg_loop.StopLoopThread();
+	IF_FALSE_ASSERT_RETURN(true == sm_is_win_sock_init);
 
 	w2x::log::LogInfo(TEXT("Uninitializing WinSock DLL 2.2 ..."));
 
@@ -224,13 +231,12 @@ bool CTinySocket::CImpl::UninitWinSock(void)
 		w2x::log::LogError(
 			TEXT("Uninitialize WinSock DLL 2.2 faild. %d - %s."), 
 			error_code, error_msg);
-		return false;
+		return;
 	}
 
 	sm_is_win_sock_init = false;
 
 	w2x::log::LogInfo(TEXT("Uninitialize WinSock DLL 2.2 successed."));
-	return true;
 }
 
 
@@ -245,60 +251,9 @@ inline void CTinySocket::CImpl::EnsureWinSock(void)
 }
 
 
-bool CTinySocket::CImpl::RegisterListener(ITinySocketListener* _listener_ptr)
-{
-	CAutoLock class_lock(NULL);
-
-	IF_NULL_ASSERT_RETURN_VALUE(_listener_ptr, false);
-
-	for (CImpl::Listeners::iterator it = sm_listeners.begin();
-		sm_listeners.end() != it; ++it)
-	{
-		IF_FALSE_ASSERT_RETURN_VALUE(_listener_ptr != *it, false);
-	}
-
-	sm_listeners.push_back(_listener_ptr);
-
-	return true;
-}
-
-
-bool CTinySocket::CImpl::UnregisterListener(ITinySocketListener* _listener_ptr)
-{
-	CAutoLock class_lock(NULL);
-
-	IF_NULL_ASSERT_RETURN_VALUE(_listener_ptr, false);
-
-	for (CImpl::Listeners::iterator it = sm_listeners.begin();
-		sm_listeners.end() != it; ++it)
-	{
-		if (_listener_ptr == *it)
-		{
-			sm_listeners.erase(it);
-			return true;
-		}
-	}
-
-	ASSERT(false);
-	return false;
-}
-
-
-bool CTinySocket::CImpl::SetPacketParser(
-	CTinySocket::FPacketParser _packet_parser_fn_ptr)
-{
-	IF_NULL_ASSERT_RETURN_VALUE(_packet_parser_fn_ptr, false);
-
-	CAutoLock class_lock(NULL);
-
-	sm_packet_parser_fn_ptr = _packet_parser_fn_ptr;
-	return true;
-}
-
-
 bool CTinySocket::CImpl::Create(WORD _local_port, bool _is_udp)
 {
-	CAutoLock this_lock(this);
+	CAutoLock this_lock(this, __FUNCTION__);
 
 	this->EnsureWinSock();
 
@@ -328,25 +283,17 @@ bool CTinySocket::CImpl::Create(WORD _local_port, bool _is_udp)
 		return false;
 	}
 
-	// 创建异步重叠接收数据线程
-	m_recv_thread_handle = ::CreateThread(
-		NULL, 0, CImpl::RecvPacketThread, 
-		reinterpret_cast<LPVOID>(this), 0, NULL);
-	IF_NULL_ASSERT (m_recv_thread_handle)
+	if (false == m_packet_loop.StartLoopThread(CImpl::HandlePopPacket, this))
 	{
-		TCHAR error_msg[MAX_PATH] = TEXT("");
-		const DWORD error_code = ::GetLastError();
-		w2x::log::FormatError(error_msg, MAX_PATH, error_code);
-		w2x::log::LogError(TEXT("Create UDP socket receive thread faild. %d - %s."), 
-			error_code, error_msg);
-
-		this->Destory();
-
 		return false;
 	}
 
-	m_recv_thread_exit_event = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-
+	// 创建异步重叠接收数据线程
+	if (false == this->CreateRecvPacketThread())
+	{
+		return false;
+	}
+	
 	return true;
 }
 
@@ -359,9 +306,9 @@ inline bool CTinySocket::CImpl::IsValid(void) const
 
 bool CTinySocket::CImpl::Destory(void)
 {
-	CAutoLock this_lock(this);
+	CAutoLock this_lock(this, __FUNCTION__);
 
-	if (INVALID_SOCKET == m_local_socket)
+	if (INVALID_SOCKET == m_local_socket || false == sm_is_win_sock_init)
 	{
 		return false;
 	}
@@ -374,7 +321,7 @@ bool CTinySocket::CImpl::Destory(void)
 
 	// 停止收发数据
 
-	IF_FALSE_ASSERT (SOCKET_ERROR != ::shutdown(m_local_socket, SD_BOTH))
+	if (SOCKET_ERROR == ::shutdown(m_local_socket, SD_BOTH))
 	{
 		is_successed = false;
 
@@ -388,7 +335,7 @@ bool CTinySocket::CImpl::Destory(void)
 
 	// 关闭Socket
 
-	IF_FALSE_ASSERT (SOCKET_ERROR != ::closesocket(m_local_socket))
+	if (SOCKET_ERROR == ::closesocket(m_local_socket))
 	{
 		is_successed = false;
 
@@ -406,13 +353,15 @@ bool CTinySocket::CImpl::Destory(void)
 		TEXT("Destory socket(%d) %s."), m_local_socket, 
 		(true == is_successed ? TEXT("successed") : TEXT("falid")));
 
+	m_packet_loop.StopLoopThread();
+
 	return is_successed;
 }
 
 
 bool CTinySocket::CImpl::BindLocalAddress(WORD _port)
 {
-	CAutoLock this_lock(this);
+	CAutoLock this_lock(this, __FUNCTION__);
 
 	IF_FALSE_ASSERT_RETURN_VALUE(INVALID_SOCKET != m_local_socket, false);
 
@@ -444,7 +393,7 @@ bool CTinySocket::CImpl::BindLocalAddress(WORD _port)
 	}
 
 	w2x::log::LogInfo(
-		TEXT("Bind a local port(%s) with the socket successed."), _port);
+		TEXT("Bind a local port(%d) with the socket successed."), _port);
 
 	return true;
 }
@@ -455,18 +404,31 @@ CTinySocket::ERecvStatus CTinySocket::CImpl::RecvPacket(void)
 	// 由于后面有个等待时间，如果这里直接用 CAutoLock this_lock(this) 会死锁
 	this->LockThis();
 
-	IF_FALSE_ASSERT_RETURN_VALUE(INVALID_SOCKET != m_local_socket, kAsyncRecvError);
+	IF_FALSE_ASSERT (INVALID_SOCKET != m_local_socket)
+	{
+		// 由于后面有个等待时间，如果这里直接用 CAutoLock this_lock(this) 会死锁
+		this->UnlockThis();
+
+		return kAsyncRecvError;
+	}
+
+	if (NULL == m_recv_thread_exit_event)
+	{
+		m_recv_thread_exit_event = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+	}
 
 	memset(&m_remote_sock_addr, 0, sizeof(m_remote_sock_addr));
 	memset(&m_socket_info, 0, sizeof(SocketInfo)); // 重叠结构，必须置空，否则会出错
 	m_socket_info.this_ptr = this;
+	m_socket_info.wsa_overlapped.hEvent = m_recv_thread_exit_event;
 
 	int	remote_addr_size = sizeof(SOCKADDR);	// 远程主机地址结构字节数
 	DWORD behavior_flags = 0;					// WSARecvFrom 的 Flags 参数
 	WSABUF wsa_buf = {0};
-	wsa_buf.buf = m_recv_msg_buffer;
-	wsa_buf.len = sizeof(m_recv_msg_buffer);
-	m_recv_msg_bytes = 0;
+	memset(m_msg_buffer, 0, sizeof(m_msg_buffer));
+	wsa_buf.buf = m_msg_buffer;
+	wsa_buf.len = sizeof(m_msg_buffer);
+	m_msg_bytes = 0;
 
 	const int recv_ret_val = ::WSARecvFrom(
 		m_local_socket, &wsa_buf, 1, NULL, &behavior_flags, 
@@ -489,7 +451,7 @@ CTinySocket::ERecvStatus CTinySocket::CImpl::RecvPacket(void)
 			this->Destory();
 
 			// 由于后面有个等待时间，如果这里直接用 CAutoLock this_lock(this) 会死锁
-			m_cs_of_this_by_CAutoLock.Leave();
+			this->UnlockThis();
 
 			return kAsyncRecvError;
 		}
@@ -513,7 +475,7 @@ bool CTinySocket::CImpl::WaitRecvPacket(DWORD _timeout)
 	{
 		// 等待数据接收完成事件
 		const DWORD wait_result = ::WSAWaitForMultipleEvents(1, 
-			&m_recv_thread_exit_event, FALSE, _timeout, TRUE);
+			&m_socket_info.wsa_overlapped.hEvent, FALSE, _timeout, TRUE);
 
 		if (WSA_WAIT_IO_COMPLETION == wait_result)
 		{
@@ -530,7 +492,7 @@ bool CTinySocket::CImpl::WaitRecvPacket(DWORD _timeout)
 
 			const DWORD error_code = ::WSAGetLastError();
 
-			ASSERT(false);
+			//ASSERT(false);
 
 			TCHAR error_msg[MAX_PATH] = TEXT("");
 			w2x::log::FormatError(error_msg, MAX_PATH, error_code);
@@ -546,6 +508,28 @@ bool CTinySocket::CImpl::WaitRecvPacket(DWORD _timeout)
 }
 
 
+bool CTinySocket::CImpl::CreateRecvPacketThread(void)
+{
+	m_recv_thread_handle = ::CreateThread(
+		NULL, 0, CImpl::RecvPacketThread, 
+		reinterpret_cast<LPVOID>(this), 0, NULL);
+	IF_NULL_ASSERT (m_recv_thread_handle)
+	{
+		TCHAR error_msg[MAX_PATH] = TEXT("");
+		const DWORD error_code = ::GetLastError();
+		w2x::log::FormatError(error_msg, MAX_PATH, error_code);
+		w2x::log::LogError(TEXT("Create UDP socket receive thread faild. %d - %s."), 
+			error_code, error_msg);
+
+		this->Destory();
+
+		return false;
+	}
+
+	return true;
+}
+
+
 int CTinySocket::CImpl::SendPacket(
 	LPCTSTR _remote_addr_str,
 	WORD _remote_port,
@@ -553,12 +537,12 @@ int CTinySocket::CImpl::SendPacket(
 	DWORD _size_in_bytes
 	)
 {
-	CAutoLock this_lock(this);
+	CAutoLock this_lock(this, __FUNCTION__);
 	
 	IF_NULL_ASSERT_RETURN_VALUE(_packet_buffer, SOCKET_ERROR);
 	IF_FALSE_ASSERT_RETURN_VALUE(INVALID_SOCKET != m_local_socket, SOCKET_ERROR);
 
-	IF_FALSE_ASSERT (false == m_is_udp && NULL == _remote_addr_str)
+	IF_FALSE_ASSERT (!(false == m_is_udp && NULL == _remote_addr_str))
 	{
 		return SOCKET_ERROR;
 	}
@@ -572,14 +556,17 @@ int CTinySocket::CImpl::SendPacket(
 		{
 			return false;
 		}
+		IF_FALSE_ASSERT_RETURN_VALUE(0 != ip_address, SOCKET_ERROR);
 	}
 	else if (false == internal::ParseHostToIpAddress(ip_address , _remote_addr_str))
 	{
 		return false;
 	}
 
-	if (true == m_is_udp)
+	static bool s_pre_broadcast_state = is_broadcast;
+	if (true == m_is_udp && (true == is_broadcast || is_broadcast != s_pre_broadcast_state))
 	{
+		s_pre_broadcast_state = is_broadcast;
 		this->EnableBroadcast(is_broadcast);
 	}
 
@@ -598,9 +585,9 @@ int CTinySocket::CImpl::SendPacket(
 		reinterpret_cast<PSOCKADDR>(&sock_addr_in), 
 		sizeof(SOCKADDR), NULL, NULL);
 
-	const DWORD error_code = ::WSAGetLastError();
 	IF_FALSE_ASSERT (SOCKET_ERROR != sent_result)
 	{
+		const DWORD error_code = ::WSAGetLastError();
 		TCHAR error_msg[MAX_PATH] = TEXT("");
 		w2x::log::FormatError(error_msg, MAX_PATH, error_code);
 		w2x::log::LogError(
@@ -616,7 +603,7 @@ int CTinySocket::CImpl::SendPacket(
 
 bool CTinySocket::CImpl::EnableBroadcast(bool _is_enable)
 {
-	CAutoLock this_lock(this);
+	CAutoLock this_lock(this, __FUNCTION__);
 
 	if (_is_enable == m_is_broadcast_enable)
 	{
@@ -654,48 +641,57 @@ inline bool CTinySocket::CImpl::IsBroadcastEnable(void) const
 }
 
 
-inline size_t CTinySocket::CImpl::SetRecvMsgBytes(size_t _bytes)
+inline size_t CTinySocket::CImpl::SetRecvPacketBytes(size_t _bytes)
 {
-	CAutoLock this_lock(this);
+	CAutoLock this_lock(this, __FUNCTION__);
 
-	return m_recv_msg_bytes = _bytes;
+	return m_msg_bytes = _bytes;
 }
 
 
-inline bool CTinySocket::CImpl::SetRecvMsgEnd(void)
+inline bool CTinySocket::CImpl::SetRecvPacketEnd(void)
 {
-	CAutoLock this_lock(this);
+	CAutoLock this_lock(this, __FUNCTION__);
 
-	IF_FALSE_ASSERT_RETURN_VALUE(0 < m_recv_msg_bytes, false);
+	IF_FALSE_ASSERT_RETURN_VALUE(0 < m_msg_bytes, false);
 
 	// 填充 sizeof(TCHAR) 个字节的结束符 0
 
-	const size_t buffer_bytes = sizeof(m_recv_msg_buffer);
-	const size_t buffer_end_pos 
-		= buffer_bytes - sizeof(TCHAR) > m_recv_msg_bytes
-		? m_recv_msg_bytes : buffer_bytes - sizeof(TCHAR);
-	m_recv_msg_buffer[buffer_end_pos] = 0;
-	m_recv_msg_buffer[buffer_end_pos + 1] = 0;
+	const size_t buffer_bytes = sizeof(m_msg_buffer);
+	const size_t packet_end_pos 
+		= buffer_bytes - sizeof(TCHAR) > m_msg_bytes
+		? m_msg_bytes : buffer_bytes - sizeof(TCHAR);
+	m_msg_buffer[packet_end_pos] = 0;
+	m_msg_buffer[packet_end_pos + 1] = 0;
 
 	return true;
 }
 
 
-inline bool CTinySocket::CImpl::AddToRecvMsgLoop(void)
+inline bool CTinySocket::CImpl::AddToMsgLoop(void)
 {
-	CAutoLock this_lock(this);
+	CAutoLock this_lock(this, __FUNCTION__);
 
-	static size_t s_prev_recv_msg_count = sm_recv_msg_count++;
+	static size_t s_prev_packet_count = m_packet_count++;
 
-	IF_FALSE_ASSERT_RETURN_VALUE(s_prev_recv_msg_count < sm_recv_msg_count, false);
-	s_prev_recv_msg_count = sm_recv_msg_count++;
+	IF_FALSE_ASSERT_RETURN_VALUE(s_prev_packet_count < m_packet_count, false);
+	s_prev_packet_count = m_packet_count++;
 
-	DWORD remote_ip_addr = m_remote_sock_addr.sin_addr.s_addr;
-	return sm_recv_msg_loop.AddMsg(
-		reinterpret_cast<LPCTSTR>(m_recv_msg_buffer), m_recv_msg_bytes, 
-		reinterpret_cast<PVOID>(remote_ip_addr));
+	return m_packet_loop.AddMsg(
+		reinterpret_cast<LPCTSTR>(m_msg_buffer), m_msg_bytes, 
+		reinterpret_cast<PVOID>(m_remote_sock_addr.sin_addr.s_addr));
 }
 
+inline bool CTinySocket::CImpl::SetPacketDispatcher(
+	FPacketDispatcher _dispatcher
+	)
+{
+	IF_NULL_ASSERT_RETURN_VALUE(_dispatcher, false);
+	CAutoLock this_lock(this, __FUNCTION__);
+
+	m_packet_dispatcher = _dispatcher;
+	return true;
+}
 
 DWORD CALLBACK CTinySocket::CImpl::RecvPacketThread(PVOID _param)
 {
@@ -708,45 +704,25 @@ DWORD CALLBACK CTinySocket::CImpl::RecvPacketThread(PVOID _param)
 }
 
 
-bool CALLBACK CTinySocket::CImpl::HandleRecvMsg(
+bool CALLBACK CTinySocket::CImpl::HandlePopPacket(
 	PVOID _handler_param,
-	LPCTSTR _msg,
-	size_t _bytes,
-	PVOID _msg_param
+	LPCTSTR _packet_data_ptr,
+	size_t _data_bytes,
+	PVOID _packet_param
 	)
 {
-	CAutoLock class_lock(NULL);
+	CAutoLock class_lock(NULL, __FUNCTION__);
 
-	IF_NULL_ASSERT_RETURN_VALUE(_msg, false);
-	IF_NULL_ASSERT_RETURN_VALUE(_msg_param, false);
+	IF_NULL_ASSERT_RETURN_VALUE(_handler_param, false);
+	IF_NULL_ASSERT_RETURN_VALUE(_packet_data_ptr, false);
+	IF_NULL_ASSERT_RETURN_VALUE(_packet_param, false);
 
-	const DWORD remote_ip_addr = reinterpret_cast<DWORD>(_msg_param);
+	CImpl* const this_ptr = reinterpret_cast<CImpl*>(_handler_param);
+	IF_NULL_ASSERT_RETURN_VALUE(this_ptr->m_packet_dispatcher, false);
 
-	for (CImpl::Listeners::iterator it = sm_listeners.begin();
-		sm_listeners.end() != it; ++it)
-	{
-		ITinySocketListener* listener_ptr = *it;
-		IF_NULL_ASSERT (listener_ptr)
-		{
-			continue;
-		}
-
-		listener_ptr->HandleReceivedMessage(remote_ip_addr, 1, 
-			reinterpret_cast<const BYTE*>(_msg), _bytes);
-
-		continue;
-
-		IF_NULL_ASSERT (sm_packet_parser_fn_ptr)
-		{
-			continue;
-		}
-
-		IF_FALSE_ASSERT (true == sm_packet_parser_fn_ptr(listener_ptr, 
-			reinterpret_cast<const BYTE*>(_msg), _bytes, remote_ip_addr))
-		{
-			continue;
-		}
-	}
+	const DWORD remote_ip_addr = reinterpret_cast<DWORD>(_packet_param);
+	this_ptr->m_packet_dispatcher(remote_ip_addr, 
+		reinterpret_cast<const BYTE*>(_packet_data_ptr), _data_bytes);
 
 	return true;
 }
@@ -771,7 +747,7 @@ void CALLBACK CTinySocket::CImpl::HandleRecvCompletion(
 	CImpl* const this_ptr = socket_info_ptr->this_ptr;
 
 	// 如果与服务器连接中断，断开与远程服务器连接，尝试再次连接
-	if (NO_ERROR != _error_code || 0 == _bytes_transferred)
+	IF_FALSE_ASSERT (NO_ERROR == _error_code && 0 < _bytes_transferred)
 	{
 		TCHAR error_msg[MAX_PATH] = TEXT("");
 		w2x::log::FormatError(error_msg, MAX_PATH, _error_code);
@@ -784,10 +760,10 @@ void CALLBACK CTinySocket::CImpl::HandleRecvCompletion(
 		return;
 	}
 
-	this_ptr->SetRecvMsgBytes(_bytes_transferred);
-	this_ptr->SetRecvMsgEnd();
-	this_ptr->AddToRecvMsgLoop();
-	this_ptr->RecvPacket(); // 再次投递接收数据请求
+	this_ptr->SetRecvPacketBytes(_bytes_transferred);
+	this_ptr->SetRecvPacketEnd();
+	this_ptr->AddToMsgLoop();
+	this_ptr->CreateRecvPacketThread();	// 再次投递接收数据请求
 }
 
 
@@ -801,30 +777,6 @@ CTinySocket::CTinySocket(void)
 CTinySocket::~CTinySocket(void)
 {
 	SAFE_DELETE(const_cast<CImpl*>(m_impl_ptr));
-}
-
-
-bool CTinySocket::InitWinSock(void)
-{
-	return CImpl::InitWinSock();
-}
-
-
-bool CTinySocket::UninitWinSock(void)
-{
-	return CImpl::UninitWinSock();
-}
-
-
-bool CTinySocket::RegisterListener(ITinySocketListener* _listener_ptr)
-{
-	return CImpl::RegisterListener(_listener_ptr);
-}
-
-
-bool CTinySocket::UnregisterListener(ITinySocketListener* _listener_ptr)
-{
-	return CImpl::UnregisterListener(_listener_ptr);
 }
 
 
@@ -873,6 +825,12 @@ bool CTinySocket::EnableBroadcast(bool _is_enable)
 bool CTinySocket::IsBroadcastEnable(void) const
 {
 	return m_impl_ptr->IsBroadcastEnable();
+}
+
+
+bool CTinySocket::SetPacketDispatcher(FPacketDispatcher _dispatcher)
+{
+	return m_impl_ptr->SetPacketDispatcher(_dispatcher);
 }
 
 

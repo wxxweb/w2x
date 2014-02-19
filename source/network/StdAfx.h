@@ -17,6 +17,7 @@
 #include <Ws2tcpip.h>
 
 // C++库函数
+#include <map>
 #include <list>
 
 // C 运行时头文件
