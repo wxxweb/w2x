@@ -9,7 +9,7 @@
 #include "stdafx.h"
 #include "lan_neighbor.h"
 #include "utility.h"
-#include "tiny_socket.h"
+#include "tiny_socket_message.h"
 
 /*
  * 用于验证双方身份的 GUID，由双发事先约定好。 
@@ -171,23 +171,6 @@ CLanNeighbor::~CLanNeighbor(void)
 	SAFE_DELETE(const_cast<CImpl*>(m_impl_ptr));
 }
 
-bool CLanNeighbor::IsMessageNeedToHandle(UINT _msg_id)
-{
-	return 1 == _msg_id;
-}
-
-void CLanNeighbor::HandleMessage(
-	DWORD _remote_ip_addr,
-	const MsgHeader& _msg_header_ref,
-	const BYTE* _msg_data_ptr,
-	WORD _data_bytes
-	)
-{
-	if (NULL == _msg_data_ptr)
-	{
-		return;
-	}
-}
 
 bool CLanNeighbor::CImpl::SayHello(WORD _remote_port)
 {

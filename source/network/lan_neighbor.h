@@ -14,30 +14,19 @@
 #define __W2X_NETWORK_LAN_NEIGHBOR_H__
 
 #include "exports.h"
-#include "interfaces_of_tiny_socket.h"
 #include "..\common\macros.h"
 
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(network)
 
 
-class W2X_NETWORK_API CLanNeighbor: public IMessageListener
+class W2X_NETWORK_API CLanNeighbor
 {
 public:
 	CLanNeighbor(void);
 	virtual ~CLanNeighbor(void);
 
 W2X_DISALLOW_COPY_AND_ASSIGN(CLanNeighbor)
-
-public:
-	virtual bool IsMessageNeedToHandle(UINT _msg_id);
-
-	virtual void HandleMessage(
-		DWORD _remote_ip_addr,
-		const MsgHeader& _msg_header_ref,
-		const BYTE* _msg_data_ptr,
-		WORD _data_bytes
-	);
 
 public:
 	bool SayHello(WORD _remote_port);

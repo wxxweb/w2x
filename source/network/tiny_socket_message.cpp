@@ -7,7 +7,7 @@
  ******************************************************************************/
 
 #include "stdafx.h"
-#include "interfaces_of_tiny_socket.h"
+#include "tiny_socket_message.h"
 #include "tiny_socket.h"
 #include "utility.h"
 #include "..\common\common.h"

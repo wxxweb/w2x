@@ -1,13 +1,13 @@
 /*******************************************************************************
- * 文件：	interfacess_of_tiny_socket.h
- * 描述：	定义 CTinySocket 的几个接口类，如消息接口、消息分发器接口、消息监听器接口。
+ * 文件：	tiny_socket_message.h
+ * 描述：	定义 CTinySocket 消息处理的几个接口类，如消息基类接口、消息监听器接口。
  * 邮箱：	wxxweb@gmail.com
  * 作者：	wu.xiongxing
  * 时间：	2014-02-08
  ******************************************************************************/
 
-#ifndef __W2X_NETWORK_INTERFACES_OF_TINY_SOCKET_H__
-#define __W2X_NETWORK_INTERFACES_OF_TINY_SOCKET_H__
+#ifndef __W2X_NETWORK_TINY_SOCKET_MESSAGE_H__
+#define __W2X_NETWORK_TINY_SOCKET_MESSAGE_H__
 
 #include "exports.h"
 #include "..\common\macros.h"
@@ -26,12 +26,11 @@ struct MsgHeader {
 
 
 /*
- * CTinySocket 消息侦听器接口类 IMessageListener。当它的子类对象被构造时，将会自动向
- * CTinySocket 进行注册（调用函数 CTinySocket::RegisterListener()），而当被析构时，将
- * 会自动进行注销（调用函数 CTinySocket::UnregisterListener()）。CTinySocket 对象
- * 接收到消息后，会把消息放到队列中，出队后将其封装成 ITinySocketMessage 子类对象，接着调
- * 用侦听器函数 IsMessageNeedToHandle() 检查该消息是否需要处理，若需处理，则调用侦听器函
- * 数 HandleReceivedMessage() 传递给侦听器。
+ * ITinySocketMessage 的消息侦听器接口类 IMessageListener。当它的子类对象被构造时，
+ * 将会自动添加到 ITinySocketMessage 的侦听器容器中（调用函数 RegisterListener()），
+ * 而当被析构时，将会从侦听器容器中删除（调用函数 UnregisterListener()）。当接收到消息
+ * 后，侦听器函数 IsMessageNeedToHandle() 会被调用，用于检查该消息是否需要处理，若需
+ * 处理，则调用侦听器函数 HandleMessage() 将消息传递给侦听器进行处理。
  */
 class W2X_NETWORK_API IMessageListener
 {
@@ -155,4 +154,4 @@ W2X_DEFINE_NAME_SPACE_END(network)
 W2X_NAME_SPACE_END
 
 
-#endif /* __W2X_NETWORK_INTERFACES_OF_TINY_SOCKET_H__ */
+#endif /* __W2X_NETWORK_TINY_SOCKET_MESSAGE_H__ */
