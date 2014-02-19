@@ -85,46 +85,44 @@ W2X_NETWORK_API bool ParseHostToIpAddress(
 W2X_NETWORK_API bool GetBroadcastIpAddress(OUT DWORD& _ip_address)
 {
 	bool is_alloc_enough = false;
-	PMIB_IPADDRTABLE _ip_addr_table_ptr = NULL;
-	DWORD _ip_addr_table_size = sizeof(MIB_IPADDRTABLE);
-	DWORD	dwIPAddr;				// IP地址
-	DWORD	dwMask;					// 子网掩码
+	PMIB_IPADDRTABLE ip_addr_table_ptr = NULL;
+	DWORD ip_addr_table_size = sizeof(MIB_IPADDRTABLE);
 
 	// 最多两次尝试获取IP地址表（如果多张网卡需要重新分配内存）
 	for (size_t i = 0; i < 2 && false == is_alloc_enough; ++i)
 	{
 		// 为IP地址表分配内存
-		_ip_addr_table_ptr = reinterpret_cast<MIB_IPADDRTABLE*>(
-			::GlobalAlloc(GMEM_FIXED, _ip_addr_table_size));
+		ip_addr_table_ptr = reinterpret_cast<MIB_IPADDRTABLE*>(
+			::GlobalAlloc(GMEM_FIXED, ip_addr_table_size));
 
-		IF_NULL_ASSERT (_ip_addr_table_ptr)
+		IF_NULL_ASSERT (ip_addr_table_ptr)
 		{	
 			// IP地址表结构内存分配失败
 			break;
 		}
 
 		const DWORD get_ret_val = ::GetIpAddrTable(
-			_ip_addr_table_ptr, &_ip_addr_table_size, 0);
+			ip_addr_table_ptr, &ip_addr_table_size, 0);
 
 		if (ERROR_INSUFFICIENT_BUFFER == get_ret_val)
 		{
 			// 分配给 IP 地址表结构的缓存不足，重新分配内存
 			is_alloc_enough = false;
-			::GlobalFree(_ip_addr_table_ptr);
-			_ip_addr_table_ptr = NULL;
+			::GlobalFree(ip_addr_table_ptr);
+			ip_addr_table_ptr = NULL;
 			continue;
 		}
 
 		IF_FALSE_ASSERT (NO_ERROR == get_ret_val)
 		{
 			// 获取 IP 地址表结构内存失败
-			::GlobalFree(_ip_addr_table_ptr);
-			_ip_addr_table_ptr = NULL;
+			::GlobalFree(ip_addr_table_ptr);
+			ip_addr_table_ptr = NULL;
 		}
 		break;
 	}
 
-	IF_NULL_ASSERT (_ip_addr_table_ptr)
+	IF_NULL_ASSERT (ip_addr_table_ptr)
 	{
 		const DWORD error_code = ::GetLastError();
 		TCHAR error_msg[MAX_PATH] = TEXT("");
@@ -137,13 +135,20 @@ W2X_NETWORK_API bool GetBroadcastIpAddress(OUT DWORD& _ip_address)
 	}
 
 	// IP地址表获取成功
+	for (DWORD i = 0; i < ip_addr_table_ptr->dwNumEntries; ++i)
+	{
+		DWORD local_ip_addr = ip_addr_table_ptr->table[i].dwAddr;	// 获取IP地址
 
-	dwIPAddr = _ip_addr_table_ptr->table[1].dwAddr;		// 获取IP地址
-	dwMask = _ip_addr_table_ptr->table[1].dwMask;		// 获得子网掩码
-	_ip_address = (dwIPAddr & dwMask) | ~dwMask;		// 计算广播地址
+		if (0x7F != ((ntohl(local_ip_addr) >> 24) & 0xFF))
+		{
+			DWORD net_mask = ip_addr_table_ptr->table[i].dwMask;		// 获得子网掩码
+			_ip_address = (local_ip_addr & net_mask) | ~net_mask;		// 计算广播地址
+			break;
+		}
+	}
 
-	::GlobalFree(_ip_addr_table_ptr);
-	_ip_addr_table_ptr = NULL;
+	::GlobalFree(ip_addr_table_ptr);
+	ip_addr_table_ptr = NULL;
 
 	return true;
 }
