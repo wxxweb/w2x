@@ -45,30 +45,42 @@ W2X_NAME_SPACE_END
 // 多线程同步访问时，保护类 class_parent 实例的一段代码。通过调用函数 LockClass() 和
 // UnlockClass() 来实现在多线程同步访问时，保护类 class_parent 本身的一段代码。
 //-----------------------------------------------------------------------------
-#define W2X_IMPLEMENT_LOCKING(class_parent, class_lock)                      \
-protected:                                                                   \
-	class class_lock {                                                       \
-	public:                                                                  \
-		explicit class_lock(class_parent* parent) : m_parent(parent) {       \
-			NULL != m_parent ? m_parent->LockThis()                          \
-				: class_parent::LockClass();                                 \
-        }                                                                    \
-		~class_lock(void) {                                                  \
-			NULL != m_parent ? m_parent->UnlockThis()                        \
-				: class_parent::UnlockClass();                               \
-        }                                                                    \
-	private:                                                                 \
-		class_parent* m_parent;                                              \
-	};                                                                       \
-	void LockThis() { m_cs_of_this_by_##class_lock.Enter(); }                \
-	void UnlockThis() { m_cs_of_this_by_##class_lock.Leave(); }              \
-	static void LockClass() { sm_cs_of_class_by_##class_lock.Enter(); }      \
-    static void UnlockClass() { sm_cs_of_class_by_##class_lock.Leave(); }    \
-private:                                                                     \
-	w2x::CCriticalSection m_cs_of_this_by_##class_lock;                      \
+#define W2X_IMPLEMENT_LOCKING(class_parent, class_lock)                        \
+protected:                                                                     \
+	class class_lock {                                                         \
+	public:                                                                    \
+		explicit class_lock(class_parent* _parent, const char* _name = 0)      \
+			: m_parent(_parent), m_name(_name) {                               \
+			W2X_OUT_PUT_DEBUG_STRING_A("[Lock");                               \
+            NULL != m_parent ? W2X_OUT_PUT_DEBUG_STRING_A("This] - ")          \
+			    : W2X_OUT_PUT_DEBUG_STRING_A("Class] - ");                     \
+		    W2X_OUT_PUT_DEBUG_STRING_A(m_name);                                \
+            W2X_OUT_PUT_DEBUG_STRING_A("\n");                                  \
+			NULL != m_parent ? m_parent->LockThis()                            \
+				: class_parent::LockClass();                                   \
+        }                                                                      \
+		~class_lock(void) {                                                    \
+		    W2X_OUT_PUT_DEBUG_STRING_A("[Unlock");                             \
+		    NULL != m_parent ? W2X_OUT_PUT_DEBUG_STRING_A("This] - ")          \
+		        : W2X_OUT_PUT_DEBUG_STRING_A("Class] - ");                     \
+		    W2X_OUT_PUT_DEBUG_STRING_A(m_name);                                \
+		    W2X_OUT_PUT_DEBUG_STRING_A("\n");                                  \
+			NULL != m_parent ? m_parent->UnlockThis()                          \
+				: class_parent::UnlockClass();                                 \
+        }                                                                      \
+	private:                                                                   \
+		class_parent* const m_parent;										   \
+		const char* m_name;												       \
+	};                                                                         \
+	void LockThis() { m_cs_of_this_by_##class_lock.Enter(); }                  \
+	void UnlockThis() { m_cs_of_this_by_##class_lock.Leave(); }                \
+	static void LockClass() { sm_cs_of_class_by_##class_lock.Enter(); }        \
+    static void UnlockClass() { sm_cs_of_class_by_##class_lock.Leave(); }      \
+private:                                                                       \
+	w2x::CCriticalSection m_cs_of_this_by_##class_lock;                        \
 	static w2x::CCriticalSection sm_cs_of_class_by_##class_lock;
 
-#define W2X_IMPLEMENT_LOCKING_CLASS(class_parent, class_lock)                \
+#define W2X_IMPLEMENT_LOCKING_CLASS(class_parent, class_lock)                  \
 	w2x::CCriticalSection class_parent::sm_cs_of_class_by_##class_lock;
 
 
