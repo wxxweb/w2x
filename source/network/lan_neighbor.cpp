@@ -27,19 +27,48 @@ W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(network)
 
 
-class CMsgNeighbor: public ITinySocketMessage
+class CMsgHello: public ITinySocketMessage
 {
 public:
-	CMsgNeighbor(void) {}
-	virtual ~CMsgNeighbor(void) {}
+	CMsgHello(void) : ITinySocketMessage(1, 2, 1) {}
+	virtual ~CMsgHello(void) {}
 
-W2X_DISALLOW_COPY_AND_ASSIGN(CMsgNeighbor)
+W2X_DISALLOW_COPY_AND_ASSIGN(CMsgHello)
 
 public:
-	virtual void Handle(DWORD _remote_ip_addr, const BYTE* _msg_data);
+	virtual void HandleEchoMsg(
+		DWORD _remote_ip_addr,
+		const MsgHeader& _msg_header,
+		const BYTE* _msg_data,
+		WORD _data_bytes
+	);
 };
 
-void CMsgNeighbor::Handle(DWORD _remote_ip_addr, const BYTE* _msg_data)
+
+class CMsgEchoHello: public ITinySocketMessage
+{
+public:
+	CMsgEchoHello(void) : ITinySocketMessage(2, 1, 1) {}
+	virtual ~CMsgEchoHello(void) {}
+
+	W2X_DISALLOW_COPY_AND_ASSIGN(CMsgEchoHello)
+
+public:
+	virtual void HandleEchoMsg(
+		DWORD _remote_ip_addr,
+		const MsgHeader& _msg_header,
+		const BYTE* _msg_data,
+		WORD _data_bytes
+	);
+};
+
+
+void CMsgHello::HandleEchoMsg(
+	DWORD _remote_ip_addr,
+	const MsgHeader& _msg_header,
+	const BYTE* _msg_data,
+	WORD _data_bytes
+	)
 {
 	// 接收到回应消息
 	if (0 != memcmp(&AUTHENTCATION_GUID, _msg_data, sizeof(GUID)))
@@ -52,22 +81,51 @@ void CMsgNeighbor::Handle(DWORD _remote_ip_addr, const BYTE* _msg_data)
 	SOCKADDR_IN	remote_sock_addr_in = {0};
 
 	internal::ParseIpAddressString(ip_addr_str_buf, 
-		sizeof(ip_addr_str_buf), _remote_ip_addr);
+		MAX_IP_ADDR_STR, _remote_ip_addr);
 
 	_tprintf_s(
-		TEXT("Received the ack msg.\nRemote host IP: %s\n"), 
+		TEXT("Received the echo msg.\nRemote host IP: %s\n"), 
 		ip_addr_str_buf);
+}
 
-	// 发送回应消息
-	const int sent_result = ITinySocketMessage::Send(
-		ip_addr_str_buf, 22222, (PBYTE)msg_data_buf, sizeof(GUID));
-	if (SOCKET_ERROR == sent_result)
+
+void CMsgEchoHello::HandleEchoMsg(
+	DWORD _remote_ip_addr,
+	const MsgHeader& _msg_header_ref,
+	const BYTE* _msg_data_ptr,
+	WORD _data_bytes
+	)
+{
+	// 接收到回应消息
+	if (0 != memcmp(&AUTHENTCATION_GUID, _msg_data_ptr, sizeof(GUID)))
 	{
-		_tprintf_s(TEXT("Send UDP packet faild.\n"));
 		return;
 	}
 
-	_tprintf_s(TEXT("Send response msg [%d Bytes].\n"), sent_result);
+	TCHAR ip_addr_str_buf[internal::MAX_IP_ADDR_STR] = TEXT("");
+	BYTE  msg_data_buf[SO_MAX_MSG_SIZE] = {0};
+	SOCKADDR_IN	remote_sock_addr_in = {0};
+
+	internal::ParseIpAddressString(ip_addr_str_buf, 
+		MAX_IP_ADDR_STR, _remote_ip_addr);
+
+	_tprintf_s(
+		TEXT("Received the hello msg.\nRemote host IP: %s\n"), 
+		ip_addr_str_buf);
+
+	// 发送回应消息
+
+	if (true == this->CreateSendMsg(_msg_data_ptr, sizeof(GUID)))
+	{
+		const int sent_bytes = this->SendMsg(ip_addr_str_buf, 22222, true);
+		if (SOCKET_ERROR == sent_bytes)
+		{
+			_tprintf_s(TEXT("Send UDP packet faild.\n"));
+			return;
+		}
+
+		_tprintf_s(TEXT("Send echo hello msg [%d Bytes].\n"), sent_bytes);
+	}
 }
 
 
@@ -84,17 +142,21 @@ public:
 	bool Listen(WORD _local_port);
 
 public:
-	CMsgNeighbor* msg_neighbor_ptr;
+	CMsgHello* m_msg_hello_ptr;
+	CMsgEchoHello* m_msg_echo_hello_ptr;
 };
 
 
 CLanNeighbor::CImpl::CImpl(void)
+	: m_msg_hello_ptr(NULL)
+	, m_msg_echo_hello_ptr(NULL)
 {}
 
 
 CLanNeighbor::CImpl::~CImpl(void)
 {
-	SAFE_DELETE(msg_neighbor_ptr);
+	SAFE_DELETE(m_msg_hello_ptr);
+	SAFE_DELETE(m_msg_echo_hello_ptr);
 }
 
 
@@ -106,7 +168,7 @@ CLanNeighbor::CLanNeighbor(void)
 
 CLanNeighbor::~CLanNeighbor(void)
 {
-
+	SAFE_DELETE(const_cast<CImpl*>(m_impl_ptr));
 }
 
 bool CLanNeighbor::IsMessageNeedToHandle(UINT _msg_id)
@@ -114,33 +176,36 @@ bool CLanNeighbor::IsMessageNeedToHandle(UINT _msg_id)
 	return 1 == _msg_id;
 }
 
-void CLanNeighbor::HandleReceivedMessage(
+void CLanNeighbor::HandleMessage(
 	DWORD _remote_ip_addr,
-	UINT _msg_id, 
-	const BYTE* _msg_data, 
+	const MsgHeader& _msg_header_ref,
+	const BYTE* _msg_data_ptr,
 	WORD _data_bytes
 	)
 {
-	if (NULL == _msg_data)
+	if (NULL == _msg_data_ptr)
 	{
 		return;
 	}
-
-	CMsgNeighbor msg_neighbor;
-	msg_neighbor.Handle(_remote_ip_addr, _msg_data);
 }
 
 bool CLanNeighbor::CImpl::SayHello(WORD _remote_port)
 {
-	ITinySocketMessage::InitializeUdp(0);
+	ITinySocketMessage::InitializeUdp(22222);
 
-	CMsgNeighbor msg_neighbor;
-	if (false == msg_neighbor.Create(1, (PBYTE)&AUTHENTCATION_GUID, sizeof(GUID)))
+	if (NULL == m_msg_hello_ptr)
+	{
+		m_msg_hello_ptr = new CMsgHello();
+		IF_NULL_ASSERT_RETURN_VALUE(m_msg_hello_ptr, false);
+	}
+	
+	if (false == m_msg_hello_ptr->CreateSendMsg(
+		reinterpret_cast<const BYTE*>(&AUTHENTCATION_GUID), sizeof(GUID)))
 	{
 		return false;
 	}
 
-	const int send_bytes = msg_neighbor.Send(NULL, _remote_port);
+	const int send_bytes = m_msg_hello_ptr->SendMsg(NULL, _remote_port, true);
 	if (SOCKET_ERROR == send_bytes)
 	{
 		_tprintf_s(TEXT("Send UDP packet faild.\n"));
@@ -160,6 +225,12 @@ bool CLanNeighbor::CImpl::Listen(WORD _local_port)
 	_tprintf_s(TEXT("Receiving UDP packet...\n"));
 
 	ITinySocketMessage::InitializeUdp(_local_port);
+
+	if (NULL == m_msg_echo_hello_ptr)
+	{
+		m_msg_echo_hello_ptr = new CMsgEchoHello();
+		IF_NULL_ASSERT_RETURN_VALUE(m_msg_echo_hello_ptr, false);
+	}
 
 	return true;
 }

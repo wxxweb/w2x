@@ -21,7 +21,7 @@ W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(network)
 
 
-class W2X_NETWORK_API CLanNeighbor: public ITinySocketListener
+class W2X_NETWORK_API CLanNeighbor: public IMessageListener
 {
 public:
 	CLanNeighbor(void);
@@ -32,10 +32,10 @@ W2X_DISALLOW_COPY_AND_ASSIGN(CLanNeighbor)
 public:
 	virtual bool IsMessageNeedToHandle(UINT _msg_id);
 
-	virtual void HandleReceivedMessage(
-		DWORD _remote_ip_addr, 
-		UINT _msg_id, 
-		const BYTE* _msg_data, 
+	virtual void HandleMessage(
+		DWORD _remote_ip_addr,
+		const MsgHeader& _msg_header_ref,
+		const BYTE* _msg_data_ptr,
 		WORD _data_bytes
 	);
 
