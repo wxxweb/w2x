@@ -1203,13 +1203,13 @@ W2X_COMMON_API size_t FormatError(
 		NULL,
 		_error_code,								// 错误代码
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),	// 默认语言
-		reinterpret_cast<LPTSTR>(&msg_buf_ptr), 0, NULL);
+		reinterpret_cast<LPTSTR>(&msg_buf_ptr), _size_in_words, NULL);
 
 	size_t max_words = _size_in_words - 1;
 	max_words = (chars_stored >= max_words) ? max_words : chars_stored;
 
 	_tcsncpy_s(_str_buffer, _size_in_words,  
-		reinterpret_cast<LPTSTR>(&msg_buf_ptr), max_words);
+		reinterpret_cast<LPTSTR>(msg_buf_ptr), max_words);
 
 	::LocalFree(msg_buf_ptr);	// 释放内存
 	msg_buf_ptr = NULL;
