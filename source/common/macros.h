@@ -170,4 +170,21 @@
 #endif
 
 
+#ifdef _DEBUG
+#  define W2X_OUT_PUT_DEBUG_STRING_A(str) \
+	(NULL != str && 0 != str[0] && (::OutputDebugStringA(str), true))
+#  define W2X_OUT_PUT_DEBUG_STRING_W(str) \
+	(NULL != str && 0 != str[0] && (::OutputDebugStringW(str), true))
+#else
+#  define W2X_OUT_PUT_DEBUG_STRING_A(str) 0
+#  define W2X_OUT_PUT_DEBUG_STRING_W(str) 0
+#endif
+
+#ifdef _UNICODE
+#  define W2X_OUT_PUT_DEBUG_STRING(str) W2X_OUT_PUT_DEBUG_STRING_W(str)
+#else
+#  define W2X_OUT_PUT_DEBUG_STRING(str) W2X_OUT_PUT_DEBUG_STRING_A(str)
+#endif
+
+
 #endif /* __W2X_COMMON_UTILITY_MACROS_H__ */
