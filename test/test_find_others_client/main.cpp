@@ -13,10 +13,11 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	SOCKADDR_IN sock_addr_in = {0};
 	w2x::network::CLanNeighbor lan_neighbor;
-	do {
-		lan_neighbor.SayHello(22222);
+	//do {
+		_tprintf_s(TEXT("Say Hello to everyone."));
+		lan_neighbor.SayHello(22221);
 		::Sleep(1000);
-	} while (true);
+	//} while (true);
 
 	system("pause");
 	return 0;
