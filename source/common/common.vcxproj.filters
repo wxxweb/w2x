@@ -51,6 +51,18 @@
     <ClInclude Include="encode.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="event_dispatcher.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="base.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ref_count.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ref_ptr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -63,9 +75,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="debug.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="thread.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="msg_loop.cpp">

@@ -94,13 +94,17 @@
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="base.h" />
     <ClInclude Include="command.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="encode.h" />
+    <ClInclude Include="event_dispatcher.h" />
     <ClInclude Include="exports.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="msg_loop.h" />
+    <ClInclude Include="ref_count.h" />
+    <ClInclude Include="ref_ptr.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="thread.h" />
@@ -128,7 +132,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="thread.cpp" />
     <ClCompile Include="macros.cpp" />
     <ClCompile Include="version.cpp" />
   </ItemGroup>
