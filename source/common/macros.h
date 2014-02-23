@@ -39,6 +39,16 @@
 #  define OUT
 #endif /* OUT */
 
+/* 指明一个函数是读取器 */
+#ifndef GETTER
+#  define GETTER
+#endif /* GETTER */
+
+/* 指明一个函数是设置器 */
+#ifndef SETTER
+#  define SETTER
+#endif /* SETTER */
+
 
 /* 指明一个变量没有被使用 */
 #ifndef UNUSED
@@ -171,19 +181,19 @@
 
 
 #ifdef _DEBUG
-#  define W2X_OUT_PUT_DEBUG_STRING_A(str) \
+#  define W2X_OUTPUT_DEBUG_STR_A(str) \
 	(NULL != str && 0 != str[0] && (::OutputDebugStringA(str), true))
-#  define W2X_OUT_PUT_DEBUG_STRING_W(str) \
+#  define W2X_OUTPUT_DEBUG_STR_W(str) \
 	(NULL != str && 0 != str[0] && (::OutputDebugStringW(str), true))
 #else
-#  define W2X_OUT_PUT_DEBUG_STRING_A(str) 0
-#  define W2X_OUT_PUT_DEBUG_STRING_W(str) 0
+#  define W2X_OUTPUT_DEBUG_STR_A(str) 0
+#  define W2X_OUTPUT_DEBUG_STR_W(str) 0
 #endif
 
 #ifdef _UNICODE
-#  define W2X_OUT_PUT_DEBUG_STRING(str) W2X_OUT_PUT_DEBUG_STRING_W(str)
+#  define W2X_OUTPUT_DEBUG_STR(str) W2X_OUTPUT_DEBUG_STR_W(str)
 #else
-#  define W2X_OUT_PUT_DEBUG_STRING(str) W2X_OUT_PUT_DEBUG_STRING_A(str)
+#  define W2X_OUTPUT_DEBUG_STR(str) W2X_OUTPUT_DEBUG_STR_A(str)
 #endif
 
 

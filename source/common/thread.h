@@ -12,6 +12,13 @@
 #include "exports.h"
 #include "macros.h"
 
+/*
+ * 对一个 32 位的变量进行原子递增及递减
+ */
+#define W2X_ATOMIC_INCREMENT(ptr) InterlockedIncrement(ptr)
+#define W2X_ATOMIC_DECREMENT(ptr) InterlockedDecrement(ptr)
+
+
 W2X_NAME_SPACE_BEGIN
 
 //-----------------------------------------------------------------------------
@@ -21,18 +28,26 @@ W2X_NAME_SPACE_BEGIN
 class W2X_COMMON_API CCriticalSection
 {
 public:
-	CCriticalSection(void);
-	virtual ~CCriticalSection(void);
+	CCriticalSection(void) {
+		memset(&m_cs, 0, sizeof(CRITICAL_SECTION));
+		::InitializeCriticalSection(&m_cs);
+	}
+	virtual ~CCriticalSection(void) {
+		::DeleteCriticalSection(&m_cs);
+	}
 
 W2X_DISALLOW_COPY_AND_ASSIGN(CCriticalSection)
 
 public:
-	void Enter(void);
-	void Leave(void);
+	void Enter(void) {
+		::EnterCriticalSection(&m_cs);
+	}
+	void Leave(void) {
+		::LeaveCriticalSection(&m_cs);
+	}
 
 private:
-	class CImpl;
-	CImpl* const m_impl;
+	CRITICAL_SECTION m_cs;
 };
 
 W2X_NAME_SPACE_END
@@ -51,20 +66,20 @@ protected:                                                                     \
 	public:                                                                    \
 		explicit class_lock(class_parent* _parent, const char* _name = 0)      \
 			: m_parent(_parent), m_name(_name) {                               \
-			W2X_OUT_PUT_DEBUG_STRING_A("[Lock");                               \
-            NULL != m_parent ? W2X_OUT_PUT_DEBUG_STRING_A("This] - ")          \
-			    : W2X_OUT_PUT_DEBUG_STRING_A("Class] - ");                     \
-		    W2X_OUT_PUT_DEBUG_STRING_A(m_name);                                \
-            W2X_OUT_PUT_DEBUG_STRING_A("\n");                                  \
+            if (NULL != m_name) {                                              \
+				W2X_OUTPUT_DEBUG_STR_A(                                        \
+				    NULL != m_parent ? "\n[LockThis]:\t" : "[LockClass]:\t");  \
+				W2X_OUTPUT_DEBUG_STR_A(m_name);                                \
+			}                                                                  \
 			NULL != m_parent ? m_parent->LockThis()                            \
 				: class_parent::LockClass();                                   \
         }                                                                      \
 		~class_lock(void) {                                                    \
-		    W2X_OUT_PUT_DEBUG_STRING_A("[Unlock");                             \
-		    NULL != m_parent ? W2X_OUT_PUT_DEBUG_STRING_A("This] - ")          \
-		        : W2X_OUT_PUT_DEBUG_STRING_A("Class] - ");                     \
-		    W2X_OUT_PUT_DEBUG_STRING_A(m_name);                                \
-		    W2X_OUT_PUT_DEBUG_STRING_A("\n");                                  \
+			if (NULL != m_name) {                                              \
+				W2X_OUTPUT_DEBUG_STR_A(                                        \
+					NULL != m_parent ? "\n[LockThis]:\t" : "[LockClass]:\t");  \
+				W2X_OUTPUT_DEBUG_STR_A(m_name);                                \
+			}                                                                  \
 			NULL != m_parent ? m_parent->UnlockThis()                          \
 				: class_parent::UnlockClass();                                 \
         }                                                                      \
