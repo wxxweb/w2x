@@ -14,11 +14,22 @@
 #include "..\common\macros.h"
 
 
-class CWndFlashImpl;
-
-
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(ui)
+
+
+class IFlashEventListener
+{
+public:
+	IFlashEventListener(void) {}
+	virtual ~IFlashEventListener(void) {}
+
+public:
+	virtual void OnFlashBeforeShow(void) = 0;
+	virtual void OnFlashAfterShow(void) = 0;
+	virtual void OnFlashEnterFrame(void) = 0;
+	virtual void OnFlashCommand(LPCTSTR _command, LPCTSTR _args) = 0;
+};
 
 
 class W2X_FLASH_API CWndFlash
@@ -39,8 +50,11 @@ public:
 
 	HWND GetHwnd(void) const;
 
+	LPCTSTR CallFunction(LPCTSTR _funcion, LPCTSTR _arg);
+
 private:
-	CWndFlashImpl* m_wnd_ptr;
+	class CImpl;
+	CImpl* const m_impl_ptr;
 };
 
 

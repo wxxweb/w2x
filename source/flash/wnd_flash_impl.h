@@ -210,16 +210,13 @@ class CWndFlashImpl :
 	public IServiceProvider
 {
 public:
-	long m_lVersion;
-	IDirectDraw4Ptr *m_lpDD4;
-	LPTSTR m_pszSwfFilePath;
-
-public:
 	CWndFlashImpl();
 	virtual ~CWndFlashImpl();
 
 public:
 	bool SetMovie(LPCTSTR pszSwfFilePath);
+	inline LPCTSTR CallFunction(LPCTSTR _request)
+	{ return m_lpControl->CallFunction(_request); }
 
 public:
 	virtual void OnErrorClassNotReg();
@@ -277,6 +274,11 @@ public:
        IUnknown * * ppvObject );*/
     HRESULT __stdcall raw_RemoteQueryService (REFGUID guidService, REFIID riid,
 IUnknown ** ppvObject );
+
+public:
+	long m_lVersion;
+	IDirectDraw4Ptr *m_lpDD4;
+	LPTSTR m_pszSwfFilePath;
 };
 
 #endif // !defined(AFX_FLASHWND_H__D74EA89B_5D79_4D87_8BB9_4DB90A5FE8FC__INCLUDED_)

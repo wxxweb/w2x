@@ -398,7 +398,7 @@ OLECONTAINER(HRESULT STDMETHODCALLTYPE)::OnDefWindowMessage(
 void PreMultiplyRGBChannels(long w, long h, LPBYTE pBitmapBits)
 {
 	// pre-multiply rgb channels with alpha channel
-
+/*
 	static int c = 0;
 	int inc = 0;
 	unsigned char alpha_bytes[102400];
@@ -424,18 +424,19 @@ void PreMultiplyRGBChannels(long w, long h, LPBYTE pBitmapBits)
 		
 		for (int x=0; x < w ; ++x)
 		{
-			/*pPixel[0]= pPixel[0]*pPixel[3]/255;
-			pPixel[1]= pPixel[1]*pPixel[3]/255;
-			pPixel[2]= pPixel[2]*pPixel[3]/255;*/
+// 			pPixel[0]= pPixel[0]*pPixel[3]/255;
+// 			pPixel[1]= pPixel[1]*pPixel[3]/255;
+// 			pPixel[2]= pPixel[2]*pPixel[3]/255;
 			pPixel[3] = alpha_bytes[inc++];
 
 			pPixel+= 4;
 		}
 	}
 
-	/*FILE *f = fopen("e:\\ab.bin", "wb+");
-	fwrite(alpha_bytes, inc, 1, f);
-	fclose(f);*/
+// 	FILE *f = fopen("e:\\ab.bin", "wb+");
+// 	fwrite(alpha_bytes, inc, 1, f);
+// 	fclose(f);
+*/
 }
 
 #include <stdio.h>
@@ -937,6 +938,7 @@ HRESULT STDMETHODCALLTYPE CWndFlashImpl::OnProgress(long percentDone)
 }
 HRESULT STDMETHODCALLTYPE CWndFlashImpl::FSCommand(_bstr_t command, _bstr_t args)
 {
+	MessageBox(NULL, command, args, MB_OK);
 	return S_OK;
 }
 
@@ -1053,12 +1055,23 @@ HRESULT STDMETHODCALLTYPE CWndFlashImpl::Invoke(
     /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo,
     /* [out] */ UINT __RPC_FAR *puArgErr)
 {
-/*	switch (dispIdMember)
-	{
-	default:
-		return S_OK;
-	}*/
-	return S_OK;
+	switch(dispIdMember)   
+	{    
+	case 0x96:             
+		if ((pDispParams->cArgs == 2) &&   
+			(pDispParams->rgvarg[0].vt == VT_BSTR) &&   
+			(pDispParams->rgvarg[1].vt == VT_BSTR))   
+		{   
+			FSCommand(pDispParams->rgvarg[1].bstrVal, pDispParams->rgvarg[0].bstrVal);   
+		}   
+		break;   
+	case DISPID_READYSTATECHANGE:                      
+		break;   
+	default:               
+		return DISP_E_MEMBERNOTFOUND;  
+	}    
+
+	return NOERROR;
 }
 
 HRESULT __stdcall CWndFlashImpl::raw_RemoteQueryService (REFGUID guidService, REFIID riid,IUnknown ** ppvObject )

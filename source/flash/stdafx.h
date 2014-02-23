@@ -27,6 +27,7 @@
 #include <strsafe.h>
 
 // C++库函数
+#include <string>
 
 // C 运行时头文件
 

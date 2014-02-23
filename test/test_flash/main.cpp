@@ -86,7 +86,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	TCHAR szSwfFilePath[MAX_PATH] = TEXT("");
 	::GetModuleFileName(NULL, szSwfFilePath, MAX_PATH);
 	::PathRemoveFileSpec(szSwfFilePath);
-	_tcscat_s(szSwfFilePath, TEXT("\\test.swf"));
+	_tcscat_s(szSwfFilePath, TEXT("\\AS3VsCpp.swf"));
 
 	g_flashWnd = new w2x::ui::CWndFlash();
 	g_flashWnd->Create(szSwfFilePath, g_hWnd, g_hInst);
