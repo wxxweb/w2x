@@ -41,6 +41,15 @@ public:
 
 	inline LPCTSTR CallFunction(LPCTSTR _funcion, LPCTSTR _arg);
 
+	inline bool AddEventListener(LPCTSTR _type_name, 
+		w2x::events::FEventListener _listener
+	);
+
+	inline bool RemoveEventListener(
+		LPCTSTR _type_name, 
+		w2x::events::FEventListener _listener
+	);
+
 private:
 	static bool Hook(void);
 
@@ -254,6 +263,23 @@ inline LPCTSTR CWndFlash::CImpl::CallFunction(LPCTSTR _funcion, LPCTSTR _arg)
 }
 
 
+bool CWndFlash::CImpl::AddEventListener(LPCTSTR _type_name, 
+	w2x::events::FEventListener _listener
+	)
+{
+	return m_wnd_ptr->m_event_disp.AddEventListener(_type_name, _listener);
+}
+
+
+bool CWndFlash::CImpl::RemoveEventListener(
+	LPCTSTR _type_name, 
+	w2x::events::FEventListener _listener
+	)
+{
+	return m_wnd_ptr->m_event_disp.RemoveEventListener(_type_name, _listener);
+}
+
+
 CWndFlash::CWndFlash(void)
 	: m_impl_ptr(new CImpl())
 {
@@ -290,6 +316,23 @@ HWND CWndFlash::GetHwnd(void) const
 LPCTSTR CWndFlash::CallFunction(LPCTSTR _funcion, LPCTSTR _arg)
 {
 	return m_impl_ptr->CallFunction(_funcion, _arg);
+}
+
+
+bool CWndFlash::AddEventListener(LPCTSTR _type_name, 
+	w2x::events::FEventListener _listener
+	)
+{
+	return m_impl_ptr->AddEventListener(_type_name, _listener);
+}
+
+
+bool CWndFlash::RemoveEventListener(
+	LPCTSTR _type_name, 
+	w2x::events::FEventListener _listener
+	)
+{
+	return m_impl_ptr->RemoveEventListener(_type_name, _listener);
 }
 
 

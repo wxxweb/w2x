@@ -19,7 +19,10 @@
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
+
+#include "..\common\event_dispatcher.h"
 #include <ddraw.h>
+
 //#import "c:\\winnt\\system32\\macromed\\flash\\flash.ocx" named_guids
 //#import "c:\\windows\\system32\\macromed\\flash\\Flash.ocx" named_guids
 #import "Flash64_12_0_0_44.ocx" named_guids
@@ -201,7 +204,6 @@ public:
 };
 
 
-
 //OM_SMARTPTR_TYPEDEF(IDirectDraw4, IID_IDirectDraw4);
 
 class CWndFlashImpl :
@@ -279,6 +281,7 @@ public:
 	long m_lVersion;
 	IDirectDraw4Ptr *m_lpDD4;
 	LPTSTR m_pszSwfFilePath;
+	w2x::events::CEventDispatcher m_event_disp;
 };
 
 #endif // !defined(AFX_FLASHWND_H__D74EA89B_5D79_4D87_8BB9_4DB90A5FE8FC__INCLUDED_)

@@ -1,10 +1,10 @@
 /*****************************************************************************
-文件名：		wnd_flash.h
-描述：		定义 FLASH 动画窗口封装类 CWndFlash。
-作者：		wu.xiongxing					
-邮箱：		wxxweb@gmail.com
-日期：		2014.02.17
-******************************************************************************/
+ * 文名：	wnd_flash.h
+ * 描述：	定义 FLASH 动画窗口封装类 CWndFlash。
+ * 作者：	wu.xiongxing					
+ * 邮箱：	wxxweb@gmail.com
+ * 日期：	2014-02-17
+ *****************************************************************************/
 
 #ifndef __W2X_FLASH_WND_FALSH_H__
 #define __W2X_FLASH_WND_FALSH_H__
@@ -12,24 +12,11 @@
 
 #include "exports.h"
 #include "..\common\macros.h"
+#include "..\common\event_dispatcher.h"
 
 
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(ui)
-
-
-class IFlashEventListener
-{
-public:
-	IFlashEventListener(void) {}
-	virtual ~IFlashEventListener(void) {}
-
-public:
-	virtual void OnFlashBeforeShow(void) = 0;
-	virtual void OnFlashAfterShow(void) = 0;
-	virtual void OnFlashEnterFrame(void) = 0;
-	virtual void OnFlashCommand(LPCTSTR _command, LPCTSTR _args) = 0;
-};
 
 
 class W2X_FLASH_API CWndFlash
@@ -51,6 +38,15 @@ public:
 	HWND GetHwnd(void) const;
 
 	LPCTSTR CallFunction(LPCTSTR _funcion, LPCTSTR _arg);
+
+	bool AddEventListener(LPCTSTR _type_name, 
+		w2x::events::FEventListener _listener
+	);
+
+	bool RemoveEventListener(
+		LPCTSTR _type_name, 
+		w2x::events::FEventListener _listener
+	);
 
 private:
 	class CImpl;

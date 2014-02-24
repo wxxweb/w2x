@@ -16,6 +16,7 @@
 #include "stdafx.h"
 #include "wnd_flash_impl.h"
 #include "..\common\macros.h"
+#include "flash_event.h"
 #include <ddraw.h>
 
 
@@ -915,6 +916,7 @@ CWndFlashImpl::CWndFlashImpl()
 	: m_lVersion(0)
 	, m_lpDD4(NULL)
 	, m_pszSwfFilePath(NULL)
+	, m_event_disp(NULL)
 {
 
 }
@@ -938,7 +940,11 @@ HRESULT STDMETHODCALLTYPE CWndFlashImpl::OnProgress(long percentDone)
 }
 HRESULT STDMETHODCALLTYPE CWndFlashImpl::FSCommand(_bstr_t command, _bstr_t args)
 {
-	MessageBox(NULL, command, args, MB_OK);
+	static w2x::ui::CFlashEvent flash_event(w2x::ui::CFlashEvent::EVENT_COMMAND);
+	flash_event.SetCommand(command, args);
+
+	m_event_disp.DispatchEvent(flash_event);
+
 	return S_OK;
 }
 
