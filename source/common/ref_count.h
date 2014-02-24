@@ -12,10 +12,10 @@
 #include "thread.h"
 
 
-W2X_NAME_SPACE_END
+W2X_NAME_SPACE_BEGIN
 
 
-class CRefCount 
+class W2X_COMMON_API CRefCount 
 {
 public:
 	CRefCount() : m_ref_count(0) {}

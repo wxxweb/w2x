@@ -14,7 +14,7 @@
 #define __W2X_COMMON_REF_PTR_H__
 
 
-W2X_NAME_SPACE_END
+W2X_NAME_SPACE_BEGIN
 
 
 template <class T>
@@ -58,7 +58,7 @@ public:
 		return *this;
 	}
 
-	CRefPtr<T>& operator=(const CefRefPtr<T>& _ref) {
+	CRefPtr<T>& operator=(const CRefPtr<T>& _ref) {
 		return *this = _ref.m_ptr;
 	}
 
@@ -68,12 +68,12 @@ public:
 		*_ptr_ptr = p;
 	}
 
-	void swap(CefRefPtr<T>& _ref) {
+	void swap(CRefPtr<T>& _ref) {
 		swap(&_ref.m_ptr);
 	}
 
 private:
-	T* const m_ptr;
+	T* m_ptr;
 };
 
 

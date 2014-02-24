@@ -21,14 +21,14 @@
 W2X_NAME_SPACE_BEGIN
 
 
-class IBase
+class W2X_COMMON_API IBase
 {
 protected:
 	/*
 	 * 凡是继承了该接口的类对象，都无法直接通过 delete 来手动释放对象内存，使用
 	 * delete 将会出现编译错误，想要释放对象内存请使用对象的 Release() 函数来实现。
 	 */
-	virtual ~IBase(void) {}
+	virtual ~IBase(void) = 0 {}
 
 public:
 	/*
