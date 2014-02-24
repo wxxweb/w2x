@@ -30,7 +30,7 @@
     <ClInclude Include="wnd_flash.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="flash_event_listener.h">
+    <ClInclude Include="flash_event.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -45,6 +45,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="wnd_flash.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="flash_event.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
