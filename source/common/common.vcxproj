@@ -99,6 +99,7 @@
     <ClInclude Include="common.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="encode.h" />
+    <ClInclude Include="event.h" />
     <ClInclude Include="event_dispatcher.h" />
     <ClInclude Include="exports.h" />
     <ClInclude Include="log.h" />
@@ -126,6 +127,8 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="encode.cpp" />
+    <ClCompile Include="event.cpp" />
+    <ClCompile Include="event_dispatcher.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="msg_loop.cpp" />
     <ClCompile Include="stdafx.cpp">

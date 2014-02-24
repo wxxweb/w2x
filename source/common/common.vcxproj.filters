@@ -63,6 +63,9 @@
     <ClInclude Include="ref_ptr.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="event.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -93,6 +96,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="encode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="event.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="event_dispatcher.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
