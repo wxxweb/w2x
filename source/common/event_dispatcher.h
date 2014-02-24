@@ -23,16 +23,16 @@
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(events)
 
+
 class CEvent;
+
+/*
+ * 事件侦听器函数类型。
+ */
+typedef void (*FEventListener)(const CEvent& _event_ref);
 
 class W2X_COMMON_API IEventDispatcher: public IBase
 {
-public:
-	/*
-	 * 事件侦听器函数类型。
-	 */
-	typedef void (*FEventListener)(const CEvent& _event_ref);
-
 public:
 	virtual ~IEventDispatcher(void) = 0 {}
 

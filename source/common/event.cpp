@@ -66,6 +66,17 @@ LPCTSTR CEvent::GetTypeName(void) const
 }
 
 
+CRefPtr<IBase>& CEvent::GetSource(void) const
+{
+	return m_event_impl_ptr->m_source_ptr;
+}
+
+void CEvent::SetSource(const CRefPtr<IBase>& _source_ptr)
+{
+	m_event_impl_ptr->m_source_ptr = _source_ptr;
+}
+
+
 CRefPtr<IBase>& CEvent::GetTarget(void) const
 {
 	return m_event_impl_ptr->m_target_ptr;
