@@ -16,10 +16,10 @@
 
 
 W2X_NAME_SPACE_BEGIN
-W2X_DEFINE_NAME_SPACE_BEGIN(ui)
+W2X_DEFINE_NAME_SPACE_BEGIN(events)
 
 
-class CFlashEvent: public w2x::events::CEvent
+class W2X_FLASH_API CFlashEvent: public w2x::events::CEvent
 {
 public:
 	static LPCTSTR EVENT_COMMAND;
@@ -43,7 +43,7 @@ private:
 };
 
 
-W2X_DEFINE_NAME_SPACE_END(ui)
+W2X_DEFINE_NAME_SPACE_END(events)
 W2X_NAME_SPACE_END
 
 
