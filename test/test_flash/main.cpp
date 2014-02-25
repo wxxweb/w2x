@@ -36,6 +36,7 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "flash/wnd_flash.h"
+#include "flash/flash_event.h"
 
 #define MAX_LOADSTRING 100
 
@@ -48,6 +49,7 @@ TCHAR szWindowClass[MAX_LOADSTRING] = _T("WindowlessFlashContainerApp"); // The 
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
+void				OnFlashCommand(const w2x::events::CEvent& _event_ref);
 
 HWND g_hWnd = NULL;
 HINSTANCE g_hInst = NULL;
@@ -89,7 +91,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	_tcscat_s(szSwfFilePath, TEXT("\\AS3VsCpp.swf"));
 
 	g_flashWnd = new w2x::ui::CWndFlash();
-	g_flashWnd->Create(szSwfFilePath, g_hWnd, g_hInst);
+	if (true == g_flashWnd->Create(szSwfFilePath, g_hWnd, g_hInst))
+	{
+		g_flashWnd->AddEventListener(
+			w2x::events::CFlashEvent::EVENT_COMMAND, OnFlashCommand);
+	}
 
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0)) 
@@ -225,4 +231,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return DefWindowProc(hWnd, message, wParam, lParam);
    }
    return 0;
+}
+
+void OnFlashCommand(const w2x::events::CEvent& _event_ref)
+{
+	_event_ref.GetTypeName();
 }

@@ -940,10 +940,12 @@ HRESULT STDMETHODCALLTYPE CWndFlashImpl::OnProgress(long percentDone)
 }
 HRESULT STDMETHODCALLTYPE CWndFlashImpl::FSCommand(_bstr_t command, _bstr_t args)
 {
-	static w2x::ui::CFlashEvent flash_event(w2x::ui::CFlashEvent::EVENT_COMMAND);
-	flash_event.SetCommand(command, args);
+	using namespace w2x::events;
+	static CFlashEvent s_flash_event(CFlashEvent::EVENT_COMMAND);
 
-	m_event_disp.DispatchEvent(flash_event);
+	s_flash_event.SetCommand(command, args);
+
+	m_event_disp.DispatchEvent(s_flash_event);
 
 	return S_OK;
 }
