@@ -39,6 +39,8 @@ public:
 
 	inline HWND GetHwnd(void) const;
 
+	inline void SetCaptionArea(WORD _x, WORD _y, WORD _width, WORD _height);
+
 	inline LPCTSTR CallFunction(LPCTSTR _funcion, LPCTSTR _arg);
 
 	inline bool AddEventListener(LPCTSTR _type_name, 
@@ -240,6 +242,13 @@ inline HWND CWndFlash::CImpl::GetHwnd(void) const
 }
 
 
+inline void CWndFlash::CImpl::SetCaptionArea(
+	WORD _x, WORD _y, WORD _width, WORD _height
+	)
+{
+	m_wnd_ptr->SetCaptionArea(_x, _y, _width, _height);
+}
+
 inline LPCTSTR CWndFlash::CImpl::CallFunction(LPCTSTR _funcion, LPCTSTR _arg)
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_funcion, NULL);
@@ -310,6 +319,12 @@ void CWndFlash::Destroy(void)
 HWND CWndFlash::GetHwnd(void) const
 {
 	return m_impl_ptr->GetHwnd();
+}
+
+
+void CWndFlash::SetCaptionArea(WORD _x, WORD _y, WORD _width, WORD _height)
+{
+	m_impl_ptr->SetCaptionArea(_x, _y, _width, _height);
 }
 
 

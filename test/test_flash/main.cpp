@@ -93,6 +93,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	g_flashWnd = new w2x::ui::CWndFlash();
 	if (true == g_flashWnd->Create(szSwfFilePath, g_hWnd, g_hInst))
 	{
+		g_flashWnd->SetCaptionArea(0, 0, 600, 20);
 		g_flashWnd->AddEventListener(
 			w2x::events::CFlashEvent::EVENT_COMMAND, OnFlashCommand);
 	}
@@ -163,7 +164,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
 
    hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-      /*CW_USEDEFAULT, CW_USEDEFAULT*/ 400, 200, 600, 600, NULL, NULL, hInstance, NULL);
+      CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, hInstance, NULL);
 
    if (!hWnd)
    {
@@ -209,24 +210,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		case WM_DESTROY:
+			SendMessage(g_flashWnd->GetHwnd(), WM_CLOSE, 0, 0);
 			PostQuitMessage(0);
 			break;
 		case WM_MOVE:
 			{
 				RECT r;
 				GetWindowRect(hWnd, &r);
-				if (g_flashWnd)
+				if (g_flashWnd) {
 					SetWindowPos(g_flashWnd->GetHwnd(), NULL, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+					g_flashWnd->SetCaptionArea(0, 0, r.right-r.left, 20);
+				}
 			}
 			break;
 		case WM_SIZE:
 			{
 				RECT r;
 				GetWindowRect(hWnd, &r);
-				if (g_flashWnd)
+				if (g_flashWnd) {
 					SetWindowPos(g_flashWnd->GetHwnd(), NULL, 0, 0, (r.right-r.left), (r.bottom-r.top), SWP_NOMOVE | SWP_NOZORDER);
+					g_flashWnd->SetCaptionArea(0, 0, r.right-r.left, 20);
+				}
 			}
 			break;
+		case WM_LBUTTONDBLCLK:
+			{
+				::PostMessage(hWnd, WM_CLOSE, 0, 0);
+			}
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
    }
@@ -236,4 +246,5 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 void OnFlashCommand(const w2x::events::CEvent& _event_ref)
 {
 	_event_ref.GetTypeName();
+	//g_flashWnd->CallFunction(TEXT("Call"))
 }

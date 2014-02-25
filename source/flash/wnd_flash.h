@@ -37,6 +37,8 @@ public:
 
 	HWND GetHwnd(void) const;
 
+	void SetCaptionArea(WORD _x, WORD _y, WORD _width, WORD _height);
+
 	LPCTSTR CallFunction(LPCTSTR _funcion, LPCTSTR _arg);
 
 	bool AddEventListener(LPCTSTR _type_name, 

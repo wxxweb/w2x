@@ -36,7 +36,7 @@ class COleContainerWnd :
 	public IOleClientSite,
 	public IOleInPlaceSiteWindowless,
 	public IOleInPlaceFrame,
-	public IStorage																  
+	public IStorage
 {
 public:						 
 	GUID m_CLSID;
@@ -64,6 +64,7 @@ public:
 	HDC m_hdcBackW;
 	HBITMAP m_bmpBackW;
 	BYTE *m_lpBitsOnlyW;
+	RECT m_caption_rect;
 public:
 	COleContainerWnd();
 	virtual ~COleContainerWnd();
@@ -217,8 +218,8 @@ public:
 
 public:
 	bool SetMovie(LPCTSTR pszSwfFilePath);
-	inline LPCTSTR CallFunction(LPCTSTR _request)
-	{ return m_lpControl->CallFunction(_request); }
+	inline void SetCaptionArea(WORD _x, WORD _y, WORD _width, WORD _height);
+	inline LPCTSTR CallFunction(LPCTSTR _request);
 
 public:
 	virtual void OnErrorClassNotReg();
@@ -283,5 +284,23 @@ public:
 	LPTSTR m_pszSwfFilePath;
 	w2x::events::CEventDispatcher m_event_disp;
 };
+
+
+inline void CWndFlashImpl::SetCaptionArea(
+	WORD _x, WORD _y, WORD _width, WORD _height
+	)
+{
+	m_caption_rect.left = _x;
+	m_caption_rect.top = _y;
+	m_caption_rect.right = _x + _width;
+	m_caption_rect.bottom = _y + _height;
+}
+
+
+inline LPCTSTR CWndFlashImpl::CallFunction(LPCTSTR _request)
+{ 
+	return m_lpControl->CallFunction(_request); 
+}
+
 
 #endif // !defined(AFX_FLASHWND_H__D74EA89B_5D79_4D87_8BB9_4DB90A5FE8FC__INCLUDED_)

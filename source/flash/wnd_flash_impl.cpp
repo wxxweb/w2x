@@ -873,8 +873,18 @@ OLECONTAINER(LRESULT)::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		}
 		break;
 	case WM_LBUTTONDOWN:
-		ReleaseCapture();
-		SendMessage (hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+		::ReleaseCapture();
+		if (0 != m_caption_rect.right - m_caption_rect.left || 
+			0 != m_caption_rect.bottom - m_caption_rect.top)
+		{
+			POINT pt = {0};
+			pt.x = LOWORD(lParam);
+			pt.y = HIWORD(lParam);
+			if (TRUE == ::PtInRect(&m_caption_rect, pt))
+			{
+				::SendMessage (hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+			}
+		}
 		break;
 	case WM_RBUTTONDOWN:
 		return TRUE;
@@ -918,7 +928,7 @@ CWndFlashImpl::CWndFlashImpl()
 	, m_pszSwfFilePath(NULL)
 	, m_event_disp(NULL)
 {
-
+	memset(&m_caption_rect, 0, sizeof(m_caption_rect));
 }
 
 CWndFlashImpl::~CWndFlashImpl()
