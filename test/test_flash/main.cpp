@@ -163,7 +163,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    hInst = hInstance; // Store instance handle in our global variable
 
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+   hWnd = CreateWindow(szWindowClass, szTitle, 
+	   WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
       CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, hInstance, NULL);
 
    if (!hWnd)
@@ -219,7 +220,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				GetWindowRect(hWnd, &r);
 				if (g_flashWnd) {
 					SetWindowPos(g_flashWnd->GetHwnd(), NULL, r.left, r.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-					g_flashWnd->SetCaptionArea(0, 0, r.right-r.left, 20);
 				}
 			}
 			break;
@@ -229,7 +229,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				GetWindowRect(hWnd, &r);
 				if (g_flashWnd) {
 					SetWindowPos(g_flashWnd->GetHwnd(), NULL, 0, 0, (r.right-r.left), (r.bottom-r.top), SWP_NOMOVE | SWP_NOZORDER);
-					g_flashWnd->SetCaptionArea(0, 0, r.right-r.left, 20);
 				}
 			}
 			break;

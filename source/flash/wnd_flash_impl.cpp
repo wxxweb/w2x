@@ -141,7 +141,7 @@ OLECONTAINER(BOOL)::Create(GUID clsid, DWORD dwExStyle, DWORD dwStyle, HWND hWnd
 		TEXT("MyOleControl"), TEXT("MyOleControlWindow"),
 		dwStyle,
 		r.left, r.top, r.right-r.left, r.bottom-r.top, hWndParent, NULL, hInst, (void *)this);
-	::SetWindowPos(GetHWND(), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+	//::SetWindowPos(GetHWND(), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 	HRESULT hr;
 	hr = OleCreate(m_CLSID, IID_IOleObject, OLERENDER_DRAW,
 		0, (IOleClientSite *)this, (IStorage *)this, (void **)&m_lpO);
@@ -994,7 +994,7 @@ BOOL CWndFlashImpl::OnAfterShowingContent()
 	IF_NULL_ASSERT_RETURN_VALUE(m_pszSwfFilePath, FALSE);
 
 	HRESULT hr;
-	ShowWindow(m_hWndParent, SW_HIDE);
+	//ShowWindow(m_hWndParent, SW_HIDE);
 	m_lpControl->PutEmbedMovie(TRUE);
 
 	hr = m_lpControl->LoadMovie(0, _bstr_t(m_pszSwfFilePath));
