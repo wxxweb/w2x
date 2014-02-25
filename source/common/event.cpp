@@ -38,7 +38,7 @@ CEvent::CEventImpl::CEventImpl(LPCTSTR _type_name)
 	m_type_name_ptr = new TCHAR[count];
 	IF_NULL_ASSERT_RETURN(m_type_name_ptr);
 
-	memcpy(m_type_name_ptr, _type_name, count);
+	_tcscpy_s(m_type_name_ptr, count, _type_name);
 }
 
 CEvent::CEventImpl::~CEventImpl(void) 

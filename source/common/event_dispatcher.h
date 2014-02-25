@@ -41,16 +41,19 @@ W2X_IMPLEMENT_REFCOUNTING(IEventDispatcher)
 public:
 	/*
 	 * 请使用 CEventDispatcher 对象注册事件侦听器函数，以使侦听器能够接收事件通知。
+	 * _source_ptr 为事件源指针，一般是指向事件侦听器 _listener 的拥有者类对象，
+	 * 这样就可以在事件侦听器函数（全局函数或静态成员函数）中调用对象的成员函数。
 	 */
 	virtual bool AddEventListener(
 		LPCTSTR _type_name, 
-		FEventListener _listener
+		FEventListener _listener_fn,
+		const CRefPtr<IBase>& _source_ptr
 	) = 0;
 
 	/*
 	 * 将事件分发给事件侦听器。
 	 */
-	virtual bool DispatchEvent(const CEvent& _event_ref) const = 0;
+	virtual bool DispatchEvent(CEvent& _event_ref) const = 0;
 
 	/*
 	 * 检查 CEventDispatcher 对象是否为特定事件类型注册了事件侦听器。
@@ -62,7 +65,7 @@ public:
 	 */
 	virtual bool RemoveEventListener(
 		LPCTSTR _type_name, 
-		FEventListener _listener
+		FEventListener _listener_fn
 	) = 0;
 };
 
@@ -86,12 +89,16 @@ public:
 	/*
 	 * 注册事件侦听器函数，以使侦听器能够接收事件通知。
 	 */
-	virtual bool AddEventListener(LPCTSTR _type_name, FEventListener _listener);
+	virtual bool AddEventListener(
+		LPCTSTR _type_name, 
+		FEventListener _listener_fn,
+	 	const CRefPtr<IBase>& _source_ptr = NULL
+	);
 
 	/*
 	 * 将事件分发给事件侦听器。
 	 */
-	virtual bool DispatchEvent(const CEvent& _event_ref) const;
+	virtual bool DispatchEvent(CEvent& _event_ref) const;
 
 	/*
 	 * 检查是否为特定事件类型注册了事件侦听器。
@@ -101,7 +108,10 @@ public:
 	/*
 	 * 删除事件侦听器。
 	 */
-	virtual bool RemoveEventListener(LPCTSTR _type_name, FEventListener _listener);
+	virtual bool RemoveEventListener(
+		LPCTSTR _type_name, 
+		FEventListener _listener_fn
+	);
 
 private:
 	class CDispImpl;
