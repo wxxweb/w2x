@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crypto", "third-party\source\crypto\crypto.vcxproj", "{F255C1C7-F091-426E-B7FF-6B4A92D4B392}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crypto", "src\third-party\crypto\crypto.vcxproj", "{F255C1C7-F091-426E-B7FF-6B4A92D4B392}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "json", "third-party\source\json\json.vcxproj", "{B84F7231-16CE-41D8-8C08-7B523FF4225B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "json", "src\third-party\json\json.vcxproj", "{B84F7231-16CE-41D8-8C08-7B523FF4225B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unqlite", "third-party\source\unqlite\unqlite.vcxproj", "{48D25C6D-A1BF-40C0-8A6E-92D25840B211}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unqlite", "src\third-party\unqlite\unqlite.vcxproj", "{48D25C6D-A1BF-40C0-8A6E-92D25840B211}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "third-party\source\zlib\zlib.vcxproj", "{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xzip", "src\third-party\xzip\xzip.vcxproj", "{8D0FCC51-10D0-42AB-BA39-15DDF1092D04}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xzip", "third-party\source\xzip\XZip.vcxproj", "{8D0FCC51-10D0-42AB-BA39-15DDF1092D04}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "src\third-party\zlib\zlib.vcxproj", "{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,14 +29,14 @@ Global
 		{48D25C6D-A1BF-40C0-8A6E-92D25840B211}.Debug|Win32.Build.0 = Debug|Win32
 		{48D25C6D-A1BF-40C0-8A6E-92D25840B211}.Release|Win32.ActiveCfg = Release|Win32
 		{48D25C6D-A1BF-40C0-8A6E-92D25840B211}.Release|Win32.Build.0 = Release|Win32
-		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Debug|Win32.ActiveCfg = Debug|Win32
-		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Debug|Win32.Build.0 = Debug|Win32
-		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Release|Win32.ActiveCfg = Release|Win32
-		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Release|Win32.Build.0 = Release|Win32
 		{8D0FCC51-10D0-42AB-BA39-15DDF1092D04}.Debug|Win32.ActiveCfg = Debug|Win32
 		{8D0FCC51-10D0-42AB-BA39-15DDF1092D04}.Debug|Win32.Build.0 = Debug|Win32
 		{8D0FCC51-10D0-42AB-BA39-15DDF1092D04}.Release|Win32.ActiveCfg = Release|Win32
 		{8D0FCC51-10D0-42AB-BA39-15DDF1092D04}.Release|Win32.Build.0 = Release|Win32
+		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Debug|Win32.Build.0 = Debug|Win32
+		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Release|Win32.ActiveCfg = Release|Win32
+		{09EF3940-C9B7-4D0D-8D84-CA434D7DB6F2}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
