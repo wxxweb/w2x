@@ -62,10 +62,10 @@
       <AdditionalDependencies>Shlwapi.lib;DbgHelp.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>$(SolutionDir)script\copy_third_party.bat $(SolutionDir) $(Configuration) dll</Command>
+      <Command>$(SolutionDir)tool\copy_third_party.bat $(SolutionDir) $(Configuration) dll</Command>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>$(SolutionDir)script\copy_third_party.bat $(SolutionDir) $(Configuration) lib</Command>
+      <Command>$(SolutionDir)tool\copy_third_party.bat $(SolutionDir) $(Configuration) lib</Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -87,10 +87,11 @@
       <AdditionalDependencies>Shlwapi.lib;DbgHelp.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>$(SolutionDir)script\copy_third_party.bat $(SolutionDir) $(Configuration) dll</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>$(SolutionDir)script\copy_third_party.bat $(SolutionDir) $(Configuration) lib</Command>
+      <Command>$(SolutionDir)tool\copy_third_party.bat $(SolutionDir) $(Configuration) lib</Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
