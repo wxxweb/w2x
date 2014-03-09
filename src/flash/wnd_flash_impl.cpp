@@ -999,10 +999,11 @@ BOOL CWndFlashImpl::OnBeforeShowingContent()
 	if (FAILED(hr))
 		return FALSE;
 
-	if (m_bTransparent)
+	if (m_bTransparent) {
 		m_lpControl->PutWMode(L"transparent");
+	}
 	m_lpControl->PutScale(L"showAll");
-	m_lpControl->PutBackgroundColor(0xFFFFFF00);
+	m_lpControl->PutBackgroundColor(0x00000000);
 	m_lpControl->PutEmbedMovie(FALSE);
 	return TRUE;
 }
