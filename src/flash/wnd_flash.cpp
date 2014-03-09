@@ -259,7 +259,7 @@ inline LPCTSTR CWndFlash::CImpl::CallFunction(LPCTSTR _funcion, LPCTSTR _arg)
 
 	m_call_function_xml = TEXT("<invoke name='");
 	m_call_function_xml += _funcion;
-	m_call_function_xml += TEXT("'>");
+	m_call_function_xml += TEXT("' returntype='xml'>");
 	if (NULL != _arg)
 	{
 		m_call_function_xml += TEXT("<arguments><string>");

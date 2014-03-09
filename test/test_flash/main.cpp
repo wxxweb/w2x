@@ -249,5 +249,5 @@ void OnFlashCommand(const w2x::events::CEvent& _event_ref)
 	LPCTSTR cmmmand = flash_event.GetCommand();
 	LPCTSTR args = flash_event.GetCommandArgs();
 	_event_ref.GetTypeName();
-	//g_flashWnd->CallFunction(TEXT("Call"))
+	g_flashWnd->CallFunction(TEXT("Notify"), TEXT("123"));
 }
