@@ -263,6 +263,8 @@ public:
     HRESULT STDMETHODCALLTYPE FSCommand (
         _bstr_t command,
         _bstr_t args );
+	HRESULT STDMETHODCALLTYPE OnFlashCall(
+		_bstr_t _args);
 
 	//iServiceProvider
 	HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, 

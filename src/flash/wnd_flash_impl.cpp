@@ -19,6 +19,11 @@
 #include "flash_event.h"
 #include <ddraw.h>
 
+enum {
+	DISP_EVENT_ID_FSCOMMAND = 150,	// ActionScript 的 fscommand 调用事件
+	DISP_EVENT_ID_FLASH_CALL = 197,	// ActionScript 3.0 的 ExternalInterface.call 调用事件
+};
+
 
 #ifndef DEFINE_GUID2
 #define DEFINE_GUID2(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
@@ -960,6 +965,18 @@ HRESULT STDMETHODCALLTYPE CWndFlashImpl::FSCommand(_bstr_t command, _bstr_t args
 	return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE CWndFlashImpl::OnFlashCall(_bstr_t _args)
+{
+	using namespace w2x::events;
+	static CFlashEvent s_flash_event(CFlashEvent::EVENT_COMMAND);
+
+	s_flash_event.SetCommand(TEXT("FlashCall"), _args);
+
+	m_event_disp.DispatchEvent(s_flash_event);
+
+	return S_OK;
+}
+
 void CWndFlashImpl::OnErrorClassNotReg()
 {
 	//some notification code here
@@ -985,7 +1002,7 @@ BOOL CWndFlashImpl::OnBeforeShowingContent()
 	if (m_bTransparent)
 		m_lpControl->PutWMode(L"transparent");
 	m_lpControl->PutScale(L"showAll");
-	m_lpControl->PutBackgroundColor(0x00000000);
+	m_lpControl->PutBackgroundColor(0xFFFFFF00);
 	m_lpControl->PutEmbedMovie(FALSE);
 	return TRUE;
 }
@@ -1075,14 +1092,21 @@ HRESULT STDMETHODCALLTYPE CWndFlashImpl::Invoke(
 {
 	switch(dispIdMember)   
 	{    
-	case 0x96:             
+	case DISP_EVENT_ID_FSCOMMAND:             
 		if ((pDispParams->cArgs == 2) &&   
 			(pDispParams->rgvarg[0].vt == VT_BSTR) &&   
 			(pDispParams->rgvarg[1].vt == VT_BSTR))   
 		{   
-			FSCommand(pDispParams->rgvarg[1].bstrVal, pDispParams->rgvarg[0].bstrVal);   
+			this->FSCommand(pDispParams->rgvarg[1].bstrVal, 
+				pDispParams->rgvarg[0].bstrVal);   
+		}
+		break;
+	case DISP_EVENT_ID_FLASH_CALL:
+		if (1 == pDispParams->cArgs && VT_BSTR == pDispParams->rgvarg[0].vt)   
+		{   
+			this->OnFlashCall(pDispParams->rgvarg[0].bstrVal);
 		}   
-		break;   
+		break;
 	case DISPID_READYSTATECHANGE:                      
 		break;   
 	default:               
