@@ -88,7 +88,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	TCHAR szSwfFilePath[MAX_PATH] = TEXT("");
 	::GetModuleFileName(NULL, szSwfFilePath, MAX_PATH);
 	::PathRemoveFileSpec(szSwfFilePath);
-	_tcscat_s(szSwfFilePath, TEXT("\\AS3VsCpp.swf"));
+	_tcscat_s(szSwfFilePath, TEXT("\\GLinking.swf"));
 
 	g_flashWnd = new w2x::ui::CWndFlash();
 	if (true == g_flashWnd->Create(szSwfFilePath, g_hWnd, g_hInst))
@@ -244,6 +244,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 void OnFlashCommand(const w2x::events::CEvent& _event_ref)
 {
+	using namespace w2x::events;
+	const CFlashEvent& flash_event = static_cast<const CFlashEvent&>(_event_ref);
+	LPCTSTR cmmmand = flash_event.GetCommand();
+	LPCTSTR args = flash_event.GetCommandArgs();
 	_event_ref.GetTypeName();
 	//g_flashWnd->CallFunction(TEXT("Call"))
 }
