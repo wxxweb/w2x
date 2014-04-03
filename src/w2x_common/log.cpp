@@ -24,10 +24,6 @@ W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(log)
 
 static TCHAR const DEFAULT_LOG_DIR_NAME[]	= TEXT("default");
-static TCHAR const STR_PRIORITY_NORMAL[]	= TEXT("normal");
-static TCHAR const STR_PRIORITY_URGENT[]	= TEXT("urgent");
-static TCHAR const STR_PRIORITY_HIGH[]		= TEXT("high");
-static TCHAR const STR_PRIORITY_LOW[]		= TEXT("low");
 static TCHAR const STR_CATEGORY_INFO[]		= TEXT("info");
 static TCHAR const STR_CATEGORY_ERROR[]		= TEXT("error");
 static TCHAR const STR_CATEGORY_WARN[]		= TEXT("warn");
@@ -317,16 +313,6 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 	}
 #endif
 
-	LPCTSTR priority = NULL;
-	switch (custom_ref.priority)
-	{
-	case kPriorityNormal:	priority = STR_PRIORITY_NORMAL;	break;
-	case kPriorityUrgent:	priority = STR_PRIORITY_URGENT;	break;
-	case kPriorityHigh:		priority = STR_PRIORITY_HIGH;	break;
-	case kPriorityLow:		priority = STR_PRIORITY_LOW;	break;
-	default: ASSERT(false);	priority = STR_PRIORITY_NORMAL;	break;
-	}
-
 	LPCTSTR category = NULL;
 	switch (custom_ref.category)
 	{
@@ -344,15 +330,15 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 	//------------------------------------------------------------------
 	// 日志格式示例:
 	//------------------------------------------------------------------
-	// 序号	优先级    类型   时间				内容
+	// 序号	类型   时间				内容
 	//------------------------------------------------------------------
-	// [1	normal	info	21:32:23.321]	this is a normal info. 
-	// [2	urgent	error	22:42:21.001]	this is a urgent error.
+	// [1	info	21:32:23.321]	this is a normal info. 
+	// [2	error	22:42:21.001]	this is a urgent error.
 	//------------------------------------------------------------------
 	
 	int chars_written = _stprintf_s(log_buffer, MAX_LOG_HEAD - 1, 
-		TEXT("[%d\t%s\t%s\t%02d:%02d:%02d.%03d]\t"),
-		++m_log_record_count, priority, category,
+		TEXT("[%d\t%s\t%02d:%02d:%02d.%03d]\t"),
+		++m_log_record_count, category,
 		st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 	if (-1 == chars_written)
 	{

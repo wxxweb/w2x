@@ -140,7 +140,6 @@ static LONG WINAPI HandleTopLevelException(EXCEPTION_POINTERS *_excption_ptr)
 
 	w2x::log::Custom custom;
 	custom.category = w2x::log::kCategoryWarn;
-	custom.priority = w2x::log::kPriorityUrgent;
 	custom.is_immediately = true;
 
 	w2x::log::Log(&custom, excption_str);
@@ -171,7 +170,6 @@ static void HandleInvalidParameter(
 
 	w2x::log::Custom custom;
 	custom.category = w2x::log::kCategoryWarn;
-	custom.priority = w2x::log::kPriorityUrgent;
 	custom.is_immediately = true;
 
 	w2x::log::Log(&custom, excption_str);
@@ -188,7 +186,6 @@ static void HandlePurecall(void)
 
 	w2x::log::Custom custom;
 	custom.category = w2x::log::kCategoryWarn;
-	custom.priority = w2x::log::kPriorityUrgent;
 	custom.is_immediately = true;
 
 	w2x::log::Log(&custom, excption_str);

@@ -20,14 +20,6 @@ W2X_DEFINE_NAME_SPACE_BEGIN(log)
 
 const size_t MAX_LOG_INFO = 1024; // 单条日志信息的缓冲区最大字符数
 
-// 日志内容优先级
-enum EPriority {
-	kPriorityNormal,	// 正常
-	kPriorityUrgent,	// 紧急
-	kPriorityHigh,		// 高
-	kPriorityLow,		// 低
-};
-
 // 日志内容分类
 enum ECategory {
 	kCategoryInfo,		// 信息, 一般日志信息, 不弹框提示
@@ -41,14 +33,12 @@ typedef UINT DirId;
 // 日志定制信息结构
 struct Custom
 {
-	EPriority priority;
 	ECategory category;
 	DirId work_dir_id;
 	bool is_immediately;// 是否立即打印日志，跳过日志排队
 	bool is_resue_file;	// 是否复用刚创建的日志文件, 不再重现创建, 必须在打第一条日志前设置才有效
 	Custom(DirId dir_id = 0) 
-		: priority(kPriorityNormal)
-		, category(kCategoryInfo)
+		: category(kCategoryInfo)
 		, work_dir_id(dir_id)
 		, is_immediately(false)
 		, is_resue_file(false) {}
