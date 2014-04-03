@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by w2x_network.rc
+// Used by w2x_flash.rc
 //
 
 // Next default values for new objects
