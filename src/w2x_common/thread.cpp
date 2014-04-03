@@ -52,6 +52,8 @@ public:
 private:
 	static UINT CALLBACK RealRoutine(PVOID _routine_args);
 
+	static LPCTSTR GetStateString(State _state);
+
 public:
 	DWORD		m_obj_id;
 	UINT		m_thread_id;
@@ -72,6 +74,7 @@ DWORD CThread::CImpl::sm_obj_count = 0;
 
 CThread::CImpl::CImpl(LPCTSTR _name)
 	: m_obj_id(W2X_ATOMIC_INCREMENT(&sm_obj_count))
+	, m_thread_id(0)
 	, m_obj_name(NULL)
 	, m_handle(NULL)
 	, m_state(kNew)
@@ -112,8 +115,8 @@ CThread::CImpl::~CImpl(void)
 {
 	TCHAR thread_info[128] = TEXT("");
 	_stprintf_s(thread_info, TEXT("w2x:thread:destruct: ")
-		TEXT("obj_id(%d), name(%s), handle(0x%x), id(0x%x)"),
-		m_obj_id, m_obj_name, m_handle, m_thread_id);
+		TEXT("obj_id(%d), name(%s), handle(0x%x), id(0x%x), state(%s)."),
+		m_obj_id, m_obj_name, m_handle, m_thread_id, CImpl::GetStateString(m_state));
 	::OutputDebugString(TEXT("\n"));
 	::OutputDebugString(thread_info);
 	::OutputDebugString(TEXT("\n"));
@@ -208,6 +211,23 @@ inline void CThread::CImpl::Wait(DWORD _millis)
 		return;
 	}
 	::WaitForSingleObject(m_handle, _millis);
+}
+
+
+LPCTSTR CThread::CImpl::GetStateString(State _state)
+{
+	switch (_state) {
+	case kNew:
+		return TEXT("new");
+	case kRunnable:
+		return TEXT("runnable");
+	case kRunning:
+		return TEXT("running");
+	case kTerminated:
+		return TEXT("terminated");
+	default:
+		return TEXT("unknow");
+	}
 }
 
 
