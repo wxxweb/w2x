@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<w2x>
+	<list id="0" type="xml">
+		<item id="str" url="../../config/flash/str.xml"></item>
+		<item id="ui" url="../../config/flash/ui.xml"></item>
+		<item id="res" url="../../config/flash/res.xml"></item>
+	</list>
+	<list id="1" type="swf">
+		<item id="res" url="../../res/flash/res.swf"></item>
+	</list>
+        <list id="2" type="css">
+		<item id="res" url="../../res/flash/ui.css"></item>
+	</list>
+</w2x>

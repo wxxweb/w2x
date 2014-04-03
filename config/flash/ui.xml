@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<w2x>
+	<!--主菜单BEGIN-->
+	<div id="main_menu" w="214" h="40" base="flash.display.Sprite">
+		<div id="function" x="0" base="flash.display.Sprite">
+			<event cls="MouseEvent" type="CLICK"></event>
+			<div id="0" cls="MainBtn" base="flash.display.SimpleButton">
+				<attr alpha="0.5"/>
+			</div>
+			<div id="1" x="8" y="8" z="1" cls="IconFunction" base="flash.display.Bitmap">
+				<attr mouseEnabled=""/>
+			</div>
+			<!--<div id="2" y="54" w="50" h="16" z="1" base="flash.text.TextField">
+				<attr align="center" size="15" color="0x60AC51" bold="1" text="功能"/>
+			</div>-->
+    </div>
+		<div id="discovery" x="65" base="flash.display.Sprite">
+			<event cls="MouseEvent" type="CLICK"></event>
+			<div id="0" cls="MainBtn" base="flash.display.SimpleButton">
+				<attr alpha="0.5"/>
+			</div>
+			<div id="1" x="8" y="8" z="1" cls="IconDiscovery" base="flash.display.Bitmap">
+				<attr mouseEnabled=""/>
+			</div>
+			<!--<div id="2" y="54" w="50" h="16" z="1" base="flash.text.TextField">
+				<attr align="center" size="15" color="0x60AC51" bold="1" text="发现"/>
+			</div>-->
+			<event cls="MouseEvent" type="CLICK"></event>
+		</div>
+		<div id="me" x="130" base="flash.display.Sprite">
+			<div id="0" cls="MainBtn" base="flash.display.SimpleButton">
+				<attr alpha="0.5"/>
+			</div>
+			<div id="1" x="8" y="8" z="1" cls="IconMe" base="flash.display.Bitmap">
+				<attr mouseEnabled=""/>
+			</div>
+			<!--<div id="2" y="54" w="50" h="16" z="1" base="flash.text.TextField">
+				<attr align="center" size="15" color="0x60AC51" bold="1" text="我"/>
+			</div>-->
+		</div>
+		<div id="friend" x="195" base="flash.display.Sprite">
+			<div id="0" cls="MainBtn" base="flash.display.SimpleButton">
+				<attr alpha="0.5"/>
+			</div>
+			<div id="1" x="8" y="8" z="1" cls="IconFriend" base="flash.display.Bitmap">
+				<attr mouseEnabled=""/>
+			</div>
+			<!--<div id="2" y="54" w="50" h="16" z="1" base="flash.text.TextField">
+				<attr align="center" size="15" color="0x60AC51" bold="1" text="亲友"/>
+			</div>-->
+		</div>
+		<div id="setting" x="260" base="flash.display.Sprite">
+			<div id="0" cls="MainBtn" base="flash.display.SimpleButton">
+				<attr alpha="0.5"/>
+			</div>
+			<div id="1" x="8" y="8" z="1" cls="IconSetting" base="flash.display.Bitmap">
+				<attr mouseEnabled=""/>
+			</div>
+			<!--<div id="2" y="54" w="50" h="16" z="1" base="flash.text.TextField">
+				<attr align="center" size="15" color="0x60AC51" bold="1" text="设置"/>
+			</div>-->
+		</div>
+	</div>
+	<!--主菜单END-->
+	<!--功能面板BEGIN-->
+	<div id="function" base="flash.display.Sprite">
+		<div id="frame" cls="FnDlg" base="flash.display.Sprite"></div>
+		<div id="input" x="130" y="10" z="1" w="300" h="30" base="fl.controls.TextInput"></div>
+	</div>
+	<!--功能面板END-->
+	<!--发现对话框BEGIN-->
+	<div id="discovery" base="flash.display.Sprite">
+		<div id="frame" cls="DiscDlg" base="flash.display.MovieClip"></div>
+	</div>
+	<!--发现对话框END-->
+</w2x>
