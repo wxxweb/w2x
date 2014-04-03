@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{840CA657-7A92-4AF9-83A8-4BFD65184D2B}</ProjectGuid>
+    <ProjectGuid>{2A261E31-743F-46D8-BDDA-93C22F82C24E}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>test_flash</RootNamespace>
   </PropertyGroup>
@@ -59,8 +59,15 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>common.lib;flash.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>w2x_common.lib;w2x_flash.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreLinkEvent>
+      <Command>
+      </Command>
+    </PreLinkEvent>
+    <PostBuildEvent>
+      <Command>$(SolutionDir)tool\copy_module_to_env.bat $(SolutionDir)bin\$(Configuration) $(SolutionDir)env\$(Configuration)&amp;&amp;$(SolutionDir)tool\copy_res_to_env.bat $(SolutionDir)res $(SolutionDir)env\$(Configuration)&amp;&amp;$(SolutionDir)tool\copy_config_to_env.bat $(SolutionDir)config $(SolutionDir)env\$(Configuration)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -78,8 +85,15 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>common.lib;flash.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>w2x_common.lib;w2x_flash.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreLinkEvent>
+      <Command>
+      </Command>
+    </PreLinkEvent>
+    <PostBuildEvent>
+      <Command>$(SolutionDir)tool\copy_module_to_env.bat $(SolutionDir)bin\$(Configuration) $(SolutionDir)env\$(Configuration)&amp;&amp;$(SolutionDir)tool\copy_res_to_env.bat $(SolutionDir)res $(SolutionDir)env\$(Configuration)&amp;&amp;$(SolutionDir)tool\copy_config_to_env.bat $(SolutionDir)config $(SolutionDir)env\$(Configuration)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />

@@ -35,10 +35,12 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include "flash/wnd_flash.h"
-#include "flash/flash_event.h"
+#include "w2x_flash/wnd_flash.h"
+#include "w2x_flash/flash_event.h"
+#include "w2x_common/sys_tray.h"
 
 #define MAX_LOADSTRING 100
+#define WMU_NOTIFY_ICON WM_APP + 100
 
 // Global Variables:
 HINSTANCE hInst;								// current instance
@@ -53,7 +55,8 @@ void				OnFlashCommand(const w2x::events::CEvent& _event_ref);
 
 HWND g_hWnd = NULL;
 HINSTANCE g_hInst = NULL;
-w2x::ui::CWndFlash *g_flashWnd = NULL;
+w2x::CRefPtr<w2x::ui::CWndFlash> g_flashWnd = NULL;
+w2x::CRefPtr<w2x::ui::CSysTray> g_sys_tray = NULL;
 
 HINSTANCE app_instance_;
 
@@ -86,16 +89,25 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	hAccelTable = LoadAccelerators(hInstance, (LPCTSTR)IDC_FLASH);
 
 	TCHAR szSwfFilePath[MAX_PATH] = TEXT("");
-	::GetModuleFileName(NULL, szSwfFilePath, MAX_PATH);
-	::PathRemoveFileSpec(szSwfFilePath);
-	_tcscat_s(szSwfFilePath, TEXT("\\GLinking.swf"));
+	//::GetModuleFileName(NULL, szSwfFilePath, MAX_PATH);
+	::GetCurrentDirectory(MAX_PATH, szSwfFilePath);
+	_tcscat_s(szSwfFilePath, TEXT("\\res\\flash\\GLinking.swf"));
+	if (FALSE == ::PathFileExists(szSwfFilePath))
+	{
+		::MessageBox(NULL, szSwfFilePath, TEXT("资源文件不存在"), MB_OK);
+		return FALSE;
+	}
+	
+	g_sys_tray = new w2x::ui::CSysTray(g_hWnd, WMU_NOTIFY_ICON, TEXT("text"), 
+		::LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_SMALL)), IDC_FLASH);
 
 	g_flashWnd = new w2x::ui::CWndFlash();
-	if (true == g_flashWnd->Create(szSwfFilePath, g_hWnd, g_hInst))
+	g_flashWnd->AddEventListener(
+		w2x::events::CFlashEvent::EVENT_ENTER_MAIN, OnFlashCommand);
+	if (true == g_flashWnd->Create(TEXT("main_menu"), szSwfFilePath, g_hWnd, g_hInst))
 	{
 		g_flashWnd->SetCaptionArea(0, 0, 600, 20);
-		g_flashWnd->AddEventListener(
-			w2x::events::CFlashEvent::EVENT_COMMAND, OnFlashCommand);
+		
 	}
 
 	// Main message loop:
@@ -107,8 +119,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			DispatchMessage(&msg);
 		}
 	}
-
-	delete g_flashWnd;
 	
 	return msg.wParam;
 }
@@ -236,6 +246,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				::PostMessage(hWnd, WM_CLOSE, 0, 0);
 			}
+		case WMU_NOTIFY_ICON:
+			DestroyWindow(hWnd);
+			//g_sys_tray->OnTrayNotification(wParam, lParam);
+			break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
    }
@@ -247,7 +261,7 @@ void OnFlashCommand(const w2x::events::CEvent& _event_ref)
 	using namespace w2x::events;
 	const CFlashEvent& flash_event = static_cast<const CFlashEvent&>(_event_ref);
 	LPCTSTR cmmmand = flash_event.GetCommand();
-	LPCTSTR args = flash_event.GetCommandArgs();
+	LPCTSTR args = flash_event.GetArguments();
 	_event_ref.GetTypeName();
-	g_flashWnd->CallFunction(TEXT("Notify"), TEXT("123"));
+	//g_flashWnd->CallFunction(TEXT("Notify"), TEXT("123"));
 }

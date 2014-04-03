@@ -2,22 +2,27 @@
 //
 
 #include "stdafx.h"
-#include "common\common.h"
-#include "network\lan_neighbor.h"
+#include "w2x_common\common.h"
+#include "w2x_network\net_center.h"
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	w2x::debug::EnableExcptionHandle();
-	//w2x::debug::SetReportMode(w2x::debug::kModeStderr);
 	w2x::debug::EnableLeakCheck(true);
 
-	SOCKADDR_IN sock_addr_in = {0};
-	w2x::network::CLanNeighbor lan_neighbor;
-	//do {
-		_tprintf_s(TEXT("Say Hello to everyone."));
-		lan_neighbor.SayHello(22221);
-		::Sleep(1000);
-	//} while (true);
+	setlocale(LC_ALL ,"chs");
+
+// 	w2x::network::ITinySocketMsg::SetAuthCode(glk::MSG_AUTH_CODE);
+// 
+// 	w2x::network::CLanNeighbor lan_neighbor;
+// 	w2x::network::ITinySocketMsg::InitUdp(glk::UDP_DATA_PORT);
+// 	w2x::network::ITinySocketMsg::FilterOutLoopback(false);
+// 
+// 	//do {
+// 		_tprintf_s(TEXT("Say Hello to everyone."));
+// 		lan_neighbor.SayHello(glk::UDP_BROADCAST_PORT);
+// 		::Sleep(2000);
+// 	//} while (true);
 
 	system("pause");
 	return 0;
