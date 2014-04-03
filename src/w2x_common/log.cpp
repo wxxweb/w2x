@@ -588,7 +588,7 @@ bool CLogImpl::InitStartupInfo(void)
 	file_handle = NULL;
 
 	bool is_write_successed = true;
-	if (false == m_global_custom.is_resue_file)
+	if (false == m_global_custom.is_reuse_file)
 	{
 		// 启动次数递增
 		if (999 < ++m_startup_count)

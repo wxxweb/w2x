@@ -36,12 +36,12 @@ struct Custom
 	ECategory category;
 	DirId work_dir_id;
 	bool is_immediately;// 是否立即打印日志，跳过日志排队
-	bool is_resue_file;	// 是否复用刚创建的日志文件, 不再重现创建, 必须在打第一条日志前设置才有效
+	bool is_reuse_file;	// 是否复用刚创建的日志文件, 不再重现创建, 必须在打第一条日志前设置才有效
 	Custom(DirId dir_id = 0) 
 		: category(kCategoryInfo)
 		, work_dir_id(dir_id)
 		, is_immediately(false)
-		, is_resue_file(false) {}
+		, is_reuse_file(false) {}
 };
 
 
