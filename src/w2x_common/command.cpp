@@ -1,9 +1,9 @@
 /******************************************************************************
- * 文件：	command.cpp
- * 描述：参见 command.h
- * 作者：	wu.xiongxing
- * 邮箱：	wxxweb@gmail.com
- * 时间：	2013-01-21
+ * 文件:		command.cpp
+ * 描述:		参见 command.h
+ * 作者:		wu.xiongxing
+ * 邮箱:		wxxweb@gmail.com
+ * 时间:		2014-01-21
  ******************************************************************************/
 
 #include "stdafx.h"
@@ -39,7 +39,7 @@ public:
 private:
 	inline int EnsureOutputIsUnicode(void);
 	CCommand::EExecuteStatus ReadPipe(void);
-	static DWORD WINAPI ReadPipeThread(PVOID _thread_param);
+	static UINT CALLBACK ReadPipeThread(PVOID _thread_param);
 
 private:
 	bool		 m_is_save_output;
@@ -89,24 +89,25 @@ CCommand::EExecuteStatus CCommand::CImpl::Execute(
 	}
 
 	// 创建匿名管道
-	HANDLE pipe_write_handle = 0;
+	HANDLE pipe_write_handle = NULL;
 	SECURITY_ATTRIBUTES sa = {0};
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 	sa.lpSecurityDescriptor = NULL;
 	sa.bInheritHandle = TRUE;
-	const BOOL is_create_pipe_successed = CreatePipe(
+	const BOOL is_create_pipe_successed = ::CreatePipe(
 		&m_read_pipe_handle, &pipe_write_handle, &sa, PIPE_BUFFER_SIZE);
-	IF_FALSE_ASSERT (TRUE == is_create_pipe_successed)
+	if (FALSE == is_create_pipe_successed)
 	{
 		const DWORD dwErrorCode = ::GetLastError();
 		w2x::log::LogError(TEXT("Create pipe faild(%d). CMD: %s %s"),
 			dwErrorCode, m_app_path, m_app_args);
 
+		ASSERT(FALSE != is_create_pipe_successed);
 		return ES_CREATE_PIPE_FAILD;
 	}  
 
 	// 父进程从子进程标准输出管道里读东西，子进程只写，不继承读的管道。
-	SetHandleInformation(m_read_pipe_handle, HANDLE_FLAG_INHERIT, 0);
+	::SetHandleInformation(m_read_pipe_handle, HANDLE_FLAG_INHERIT, 0);
 
 	memset(m_app_path, 0, sizeof(m_app_path));
 	wcscpy_s(m_app_path, NULL != _app_path ? _app_path : TEXT(""));
@@ -128,7 +129,7 @@ CCommand::EExecuteStatus CCommand::CImpl::Execute(
 	// app_path 不能用 m_app_path 替代, 否则DOS命令会执行失败
 	const BOOL is_create_process_successed = ::CreateProcess(
 		_app_path, m_app_args, NULL, NULL, TRUE, NULL, NULL, NULL, &si, &pi);
-	IF_FALSE_ASSERT (TRUE == is_create_process_successed)
+	if (FALSE == is_create_process_successed)
 	{  
 		const DWORD dwErrorCode = ::GetLastError();
 
@@ -140,6 +141,7 @@ CCommand::EExecuteStatus CCommand::CImpl::Execute(
 		w2x::log::LogError(TEXT("Create command sub process faild(%d). CMD: %s %s"), 
 			dwErrorCode, m_app_path, m_app_args);
 
+		ASSERT(FALSE != is_create_process_successed);
 		return ES_CREATE_PROCESS;
 	}
 	// 父进程不需要写句柄，需立即关掉
@@ -164,13 +166,14 @@ CCommand::EExecuteStatus CCommand::CImpl::Execute(
 	}
 	else // 如果要控制读管道的超时时间，就要创建读管道线程
 	{
-		m_read_thread_handle = ::CreateThread(NULL, 0, CImpl::ReadPipeThread,
-			static_cast<LPVOID>(this), 0, NULL);
-		IF_FALSE_ASSERT (NULL != m_read_thread_handle)
+		m_read_thread_handle = (HANDLE)_beginthreadex(NULL, 0, 
+			CImpl::ReadPipeThread, static_cast<LPVOID>(this), 0, NULL);
+		if (NULL == m_read_thread_handle)
 		{
 			const DWORD dwErrorCode = ::GetLastError();
 			w2x::log::LogError(TEXT("Create read pipe thread faild(%d). CMD: %s %s"), 
 				dwErrorCode, m_app_path, m_app_args);
+			ASSERT(NULL != m_read_thread_handle);
 		}
 		else
 		{
@@ -234,7 +237,7 @@ CCommand::EExecuteStatus CCommand::CImpl::ReadPipe(void)
 	return ES_SUCCESSED;
 }
 
-DWORD WINAPI CCommand::CImpl::ReadPipeThread(PVOID _thread_param)
+UINT CALLBACK CCommand::CImpl::ReadPipeThread(PVOID _thread_param)
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_thread_param, ES_INVALID_ARG);
 
