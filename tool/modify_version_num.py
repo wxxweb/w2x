@@ -1,3 +1,4 @@
+#coding:utf-8
 import os
 import re
 import sys
@@ -14,16 +15,16 @@ def usage():
 
   
 def checkArgv():
-    #¼ì²â²ÎÊı¸öÊı
+    #æ£€æµ‹å‚æ•°ä¸ªæ•°
     argc = len(sys.argv)
     if 3 != argc:
         print "The number of parameters does not match.\n"
         return False
-    #¼ì²â×ÊÔ´ÎÄ¼şÊÇ·ñ´æÔÚ
+    #æ£€æµ‹èµ„æºæ–‡ä»¶æ˜¯å¦å­˜åœ¨
     if False == os.path.exists(sys.argv[1]):
         print "Not found file:", sys.argv[1], "\n"
         return
-    #¼ì²â°æ±¾ºÅ¸ñÊ½ÊÇ·ñÕıÈ·
+    #æ£€æµ‹ç‰ˆæœ¬å·æ ¼å¼æ˜¯å¦æ­£ç¡®
     global ver_num
     ver_num = sys.argv[2].split(".")
     if 3 != len(ver_num):
@@ -112,6 +113,5 @@ def scanResFile(file_path_):
 if False == checkArgv():
     usage()
     exit()
-print ver_num
 scanResFile(sys.argv[1])
     
