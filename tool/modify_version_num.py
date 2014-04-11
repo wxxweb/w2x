@@ -3,37 +3,40 @@ import re
 import sys
 import string
 
+
+ver_num = []
+
+
 def usage():
     print "Modify program version number, using VC development and increasing its compiler version number."
     print "USAGE: python", sys.argv[0], "<rc> <major>.<minor>.<revision>"
     print "e.g.:  python", sys.argv[0], "resource.rc 1.0.1"
 
-argc = len(sys.argv)
-
-if 3 != argc:
-    print "The number of parameters does not match.\n"
-    usage()
-    exit()
-    
-file_path = sys.argv[1]
-if False == os.path.exists(file_path):
-    print "Not found file:", file_path, "\n"
-    usage()
-    exit()
-    
-ver_num = sys.argv[2].split(".")
-if 3 != len(ver_num):
-    print "Invalid version number.\n"
-    usage()
-    exit()
-    
-for i in range(0, 3):
-    if False == ver_num[i].isdigit():
+  
+def checkArgv():
+    #检测参数个数
+    argc = len(sys.argv)
+    if 3 != argc:
+        print "The number of parameters does not match.\n"
+        return False
+    #检测资源文件是否存在
+    if False == os.path.exists(sys.argv[1]):
+        print "Not found file:", sys.argv[1], "\n"
+        return
+    #检测版本号格式是否正确
+    global ver_num
+    ver_num = sys.argv[2].split(".")
+    if 3 != len(ver_num):
         print "Invalid version number.\n"
-        usage()
-        exit()
+        return
+    for i in range(0, 3):
+        if False == ver_num[i].isdigit():
+            print "Invalid version number.\n"
+            return
+    return True
+            
 
-def modifyVersionNumber(file_, line_, name_, seq_):
+def checkLine(file_, line_, name_, seq_):
     if -1 == line_.find(name_):
         file_.write(line_)
         return False
@@ -57,6 +60,7 @@ def modifyVersionNumber(file_, line_, name_, seq_):
         has_quote = True     
     ver_info = re.split("[" + seq_ + "]", ver_str)
     ver_info[3] = str(string.atoi(ver_info[3]) + 1)
+    global ver_num
     ver_info[0] = ver_num[0]
     ver_info[1] = ver_num[1]
     ver_info[2] = ver_num[2]
@@ -69,42 +73,45 @@ def modifyVersionNumber(file_, line_, name_, seq_):
     print line_
     return True
     
-
-res_file = open(file_path, "r")
-new_file = open(file_path + ".tmp", "w")
-
-try:
-    file_line = "x"
-    while file_line:
-        file_line = res_file.readline()
-        if modifyVersionNumber(new_file, file_line, "FILEVERSION", ","):
-            break
-        
-    while file_line:
-        file_line = res_file.readline()
-        if modifyVersionNumber(new_file, file_line, "PRODUCTVERSION", ","):
-            break
+def scanResFile(file_path_):
+    res_file = open(file_path_, "r")
+    new_file = open(file_path_ + ".tmp", "w")
     
-    while file_line:
-        file_line = res_file.readline()
-        if modifyVersionNumber(new_file, file_line, "FileVersion", "."):
-            break
-
-      
-    while file_line:
-        file_line = res_file.readline()
-        if modifyVersionNumber(new_file, file_line, "ProductVersion", "."):
-            break
-        
-    while file_line:
-        file_line = res_file.readline()
-        new_file.write(file_line)
-except:
+    try:
+        file_line = "x"
+        while file_line:
+            file_line = res_file.readline()
+            if checkLine(new_file, file_line, "FILEVERSION", ","):
+                break  
+        while file_line:
+            file_line = res_file.readline()
+            if checkLine(new_file, file_line, "PRODUCTVERSION", ","):
+                break
+        while file_line:
+            file_line = res_file.readline()
+            if checkLine(new_file, file_line, '"FileVersion"', "."):
+                break
+        while file_line:
+            file_line = res_file.readline()
+            if checkLine(new_file, file_line, '"ProductVersion"', "."):
+                break
+        while file_line:
+            file_line = res_file.readline()
+            new_file.write(file_line)
+    except:
+        res_file.close()
+        new_file.close() 
+        os.remove(file_path_ + ".tmp")
+    
     res_file.close()
-    new_file.close() 
-    os.remove(file_path + ".tmp")
-
-res_file.close()
-new_file.close()
-os.remove(file_path)
-os.rename(file_path + ".tmp", file_path)
+    new_file.close()
+    os.remove(file_path_)
+    os.rename(file_path_ + ".tmp", file_path_)
+    
+    
+if False == checkArgv():
+    usage()
+    exit()
+print ver_num
+scanResFile(sys.argv[1])
+    
