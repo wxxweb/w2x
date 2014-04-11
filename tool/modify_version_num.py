@@ -77,6 +77,7 @@ def checkLine(file_, line_, name_, seq_):
 def scanResFile(file_path_):
     res_file = open(file_path_, "r")
     new_file = open(file_path_ + ".tmp", "w")
+    is_scan_successed = False
     
     try:
         file_line = "x"
@@ -99,15 +100,17 @@ def scanResFile(file_path_):
         while file_line:
             file_line = res_file.readline()
             new_file.write(file_line)
-    except:
+            
+        is_scan_successed = True
+    finally:
         res_file.close()
-        new_file.close() 
-        os.remove(file_path_ + ".tmp")
-    
-    res_file.close()
-    new_file.close()
-    os.remove(file_path_)
-    os.rename(file_path_ + ".tmp", file_path_)
+        new_file.close()
+        if not is_scan_successed:
+            os.remove(file_path_ + ".tmp")
+        
+    if is_scan_successed:
+        os.remove(file_path_)
+        os.rename(file_path_ + ".tmp", file_path_)
     
     
 if False == checkArgv():
