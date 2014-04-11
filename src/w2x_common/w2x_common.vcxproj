@@ -72,6 +72,10 @@
       <Command>
       </Command>
     </PreLinkEvent>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -103,6 +107,9 @@
       <Command>
       </Command>
     </PreLinkEvent>
+    <PreBuildEvent>
+      <Command>python "$(SolutionDir)tool\modify_version_num.py" "$(ProjectDir)$(TargetName).rc" 0.1.2</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="base.h" />

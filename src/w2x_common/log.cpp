@@ -78,12 +78,12 @@ W2X_IMPLEMENT_LOCKING(CLogImpl, CAutoLock)
 
 public:
 	static CLogImpl& GetInstance(void);
-	bool Initialize(void);
-	void Uninitialize(void);
-	bool SetGlobal(const Custom& _custom_ref);
-	void GetGlobal(Custom& _custom_ref);
-	const Custom& GetGlobal(void);
-	void ResetGlobal(void);
+	inline bool Initialize(void);
+	inline void Uninitialize(void);
+	inline bool SetGlobal(const Custom& _custom_ref);
+	inline void GetGlobal(Custom& _custom_ref);
+	inline const Custom& GetGlobal(void);
+	inline void ResetGlobal(void);
 	bool GetRootDir(LPTSTR _dir_path, size_t _size_in_words);
 	DirId AddWorkDir(LPCTSTR _dir_name);
 	bool GetLogFile(LPTSTR _str_buffer, size_t _size_in_words, DirId _work_dir_id);
@@ -127,13 +127,9 @@ private:
 	DirMap	m_work_dir_name_map;		// 存放日志读写工作目录全路径, 不包含最后"\"
 	Custom	m_global_custom;			// 全局日志定制信息, 应用于每条做特殊定制的日志
 	CMsgLoop m_msg_loop;				// 日志消息循环处理对象
-
-	static std::auto_ptr<CLogImpl> sm_auto_this_ptr; 
 };
 
 W2X_IMPLEMENT_LOCKING_CLASS(CLogImpl, CAutoLock)
-
-std::auto_ptr<CLogImpl> CLogImpl::sm_auto_this_ptr;
 
 //----------------------------------------------------------------------------
 // 以下为日志模块实现类的构造和析构函数.
@@ -182,12 +178,12 @@ CLogImpl& CLogImpl::GetInstance(void)
 }
 
 // 为了较早创建日志模块对象, 不要在其他析构函数里使用s_log_impl_ref.
-static CLogImpl& s_log_impl_ref = CLogImpl::GetInstance();
+//static CLogImpl& s_log_impl_ref = CLogImpl::GetInstance();
 
 //----------------------------------------------------------------------------
 // 初始化日志模块, 确保日志相关目录、文件被创建, 并缓存它们的全路径等信息.
 //----------------------------------------------------------------------------
-bool CLogImpl::Initialize(void)
+inline bool CLogImpl::Initialize(void)
 {
 	this->RemoveExpiredLogFiles();
 	this->GetTodayDir();
@@ -199,7 +195,7 @@ bool CLogImpl::Initialize(void)
 //----------------------------------------------------------------------------
 // 释放日志模块所获取的资源, 如关闭文件等.
 //----------------------------------------------------------------------------
-void CLogImpl::Uninitialize(void)
+inline void CLogImpl::Uninitialize(void)
 {
 	// 不主动停止日志循环, 让它打完
 	m_msg_loop.StopLoopThread();
@@ -208,7 +204,7 @@ void CLogImpl::Uninitialize(void)
 //----------------------------------------------------------------------------
 // 设置全局日志定制信息, 未做特殊定制的日志均采用默认定制.
 //----------------------------------------------------------------------------
-bool CLogImpl::SetGlobal(const Custom& _custom_ref)
+inline bool CLogImpl::SetGlobal(const Custom& _custom_ref)
 {
 	CAutoLock autoLock(this);
 
@@ -229,13 +225,12 @@ bool CLogImpl::SetGlobal(const Custom& _custom_ref)
 //----------------------------------------------------------------------------
 // 获取当前的全局日志定制信息.
 //----------------------------------------------------------------------------
-void CLogImpl::GetGlobal(Custom& _custom_ref)
+inline void CLogImpl::GetGlobal(Custom& _custom_ref)
 {
-	CAutoLock autoLock(this);
 	_custom_ref = m_global_custom;
 }
 
-const Custom& CLogImpl::GetGlobal(void)
+inline const Custom& CLogImpl::GetGlobal(void)
 {
 	return m_global_custom;
 }
@@ -243,7 +238,7 @@ const Custom& CLogImpl::GetGlobal(void)
 //----------------------------------------------------------------------------
 // 重置全局日志信息为最初状态.
 //----------------------------------------------------------------------------
-void CLogImpl::ResetGlobal(void)
+inline void CLogImpl::ResetGlobal(void)
 {
 	m_global_custom = Custom();
 }
@@ -287,7 +282,7 @@ DirId CLogImpl::AddWorkDir(LPCTSTR _dir_name)
 	return true;
 }
 
-bool CLogImpl::GetRootDir(LPTSTR _dir_path, size_t _size_in_words)
+inline bool CLogImpl::GetRootDir(LPTSTR _dir_path, size_t _size_in_words)
 {
 	if (NULL == _dir_path)
 	{
@@ -303,7 +298,7 @@ bool CLogImpl::GetRootDir(LPTSTR _dir_path, size_t _size_in_words)
 //----------------------------------------------------------------------------
 bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg_list_ref)
 {
-	const Custom& custom_ref = (NULL != _custom_ptr) ? *_custom_ptr : s_log_impl_ref.GetGlobal();
+	const Custom& custom_ref = (NULL != _custom_ptr) ? *_custom_ptr : m_global_custom;
 
 #ifndef _DEBUG
 	if (kCategoryDebug == custom_ref.category)
@@ -376,7 +371,7 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 	return 0 >= chars_written;
 }
 
-LPCTSTR CLogImpl::GetModuleName(void)
+inline LPCTSTR CLogImpl::GetModuleName(void)
 {
 	if (TEXT('\0') != m_module_name[0])
 	{
@@ -496,6 +491,10 @@ bool CLogImpl::EnsureLogFile(LPCTSTR _file_path)
 	::CloseHandle(file_handle);
 	file_handle = NULL;
 
+	::OutputDebugString(TEXT("\nCreate log file: "));
+	::OutputDebugString(_file_path);
+	::OutputDebugString(TEXT("\n"));
+
 	return true;
 }
 
@@ -540,7 +539,6 @@ bool CLogImpl::WriteLogFile(LPCTSTR _file_path, LPCTSTR _log_record)
 
 bool CLogImpl::InitStartupInfo(void)
 {
-	CAutoLock autoLock(this);
 	if (true == m_is_init_startup_info)
 	{
 		return false;
@@ -901,8 +899,6 @@ bool CLogImpl::GetLogFile(LPTSTR _str_buffer,
 		ASSERT(false);
 		return false;
 	}
-
-	CAutoLock autoLock(this);
 
 	TCHAR work_dir_path[MAX_PATH] = {0};
 	if (NULL == this->GetWorkDir(

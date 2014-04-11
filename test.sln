@@ -19,7 +19,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_find_others_client", "
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_find_others_server", "test\test_find_others_server\test_find_others_server.vcxproj", "{9A84075A-D9D1-16E5-F414-6FFE87BA1449}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_flash", "test\test_flash\test_flash.vcxproj", "{840CA657-7A92-4AF9-83A8-4BFD65184D2B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_flash", "test\test_flash\test_flash.vcxproj", "{2A261E31-743F-46D8-BDDA-93C22F82C24E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,10 +63,10 @@ Global
 		{9A84075A-D9D1-16E5-F414-6FFE87BA1449}.Debug|Win32.Build.0 = Debug|Win32
 		{9A84075A-D9D1-16E5-F414-6FFE87BA1449}.Release|Win32.ActiveCfg = Release|Win32
 		{9A84075A-D9D1-16E5-F414-6FFE87BA1449}.Release|Win32.Build.0 = Release|Win32
-		{840CA657-7A92-4AF9-83A8-4BFD65184D2B}.Debug|Win32.ActiveCfg = Debug|Win32
-		{840CA657-7A92-4AF9-83A8-4BFD65184D2B}.Debug|Win32.Build.0 = Debug|Win32
-		{840CA657-7A92-4AF9-83A8-4BFD65184D2B}.Release|Win32.ActiveCfg = Release|Win32
-		{840CA657-7A92-4AF9-83A8-4BFD65184D2B}.Release|Win32.Build.0 = Release|Win32
+		{2A261E31-743F-46D8-BDDA-93C22F82C24E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2A261E31-743F-46D8-BDDA-93C22F82C24E}.Debug|Win32.Build.0 = Debug|Win32
+		{2A261E31-743F-46D8-BDDA-93C22F82C24E}.Release|Win32.ActiveCfg = Release|Win32
+		{2A261E31-743F-46D8-BDDA-93C22F82C24E}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

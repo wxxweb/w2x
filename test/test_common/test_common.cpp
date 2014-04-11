@@ -485,7 +485,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//TestVariable();
 	//TestExcption();
-	TestNetwork();
+	//TestNetwork();
+	TestLog();
 	
 	system("pause");
 	return 0;
