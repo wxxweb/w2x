@@ -218,7 +218,7 @@ static bool GetWorkIpAddrRow(
 		DWORD local_ip_addr = ip_addr_table_ptr->table[i].dwAddr;	// »ñÈ¡IPµØÖ·
 
 		// ÅÅ³ý 127.0.0.1
-		if (0x7F != ((ntohl(local_ip_addr) >> 24) & 0xFF))
+		if (INADDR_ANY != local_ip_addr && INADDR_LOOPBACK != ntohl(local_ip_addr))
 		{
 			memcpy(&_ip_addr_row, 
 				&(ip_addr_table_ptr->table[i]), sizeof(MIB_IPADDRROW));
