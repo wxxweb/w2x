@@ -1025,7 +1025,7 @@ bool CALLBACK CTinySocket::CImpl::HandlePopRecvPacket(
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_handler_param, false);
 	IF_NULL_ASSERT_RETURN_VALUE(_packet_info_ptr, false);
-	UNUSED(_packet_param);
+	UNUSED_ALWAYS(_packet_param);
 
 	static CImpl* s_this_ptr = NULL;
 	s_this_ptr = reinterpret_cast<CImpl*>(_handler_param);
@@ -1057,7 +1057,7 @@ bool CALLBACK CTinySocket::CImpl::HandlePopSendPacket(
 
 	IF_NULL_ASSERT_RETURN_VALUE(_handler_param, false);
 	IF_NULL_ASSERT_RETURN_VALUE(_packet_info_ptr, false);
-	UNUSED(_packet_param);
+	UNUSED_ALWAYS(_packet_param);
 
 	static CImpl* s_this_ptr = NULL;
 	s_this_ptr = reinterpret_cast<CImpl*>(_handler_param);
@@ -1128,7 +1128,7 @@ void CALLBACK CTinySocket::CImpl::HandleRecvCompletion(
 	)
 {
  	IF_NULL_ASSERT_RETURN(_overlapped_ptr);
-	UNUSED(_flags);
+	UNUSED_ALWAYS(_flags);
 
 	// 如果与服务器连接中断，断开与远程服务器连接，尝试再次连接
 	IF_FALSE_ASSERT (NO_ERROR == _error_code && 0 < _bytes_transferred)
