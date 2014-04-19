@@ -133,7 +133,7 @@
 
 /* 如果指针 p 值为空,  弹出断言对话框, 并继续执行 if 语句体 */
 #ifndef IF_NULL_ASSERT
-#  define IF_NULL_ASSERT(p) if ((NULL == (p)) ? (ASSERT(!("IF_NULL: "#p)), false) : true)
+#  define IF_NULL_ASSERT(p) if ((NULL == (p)) ? (ASSERT(!("IF_NULL: "#p)), true) : false)
 #endif
 
 
