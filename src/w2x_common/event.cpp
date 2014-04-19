@@ -8,6 +8,7 @@
 
 #include "stdafx.h"
 #include "event.h"
+#include "mutex.h"
 
 
 W2X_NAME_SPACE_BEGIN

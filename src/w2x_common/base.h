@@ -1,22 +1,22 @@
 /******************************************************************************
- * 文件：	base.h
- * 描述：	IBase 接口类定义了引用计数的实现方法。为了避免不小心导致的内存泄露等问题，凡
+ * 文件:		base.h
+ * 描述:		IBase 接口类定义了引用计数的实现方法。为了避免不小心导致的内存泄露等问题，凡
  *          框架类都有必要继承该接口。务必通过宏 W2X_IMPLEMENT_REFCOUNTING 在 IBase
  *			的子类中实现引用计数相关接口函数。应尽量避免手动调用 AddRef() 和 Release()
  *			来修改引用计数值，最好的办法是使用智能指针类 CRefPtr 来管理 IBase 子类对象
  *			的指针。不要直接操作 IBase 子类对象的指针，而是将指针赋给 CRefPtr 对象，通过
  *			CRefPtr 对象来间接操作。请参见 ref_ptr.h
- * 作者：	wu.xiongxing					
- * 邮箱：	wxxweb@gmail.com
- * 日期：	2014-02-23
-*******************************************************************************/
+ * 作者:		wu.xiongxing					
+ * 邮箱:		wxxweb@gmail.com
+ * 创建:		2014-02-23
+ * 修改:		2014-04-19
+ ******************************************************************************/
 
 #ifndef __W2X_COMMON_BASE_H__
 #define __W2X_COMMON_BASE_H__
 
 #include "exports.h"
 #include "ref_count.h"
-
 
 W2X_NAME_SPACE_BEGIN
 
@@ -53,28 +53,6 @@ public:
 	 */
 	virtual int w2xGetRefCount(void) = 0;
 };
-
-
-/**
- * 该宏为继承 IBase 的类提供引用计数的代码实现。
- */
-#define W2X_IMPLEMENT_REFCOUNTING(class_name)                   \
-public:                                                         \
-    /** 谨慎调用该函数，尽量使用智能指针 CRefPtr 的 attach() 替代 */  \
-	int w2xAddRef(void) {                                       \
-        return m_ref_count.w2xAddRef();                         \
-     }                                                          \
-	/** 谨慎调用该函数，尽量使用智能指针 CRefPtr 的 detach() 替代 */  \
-	int w2xRelease(void) {                                      \
-		int retval = m_ref_count.w2xRelease();                  \
-		if (0 == retval) { delete this; }                       \
-		return retval;                                          \
-	}                                                           \
-	int w2xGetRefCount(void) {                                  \
-        return m_ref_count.w2xGetRefCount();                    \
-    }                                                           \
-private:                                                        \
-  w2x::CRefCount m_ref_count;
 
 
 W2X_NAME_SPACE_END

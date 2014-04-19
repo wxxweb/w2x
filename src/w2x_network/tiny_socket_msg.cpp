@@ -10,7 +10,8 @@
 #include "tiny_socket_msg.h"
 #include "tiny_socket.h"
 #include "utility.h"
-#include "w2x_common\common.h"
+//#include "w2x_common\common.h"
+#include "w2x_common\mutex.h"
 #include "w2x_common\encode.h"
 #include "w2x_common\log.h"
 

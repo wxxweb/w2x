@@ -1,14 +1,16 @@
 /******************************************************************************
- * 文件：	event_dispathcer.cpp
- * 描述：	参见 event_dispathcer.h
- * 作者：	wu.xiongxing					
- * 邮箱：	wxxweb@gmail.com
- * 日期：	2014-02-24
-*******************************************************************************/
+ * 文件:		event_dispathcer.cpp
+ * 描述:		参见 event_dispathcer.h
+ * 作者:		wu.xiongxing					
+ * 邮箱:		wxxweb@gmail.com
+ * 创建:		2014-02-24
+ * 修改:		2014-04-19
+ ******************************************************************************/
 
 #include "stdafx.h"
 #include "event_dispatcher.h"
 #include "event.h"
+#include "mutex.h"
 #include "log.h"
 
 

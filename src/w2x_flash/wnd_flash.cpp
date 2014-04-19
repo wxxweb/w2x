@@ -3,7 +3,8 @@
  * 描述:		参见 wnd_flash.h
  * 作者:		wu.xiongxing
  * 邮箱:		wxxweb@gmail.com
- * 日期:		2014-02-17
+ * 创建:		2014-02-17
+ * 修改:		2014-04-19
  *****************************************************************************/
 
 #include "stdafx.h"
@@ -99,7 +100,7 @@ CWndFlash::CImpl::CImpl(void)
 	, m_wnd_ptr(new CWndFlashImpl())
 {
 	ASSERT(NULL != m_wnd_ptr);
-	if (NULL == m_event_disp)
+	if (NULL == m_event_disp.get())
 	{
 		m_event_disp = new events::CEventDispatcher(NULL);
 	}
@@ -302,7 +303,7 @@ inline bool CWndFlash::CImpl::CallFunction(LPCTSTR _function, const Var& _args)
 bool CWndFlash::CImpl::ParseExtApiXml(LPCTSTR _ext_api_xml)
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_ext_api_xml, false);
-	IF_NULL_ASSERT_RETURN_VALUE(m_event_disp, false);
+	IF_NULL_ASSERT_RETURN_VALUE(m_event_disp.get(), false);
 
 	w2x::ext::CExtApiXml api_xml(_ext_api_xml);
 	IF_NULL_ASSERT_RETURN_VALUE(api_xml.IsValid(), false);
