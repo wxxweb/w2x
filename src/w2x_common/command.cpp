@@ -25,7 +25,7 @@ public:
 	~CImpl(void);
 
 public:
-	CCommand::EExecuteStatus Execute(
+	CCommand::ExecuteStatus Execute(
 		LPCTSTR _app_path, 
 		LPCTSTR _cmd_line, 
 		DWORD _time_out, 
@@ -38,7 +38,7 @@ public:
 
 private:
 	inline int EnsureOutputIsUnicode(void);
-	CCommand::EExecuteStatus ReadPipe(void);
+	CCommand::ExecuteStatus ReadPipe(void);
 	static UINT CALLBACK ReadPipeThread(PVOID _thread_param);
 
 private:
@@ -73,7 +73,7 @@ CCommand::CImpl::~CImpl(void)
 	}
 }
 
-CCommand::EExecuteStatus CCommand::CImpl::Execute(
+CCommand::ExecuteStatus CCommand::CImpl::Execute(
 	LPCTSTR _app_path, 
 	LPCTSTR _app_args, 
 	DWORD _time_out, 
@@ -85,7 +85,7 @@ CCommand::EExecuteStatus CCommand::CImpl::Execute(
 	IF_FALSE_ASSERT ((NULL != _app_path || NULL != _app_args))
 	{
 		w2x::log::LogError(TEXT("App path and args are NULL."));
-		return ES_INVALID_ARG;
+		return kInvalidArg;
 	}
 
 	// 创建匿名管道
@@ -103,7 +103,7 @@ CCommand::EExecuteStatus CCommand::CImpl::Execute(
 			dwErrorCode, m_app_path, m_app_args);
 
 		ASSERT(FALSE != is_create_pipe_successed);
-		return ES_CREATE_PIPE_FAILD;
+		return kCreatePipeFailed;
 	}  
 
 	// 父进程从子进程标准输出管道里读东西，子进程只写，不继承读的管道。
@@ -142,7 +142,7 @@ CCommand::EExecuteStatus CCommand::CImpl::Execute(
 			dwErrorCode, m_app_path, m_app_args);
 
 		ASSERT(FALSE != is_create_process_successed);
-		return ES_CREATE_PROCESS;
+		return kCreateProcessFailed;
 	}
 	// 父进程不需要写句柄，需立即关掉
 	::CloseHandle(pipe_write_handle);
@@ -159,7 +159,7 @@ CCommand::EExecuteStatus CCommand::CImpl::Execute(
 		//--------------------------------------------------------------------
 	}
 
-	CCommand::EExecuteStatus exe_status = ES_SUCCESSED;
+	CCommand::ExecuteStatus exe_status = kSuccessed;
 	if (INFINITE == _time_out)
 	{
 		exe_status = this->ReadPipe();
@@ -194,7 +194,11 @@ CCommand::EExecuteStatus CCommand::CImpl::Execute(
 			::GetExitCodeThread(m_read_thread_handle, &exit_code);
 			::CloseHandle(m_read_thread_handle);
 			m_read_thread_handle = NULL;
-			exe_status = static_cast<CCommand::EExecuteStatus>(exit_code);
+			if (WAIT_TIMEOUT == wait_status) {
+				exe_status = kTimeout;
+			} else {
+				exe_status = static_cast<CCommand::ExecuteStatus>(exit_code);
+			}
 		}
 	}
 
@@ -203,13 +207,13 @@ CCommand::EExecuteStatus CCommand::CImpl::Execute(
 	::CloseHandle(pi.hProcess);
 	m_read_pipe_handle = NULL;
 
-	ASSERT(ES_SUCCESSED == exe_status);
+	ASSERT(kSuccessed == exe_status);
 
 	return exe_status;
 }
 
 
-CCommand::EExecuteStatus CCommand::CImpl::ReadPipe(void)
+CCommand::ExecuteStatus CCommand::CImpl::ReadPipe(void)
 {
 	BOOL is_read_successed = FALSE;
 	char read_buffer[PIPE_BUFFER_SIZE] = {0};
@@ -231,15 +235,15 @@ CCommand::EExecuteStatus CCommand::CImpl::ReadPipe(void)
 		w2x::log::LogError(TEXT("Read pipe error(%d). CMD: %s %s"), 
 			last_error, m_app_path, m_app_args);
 
-		return ES_READ_FAILD;
+		return kReadFailed;
 	}
 
-	return ES_SUCCESSED;
+	return kSuccessed;
 }
 
 UINT CALLBACK CCommand::CImpl::ReadPipeThread(PVOID _thread_param)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_thread_param, ES_INVALID_ARG);
+	IF_NULL_ASSERT_RETURN_VALUE(_thread_param, kInvalidArg);
 
 	CImpl* this_ptr = static_cast<CImpl*>(_thread_param);
 	return this_ptr->ReadPipe();
@@ -314,7 +318,7 @@ CCommand::~CCommand(void)
 	SAFE_DELETE(const_cast<CImpl*>(m_impl_ptr));
 }
 
-CCommand::EExecuteStatus CCommand::Execute(
+CCommand::ExecuteStatus CCommand::Execute(
 	LPCTSTR _app_path, 
 	LPCTSTR _app_args,
 	DWORD _time_out,
@@ -323,7 +327,7 @@ CCommand::EExecuteStatus CCommand::Execute(
 	return m_impl_ptr->Execute(_app_path, _app_args, _time_out, _is_save_output);
 }
 
-CCommand::EExecuteStatus CCommand::Execute(
+CCommand::ExecuteStatus CCommand::Execute(
 	LPCTSTR _cmd_line, 
 	DWORD _time_out, 
 	bool _is_save_output)
