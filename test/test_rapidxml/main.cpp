@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "rapidxml\rapidxml.hpp"
 #include "rapidxml\rapidxml_print.hpp"
-#include "common\common.h"
+#include "w2x_common/debug.h"
 #include <fstream>
 #include <direct.h>
 

@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-#include "common\common.h"
+#include "w2x_common/debug.h"
 
 int _tmain(int argc, _TCHAR* argv[])
 {
