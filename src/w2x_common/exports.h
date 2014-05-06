@@ -1,9 +1,9 @@
 /*****************************************************************************
-文件名：		exports.h
-描述：		定义 common 模块的导入导出宏.
-作者：		wu.xiongxing					
-邮箱：		wxxweb@gmail.com
-日期：		2013-12-10
+ * 文件:		exports.h
+ * 描述:		定义 common 模块的导入导出宏.
+ * 作者:		wu.xiongxing					
+ * 邮箱:		wxxweb@gmail.com
+ * 日期:		2013-12-10
 ******************************************************************************/
 
 #ifndef __W2X_COMMON_EXPORTS_H__
@@ -21,7 +21,7 @@
 #endif
 
 
-/* 定义命名空间并标记其开始和结束位置 */
+/** 定义命名空间并标记其开始和结束位置 */
 #ifndef W2X_DEFINE_NAME_SPACE_BEGIN
 #  define W2X_DEFINE_NAME_SPACE_BEGIN(name) namespace name {
 #endif
@@ -30,12 +30,18 @@
 #endif
 
 
-/* 定义 w2x 命名空间 */
+/** 定义 w2x 命名空间 */
 #ifndef W2X_NAME_SPACE_BEGIN
 #  define W2X_NAME_SPACE_BEGIN namespace w2x {
 #endif
 #ifndef W2X_NAME_SPACE_END
 #  define W2X_NAME_SPACE_END };
+#endif
+
+
+/** 使用 w2x 命名空间 */
+#ifndef USING_NS_W2X
+#  define USING_NS_W2X using namespace w2x
 #endif
 
 

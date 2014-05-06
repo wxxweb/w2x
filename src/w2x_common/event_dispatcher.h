@@ -29,7 +29,7 @@ class CEvent;
 /*
  * 事件侦听器函数类型。
  */
-typedef void (*FEventListener)(const CEvent& _event_ref);
+typedef void (CALLBACK *EventListener)(const CEvent& _evt, PVOID _param);
 
 class W2X_COMMON_API IEventDispatcher: public IBase
 {
@@ -47,7 +47,7 @@ public:
 	 */
 	virtual bool AddEventListener(
 		LPCTSTR _type_name, 
-		FEventListener _listener_fn
+		EventListener _listener_fn
 	) = 0;
 
 	/*
@@ -65,7 +65,7 @@ public:
 	 */
 	virtual bool RemoveEventListener(
 		LPCTSTR _type_name, 
-		FEventListener _listener_fn
+		EventListener _listener_fn
 	) = 0;
 };
 
@@ -91,7 +91,8 @@ public:
 	 */
 	virtual bool AddEventListener(
 		LPCTSTR _type_name, 
-		FEventListener _listener_fn
+		EventListener _listener_fn,
+		PVOID _param
 	);
 
 	/*
@@ -109,7 +110,7 @@ public:
 	 */
 	virtual bool RemoveEventListener(
 		LPCTSTR _type_name, 
-		FEventListener _listener_fn
+		EventListener _listener_fn
 	);
 
 private:

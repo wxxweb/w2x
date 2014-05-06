@@ -20,7 +20,12 @@ W2X_DEFINE_NAME_SPACE_BEGIN(events)
 
 class CEventDispatcher::CDispImpl
 {
-	typedef std::multimap<TSTDSTR, FEventListener> EventListeners;
+	struct ListenerInfo {
+		EventListener _listener;
+		PVOID _param;
+	};
+
+	typedef std::multimap<TSTDSTR, ListenerInfo> EventListeners;
 
 public:
 	CDispImpl(LPCTSTR _target_name);
@@ -32,14 +37,15 @@ W2X_IMPLEMENT_LOCKING(CDispImpl, CAutoLock)
 public:
 	inline bool AddEventListener(
 		LPCTSTR _type_name, 
-		FEventListener _listener_fn
+		EventListener _listener_fn,
+		PVOID _param
 	);
 
 	bool DispatchEvent(CEvent& _event_ref);
 
 	inline bool HasEventListener(LPCTSTR _type_name) const;
 
-	bool RemoveEventListener(LPCTSTR _type_name, FEventListener _listener_fn);
+	bool RemoveEventListener(LPCTSTR _type_name, EventListener _listener_fn);
 
 private:
 	LPTSTR			m_target_name_ptr;
@@ -74,16 +80,21 @@ CEventDispatcher::CDispImpl::~CDispImpl(void)
 
 inline bool CEventDispatcher::CDispImpl::AddEventListener(
 	LPCTSTR _type_name, 
-	FEventListener _listener_fn
+	EventListener _listener_fn,
+	PVOID _param
 	)
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_type_name, false);
 	IF_NULL_ASSERT_RETURN_VALUE(_listener_fn, false);
 
+	ListenerInfo info = {0};
+	info._listener = _listener_fn;
+	info._param = _param;
+
 	CAutoLock this_lock(this);
 
 	m_listeners.insert(
-		std::pair<TSTDSTR, FEventListener>(_type_name, _listener_fn));
+		std::pair<TSTDSTR, ListenerInfo>(_type_name, info));
 
 	return true;
 }
@@ -96,12 +107,12 @@ bool CEventDispatcher::CDispImpl::DispatchEvent(CEvent& _event_ref)
 
 	CAutoLock this_lock(this);
 
-	FEventListener listener_fn = NULL;
+	EventListener listener_fn = NULL;
 	for (std::pair<EventListeners::iterator, EventListeners::iterator> range 
 		 = m_listeners.equal_range(type_name_ptr);
 		 range.first != range.second; ++(range.first))
 	{
-		listener_fn = range.first->second;
+		listener_fn = range.first->second._listener;
 		IF_NULL_ASSERT (listener_fn)
 		{
 			continue;
@@ -110,7 +121,7 @@ bool CEventDispatcher::CDispImpl::DispatchEvent(CEvent& _event_ref)
 		if (NULL != m_target_name_ptr && TEXT('\0') != m_target_name_ptr[0]) {
 			_event_ref.SetTargetName(m_target_name_ptr);
 		}
-		listener_fn(_event_ref);
+		listener_fn(_event_ref, range.first->second._param);
 	}
 
 	return true;
@@ -129,7 +140,7 @@ inline bool CEventDispatcher::CDispImpl::HasEventListener(
 
 bool CEventDispatcher::CDispImpl::RemoveEventListener(
 	LPCTSTR _type_name,
-	FEventListener _listener_fn
+	EventListener _listener_fn
 	)
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_type_name, false);
@@ -141,7 +152,7 @@ bool CEventDispatcher::CDispImpl::RemoveEventListener(
 		 = m_listeners.equal_range(_type_name);
 		 range.first != range.second; ++(range.first))
 	{
-		if (_listener_fn == range.first->second)
+		if (_listener_fn == range.first->second._listener)
 		{
 			m_listeners.erase(range.first);
 			return true;
@@ -167,10 +178,11 @@ CEventDispatcher::~CEventDispatcher(void)
 
 bool CEventDispatcher::AddEventListener(
 	LPCTSTR _type_name, 
-	FEventListener _listener_fn
+	EventListener _listener_fn,
+	PVOID _param
 	)
 {
-	return m_disp_impl_ptr->AddEventListener(_type_name, _listener_fn);
+	return m_disp_impl_ptr->AddEventListener(_type_name, _listener_fn, _param);
 }
 
 bool CEventDispatcher::DispatchEvent(CEvent& _event_ref) const
@@ -187,7 +199,7 @@ bool CEventDispatcher::HasEventListener(LPCTSTR _type_name) const
 
 bool CEventDispatcher::RemoveEventListener(
 	LPCTSTR _type_name, 
-	FEventListener _listener_fn
+	EventListener _listener_fn
 	)
 {
 	return m_disp_impl_ptr->RemoveEventListener(_type_name, _listener_fn);
