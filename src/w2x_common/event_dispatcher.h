@@ -47,7 +47,8 @@ public:
 	 */
 	virtual bool AddEventListener(
 		LPCTSTR _type_name, 
-		EventListener _listener_fn
+		EventListener _listener_fn,
+		PVOID _param
 	) = 0;
 
 	/*

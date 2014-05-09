@@ -120,12 +120,6 @@ void CEvent::SetTypeName(LPCTSTR _type_name)
 }
 
 
-bool CEvent::IsTypeOf(CEvent& _event) const
-{
-	return this->IsTypeOf(_event.GetTypeName());
-}
-
-
 bool CEvent::IsTypeOf(LPCTSTR _type_name) const
 {
 	IF_NULL_RETURN_VALUE(_type_name, false);
@@ -133,6 +127,24 @@ bool CEvent::IsTypeOf(LPCTSTR _type_name) const
 		return true;
 	}
 	return false;
+}
+
+
+bool CEvent::IsTypeOf(const CEvent& _event) const
+{
+	return this->IsTypeOf(_event.GetTypeName());
+}
+
+
+bool CEvent::operator ==(LPCTSTR _type_name) const
+{
+	return this->IsTypeOf(_type_name);
+}
+
+
+bool CEvent::operator ==(const CEvent& _event) const
+{
+	return this->IsTypeOf(_event.GetTypeName());
 }
 
 
