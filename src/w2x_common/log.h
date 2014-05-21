@@ -12,7 +12,7 @@
 #ifndef __W2X_COMMON_LOG_H__
 #define __W2X_COMMON_LOG_H__
 
-#include "exports.h"
+#include "macros.h"
 #include <WTypes.h>
 
 W2X_NAME_SPACE_BEGIN

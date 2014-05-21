@@ -1,20 +1,20 @@
-/******************************************************************************
- * 文件：	event_dispathcer.h
- * 描述：	IEventDispatcher 接口定义用于添加或删除事件侦听器的方法，检查是否已注册特定
- *          类型的事件侦听器，并调度事件。
- * 			通常，让用户自定义的类能够调度事件，最简单方法是继承或聚合 CEventDispatcher。
- * 			但是，如果由于逻辑关系或继承关系等缘故，无法或不便直接继承 CEventDispatcher，
- * 			也可以通过实现 IEventDispatcher 接口，创建 CEventDispatcher 成员，并编写
- * 			一些简单的包装函数，将调用连接到聚合的 CEventDispatcher 中。
- * 作者：	wu.xiongxing					
- * 邮箱：	wxxweb@gmail.com
- * 日期：	2014-02-23
+/*******************************************************************************
+文件:	event_dispathcer.h
+描述:	IEventDispatcher 接口定义用于添加或删除事件侦听器的方法，检查是否已注册特定
+        类型的事件侦听器，并调度事件。
+		通常，让用户自定义的类能够调度事件，最简单方法是继承或聚合 CEventDispatcher。
+		但是，如果由于逻辑关系或继承关系等缘故，无法或不便直接继承 CEventDispatcher，
+		也可以通过实现 IEventDispatcher 接口，创建 CEventDispatcher 成员，并编写
+		一些简单的包装函数，将调用连接到聚合的 CEventDispatcher 中。
+作者:	wu.xiongxing					
+邮箱:	wxxweb@gmail.com
+日期:	2014-02-23
+修改:	2014-05-21
 *******************************************************************************/
 
 #ifndef __W2X_COMMON_EVENT_DISPATCHER_H__
 #define __W2X_COMMON_EVENT_DISPATCHER_H__
 
-#include "exports.h"
 #include "macros.h"
 #include "base.h"
 #include "ref_ptr.h"

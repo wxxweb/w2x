@@ -9,7 +9,6 @@
 #ifndef __W2X_COMMON_FILE_SYS_H__
 #define __W2X_COMMON_FILE_SYS_H__
 
-#include "exports.h"
 #include "macros.h"
 #include <WTypes.h>
 

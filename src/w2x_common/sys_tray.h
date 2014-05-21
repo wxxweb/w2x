@@ -1,16 +1,15 @@
 /******************************************************************************
- * 文件:		sys_tray.h
- * 描述:		用于构建系统托盘图标及添加托盘图标右键菜单等。
- * 作者:		wu.xiongxing					
- * 邮箱:		wxxweb@gmail.com
- * 日期:		2014-03-17
+文件:	sys_tray.h
+描述:	用于构建系统托盘图标及添加托盘图标右键菜单等。
+作者:	wu.xiongxing					
+邮箱:	wxxweb@gmail.com
+日期:	2014-03-17
+修改:	2014-05-21
 *******************************************************************************/
 
 #ifndef __W2X_COMMON_SYS_TRAY_H__
 #define __W2X_COMMON_SYS_TRAY_H__
 
-
-#include "exports.h"
 #include "macros.h"
 #include "base.h"
 

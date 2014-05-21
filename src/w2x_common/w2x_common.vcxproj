@@ -120,7 +120,6 @@
     <ClInclude Include="error.h" />
     <ClInclude Include="event.h" />
     <ClInclude Include="event_dispatcher.h" />
-    <ClInclude Include="exports.h" />
     <ClInclude Include="file_sys.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="msg_loop.h" />
@@ -165,7 +164,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="macros.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="sys_tray.cpp" />
     <ClCompile Include="thread.cpp" />

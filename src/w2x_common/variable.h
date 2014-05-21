@@ -1,15 +1,16 @@
 /*****************************************************************************
- * 文名：	variable.h
- * 描述：	Var 类仿弱类型变量，可接受数值和字符及之间的赋值取值。
- * 作者：	wu.xiongxing					
- * 邮箱：	wxxweb@gmail.com
- * 日期：	2014-03-13
+文名:	variable.h
+描述:	Var 类仿弱类型变量，可接受数值和字符及之间的赋值取值。
+作者:	wu.xiongxing					
+邮箱:	wxxweb@gmail.com
+日期:	2014-03-13
+修改:	2014-05-21
  *****************************************************************************/
 
 #ifndef __W2X_COMMON_VARIABLE_H__
 #define __W2X_COMMON_VARIABLE_H__
 
-#include "exports.h"
+#include "macros.h"
 #include <map>
 #include <vector>
 

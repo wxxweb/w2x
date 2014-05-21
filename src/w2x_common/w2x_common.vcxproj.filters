@@ -27,9 +27,6 @@
     <ClInclude Include="debug.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="exports.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="msg_loop.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -108,9 +105,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="log.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="macros.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="command.cpp">

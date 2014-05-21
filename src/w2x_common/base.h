@@ -15,7 +15,7 @@
 #ifndef __W2X_COMMON_BASE_H__
 #define __W2X_COMMON_BASE_H__
 
-#include "exports.h"
+#include "macros.h"
 #include "ref_count.h"
 
 W2X_NAME_SPACE_BEGIN

@@ -1,15 +1,15 @@
 /******************************************************************************
- * 文件:		mutex.h
- * 描述:		提供线程同步的相关帮助器，如互斥体、临界代码段保护等.
- * 作者:		wu.xiongxing					
- * 邮箱:		wxxweb@gmail.com
- * 日期:		2013-12-10
- ******************************************************************************/
+文件:	mutex.h
+描述:	提供线程同步的相关帮助器，如互斥体、临界代码段保护等.
+作者:	wu.xiongxing					
+邮箱:	wxxweb@gmail.com
+日期:	2013-12-10
+修改:		2014-05-21
+*******************************************************************************/
 
 #ifndef __W2X_COMMON_MUTEX_H__
 #define __W2X_COMMON_MUTEX_H__
 
-#include "exports.h"
 #include "macros.h"
 
 /** 对一个 32 位的变量进行原子递增及递减 */
@@ -87,18 +87,18 @@ protected:                                                                     \
 		explicit class_lock(class_parent* _parent, const char* _name = 0)      \
 			: m_parent(_parent), m_name(_name) {                               \
             if (NULL != m_name) {                                              \
-				W2X_OUTPUT_DEBUG_STR_A(                                        \
+				::OutputDebugStringA(                                          \
 				    NULL != m_parent ? "\n[LockThis]:\t" : "[LockClass]:\t");  \
-				W2X_OUTPUT_DEBUG_STR_A(m_name);                                \
+				::OutputDebugStringA(m_name);                                  \
 			}                                                                  \
 			NULL != m_parent ? m_parent->LockThis()                            \
 				: class_parent::LockClass();                                   \
         }                                                                      \
 		~class_lock(void) {                                                    \
 			if (NULL != m_name) {                                              \
-				W2X_OUTPUT_DEBUG_STR_A(                                        \
+				::OutputDebugStringA(                                          \
 					NULL != m_parent ? "\n[LockThis]:\t" : "[LockClass]:\t");  \
-				W2X_OUTPUT_DEBUG_STR_A(m_name);                                \
+				::OutputDebugStringA(m_name);                                  \
 			}                                                                  \
 			NULL != m_parent ? m_parent->UnlockThis()                          \
 				: class_parent::UnlockClass();                                 \

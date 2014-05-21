@@ -4,13 +4,12 @@
 作者:	wu.xiongxing
 邮箱:	wxxweb@gmail.com
 日期:	2013-12-10
-修改:	2014-05-16
+修改:	2014-05-21
 *******************************************************************************/
 
 #ifndef __W2X_COMMON_MSG_LOOP_H__
 #define __W2X_COMMON_MSG_LOOP_H__
 
-#include "exports.h"
 #include "macros.h"
 #include <wtypes.h>
 

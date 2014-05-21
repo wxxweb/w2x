@@ -8,13 +8,13 @@
  * 作者:		wu.xiongxing					
  * 邮箱:		wxxweb@gmail.com
  * 创建:		2014-02-23
- * 修改:		2014-04-19
+ * 修改:		2014-05-21
  ******************************************************************************/
 
 #ifndef __W2X_COMMON_REF_PTR_H__
 #define __W2X_COMMON_REF_PTR_H__
 
-#include "exports.h"
+#include "macros.h"
 
 W2X_NAME_SPACE_BEGIN
 
