@@ -8,17 +8,11 @@
 *******************************************************************************/
 
 #include "stdafx.h"
+#include "macros.h"
 #include "msg_loop.h"
 #include "mutex.h"
 #include "log.h"
 
-#ifndef TSTDSTR
-#  ifdef UNICODE
-#  define TSTDSTR std::wstring
-#  else
-#  define TSTDSTR std::string
-#  endif
-#endif
 
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(log)
@@ -317,16 +311,42 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 	//------------------------------------------------------------------
 	// 日志格式示例:
 	//------------------------------------------------------------------
-	// 序号	类型   时间				内容
+	// PID   TID  序号 类型  时间				内容
 	//------------------------------------------------------------------
-	// [1	info	21:32:23.31]	this is a normal info.
-	// [2	error	22:42:21.01]	this is a urgent error.
+	// [1242 4291 1	  info	21:32:23.31]	this is a normal info.
+	// [1242 3429 2	  error	22:42:21.01]	this is a urgent error.
 	//------------------------------------------------------------------
 	
-	int chars_written = _stprintf_s(log_buffer, MAX_LOG_HEAD - 1, 
-		TEXT("[%d\t%s\t%02d:%02d:%02d.%02d]\t"),
-		++m_log_record_count, category,
-		st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+	int chars_written = 0;
+	if (true == custom_ref.is_hide_pid && true == custom_ref.is_hide_tid)
+	{ // 不显示进程 ID 和线程 ID
+		chars_written = _stprintf_s(log_buffer, MAX_LOG_HEAD - 1, 
+			TEXT("[%04d %02d:%02d:%02d.%03d %s]\t"),
+			++m_log_record_count,
+			st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, category);
+	}
+	else if (true == custom_ref.is_hide_pid)
+	{ // 不显示进程 ID
+		chars_written = _stprintf_s(log_buffer, MAX_LOG_HEAD - 1, 
+			TEXT("[%04d T%04d %02d:%02d:%02d.%03d %s]\t"),
+			++m_log_record_count, ::GetCurrentThreadId(),
+			st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, category);
+	}
+	else if (true == custom_ref.is_hide_tid)
+	{ // 不显示线程 ID
+		chars_written = _stprintf_s(log_buffer, MAX_LOG_HEAD - 1, 
+			TEXT("[%04d P%04d %02d:%02d:%02d.%03d %s]\t"),
+			++m_log_record_count, m_process_id,
+			st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, category);
+	}
+	else
+	{ // 显示线程 ID 和线程 ID
+		chars_written = _stprintf_s(log_buffer, MAX_LOG_HEAD - 1, 
+			TEXT("[%04d %04d-%04d %02d:%02d:%02d.%03d %s]\t"),
+			++m_log_record_count, m_process_id, ::GetCurrentThreadId(),
+			st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, category);
+	}
+	
 	if (-1 == chars_written)
 	{
 		ASSERT(false);
@@ -808,7 +828,8 @@ LPCTSTR CLogImpl::GetRootDir(void)
 		return m_log_root_dir;
 	}
 
-	::GetCurrentDirectory(MAX_PATH, m_log_root_dir);
+	::GetModuleFileName(NULL, m_log_root_dir, MAX_PATH);
+	::PathRemoveFileSpec(m_log_root_dir);
 	::_tcscat_s(m_log_root_dir, TEXT("\\log"));
 
 	BOOL is_dir_exist = TRUE;
@@ -1039,7 +1060,7 @@ W2X_COMMON_API bool LogInfo(LPCTSTR _format_str, ...)
 		return false;
 	}
 
-	Custom custom;
+	static Custom custom = CLogImpl::GetInstance().GetGlobal();
 	custom.category = kCategoryInfo;
 
 	va_list args;
@@ -1058,7 +1079,7 @@ W2X_COMMON_API bool LogWarn(LPCTSTR _format_str, ...)
 		return false;
 	}
 
-	Custom custom;
+	static Custom custom = CLogImpl::GetInstance().GetGlobal();
 	custom.category = kCategoryWarn;
 
 	va_list args;
@@ -1077,7 +1098,7 @@ W2X_COMMON_API bool LogError(LPCTSTR _format_str, ...)
 		return false;
 	}
 
-	Custom custom;
+	static Custom custom = CLogImpl::GetInstance().GetGlobal();
 	custom.category = kCategoryError;
 
 	va_list args;
@@ -1096,7 +1117,7 @@ W2X_COMMON_API bool LogDebug(LPCTSTR _format_str, ...)
 		return false;
 	}
 
-	Custom custom;
+	static Custom custom = CLogImpl::GetInstance().GetGlobal();
 	custom.category = kCategoryDebug;
 
 	va_list args;

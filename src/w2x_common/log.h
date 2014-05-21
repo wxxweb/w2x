@@ -38,11 +38,16 @@ struct Custom
 	DirId work_dir_id;
 	bool is_immediately;///< 是否立即打印日志，跳过日志消息排队。
 	bool is_reuse_file;	///< 是否复用刚创建的日志文件, 不再重现创建, 必须在打第一条日志前设置才有效。
+	bool is_hide_pid;	///< 是否隐藏进程 ID
+	bool is_hide_tid;	///< 是否隐藏线程 ID
 	Custom(DirId dir_id = 0) 
 		: category(kCategoryInfo)
 		, work_dir_id(dir_id)
 		, is_immediately(false)
-		, is_reuse_file(false) {}
+		, is_reuse_file(false)
+		, is_hide_pid(false)
+		, is_hide_tid(false)
+	{}
 };
 
 /**
