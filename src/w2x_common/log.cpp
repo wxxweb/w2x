@@ -300,14 +300,6 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 {
 	const Custom& custom_ref = (NULL != _custom_ptr) ? *_custom_ptr : m_global_custom;
 
-#ifndef _DEBUG
-	if (kCategoryDebug == custom_ref.category)
-	{
-		// Release模式下不打印调试日志
-		return true;
-	}
-#endif
-
 	LPCTSTR category = NULL;
 	switch (custom_ref.category)
 	{
@@ -327,12 +319,12 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 	//------------------------------------------------------------------
 	// 序号	类型   时间				内容
 	//------------------------------------------------------------------
-	// [1	info	21:32:23.321]	this is a normal info. 
-	// [2	error	22:42:21.001]	this is a urgent error.
+	// [1	info	21:32:23.31]	this is a normal info.
+	// [2	error	22:42:21.01]	this is a urgent error.
 	//------------------------------------------------------------------
 	
 	int chars_written = _stprintf_s(log_buffer, MAX_LOG_HEAD - 1, 
-		TEXT("[%d\t%s\t%02d:%02d:%02d.%03d]\t"),
+		TEXT("[%d\t%s\t%02d:%02d:%02d.%02d]\t"),
 		++m_log_record_count, category,
 		st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 	if (-1 == chars_written)
@@ -348,8 +340,6 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 		_format_str, _arg_list_ref);
 
 #ifdef _DEBUG
-	::OutputDebugString(TEXT("\n"));
-	::OutputDebugString(log_buffer);
 	if (kCategoryError == custom_ref.category) {
 		::MessageBeep(MB_ICONERROR);
 		::MessageBox(NULL, log_buffer, TEXT("Log Error"), MB_ICONERROR);
@@ -357,7 +347,14 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 	else if (kCategoryWarn == custom_ref.category) {
 		::MessageBeep(MB_ICONWARNING);
 	}
-#endif /* _DEBUG */
+#else ///< _DEBUG
+	::OutputDebugString(log_buffer);
+	if (kCategoryDebug == custom_ref.category)
+	{
+		// Release模式下不打印调试日志
+		return true;
+	}
+#endif ///< !_DEBUG
 
 	PVOID msg_param = reinterpret_cast<PVOID>(custom_ref.work_dir_id);
 	if (false == custom_ref.is_immediately)
@@ -731,7 +728,7 @@ bool CLogImpl::RemoveExpiredLogFiles(void)
 		_stprintf_s(find_path, _countof(find_path) - 1, 
 			TEXT("%s\\%s"), root_dir_path, wfd.cFileName);
 		this->RemoveDir(find_path);
-	} 
+	}
 	while (FALSE != ::FindNextFile(find_handle, &wfd));
 
 	::FindClose(find_handle);
@@ -1093,10 +1090,6 @@ W2X_COMMON_API bool LogError(LPCTSTR _format_str, ...)
 
 W2X_COMMON_API bool LogDebug(LPCTSTR _format_str, ...)
 {
-#ifndef _DEBUG
-	return true;
-#endif
-
 	if (NULL == _format_str)
 	{
 		ASSERT(false);

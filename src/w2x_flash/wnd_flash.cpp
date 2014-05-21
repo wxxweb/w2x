@@ -420,11 +420,13 @@ bool CWndFlash::CallFunction(LPCTSTR _function, const Var& _args)
 }
 
 
-bool CWndFlash::AddEventListener(LPCTSTR _type_name, 
-	w2x::events::FEventListener _listener
+bool CWndFlash::AddEventListener(
+	LPCTSTR _type_name, 
+	w2x::events::EventListener _listener,
+	PVOID _param
 	)
 {
-	return m_impl_ptr->m_event_disp->AddEventListener(_type_name, _listener);
+	return m_impl_ptr->m_event_disp->AddEventListener(_type_name, _listener, _param);
 }
 
 
@@ -436,7 +438,7 @@ bool CWndFlash::HasEventListener(LPCTSTR _type_name) const
 
 bool CWndFlash::RemoveEventListener(
 	LPCTSTR _type_name, 
-	w2x::events::FEventListener _listener
+	w2x::events::EventListener _listener
 	)
 {
 	return m_impl_ptr->m_event_disp->RemoveEventListener(_type_name, _listener);

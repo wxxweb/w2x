@@ -45,8 +45,10 @@ public:
 	bool CallFunction(LPCTSTR _function, const w2x::Var& _args);
 
 	/** @see CEventDispatch */
-	virtual bool AddEventListener(LPCTSTR _type_name, 
-		w2x::events::FEventListener _listener
+	virtual bool AddEventListener(
+		LPCTSTR _type_name,
+		w2x::events::EventListener _listener,
+		PVOID _param
 	);
 
 	/** @see CEventDispatch */
@@ -55,7 +57,7 @@ public:
 	/** @see CEventDispatch */
 	virtual bool RemoveEventListener(
 		LPCTSTR _type_name, 
-		w2x::events::FEventListener _listener
+		w2x::events::EventListener _listener
 	);
 
 	static bool IsFlashPlayerInstalled(void);
