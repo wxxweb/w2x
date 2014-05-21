@@ -121,6 +121,7 @@
     <ClInclude Include="event.h" />
     <ClInclude Include="event_dispatcher.h" />
     <ClInclude Include="exports.h" />
+    <ClInclude Include="file_sys.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="msg_loop.h" />
     <ClInclude Include="mutex.h" />
@@ -156,6 +157,7 @@
     <ClCompile Include="error.cpp" />
     <ClCompile Include="event.cpp" />
     <ClCompile Include="event_dispatcher.cpp" />
+    <ClCompile Include="file_sys.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="msg_loop.cpp" />
     <ClCompile Include="process.cpp" />
