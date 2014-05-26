@@ -1,9 +1,9 @@
 /******************************************************************************
- * 文件：msg_loop.cpp
- * 描述：	参见 msg_loop.h
- * 作者：	wu.xiongxing
- * 邮箱：	wxxweb@gmail.com
- * 日期：2013-12-10
+文件:	msg_loop.cpp
+描述:	参见 msg_loop.h
+作者:	wu.xiongxing
+邮箱:	wxxweb@gmail.com
+日期:	2013-12-10
  ******************************************************************************/
 
 #include "stdafx.h"
@@ -149,11 +149,11 @@ inline bool CMsgLoop::CImpl::EnterMsg(
 
 	CImpl::LockThis();
 	m_msg_queue.push(msg);
-	CImpl::UnlockThis();
 
 	if (NULL != m_msg_event_handle) {
 		::SetEvent(m_msg_event_handle);
 	}
+	CImpl::UnlockThis();
 	return true;
 }
 
@@ -222,6 +222,14 @@ inline bool CMsgLoop::CImpl::QuitMsg(void)
 	Msg& msg_ref = m_msg_queue.front();
 	LPCTSTR msg_ptr = msg_ref.msg;
 	m_msg_queue.pop();
+
+	if (NULL != m_msg_event_handle)
+	{
+		bool is_empty = m_msg_queue.empty();
+		if (is_empty) {
+			::ResetEvent(m_msg_event_handle);
+		}
+	}
 	CImpl::UnlockThis();
 
 	try {
@@ -230,16 +238,7 @@ inline bool CMsgLoop::CImpl::QuitMsg(void)
 	catch (std::exception e) {
 		MessageBoxA(NULL, e.what(), "w2x:msg_loop:QuitMsg", MB_ICONERROR);
 	}
-		
-	if (NULL != m_msg_event_handle)
-	{
-		CImpl::LockThis();
-		bool is_empty = m_msg_queue.empty();
-		CImpl::UnlockThis();
-		if (is_empty) {
-			::ResetEvent(m_msg_event_handle);
-		}
-	}
+
 	return true;
 }
 
@@ -315,8 +314,8 @@ UINT CMsgLoop::CImpl::LoopThread(PVOID _thread_param)
 
 		if (0 == bytes)
 		{
-			this_ptr->QuitMsg();
 			_ASSERT(0 != bytes);
+			this_ptr->QuitMsg();
 			continue;
 		}
 		LPTSTR msg_buffer = reinterpret_cast<LPTSTR>(new BYTE[bytes]);

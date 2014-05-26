@@ -294,6 +294,14 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 {
 	const Custom& custom_ref = (NULL != _custom_ptr) ? *_custom_ptr : m_global_custom;
 
+#ifndef _DEBUG
+if (kCategoryDebug == custom_ref.category)
+{
+	// Release模式下不打印调试日志
+	return true;
+}
+#endif ///< !_DEBUG
+
 	LPCTSTR category = NULL;
 	switch (custom_ref.category)
 	{
@@ -360,6 +368,7 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 		_format_str, _arg_list_ref);
 
 #ifdef _DEBUG
+	::OutputDebugString(log_buffer);
 	if (kCategoryError == custom_ref.category) {
 		::MessageBeep(MB_ICONERROR);
 		::MessageBox(NULL, log_buffer, TEXT("Log Error"), MB_ICONERROR);
@@ -367,14 +376,7 @@ bool CLogImpl::Log(const Custom* _custom_ptr, LPCTSTR _format_str, va_list& _arg
 	else if (kCategoryWarn == custom_ref.category) {
 		::MessageBeep(MB_ICONWARNING);
 	}
-#else ///< _DEBUG
-	::OutputDebugString(log_buffer);
-	if (kCategoryDebug == custom_ref.category)
-	{
-		// Release模式下不打印调试日志
-		return true;
-	}
-#endif ///< !_DEBUG
+#endif ///< _DEBUG
 
 	PVOID msg_param = reinterpret_cast<PVOID>(custom_ref.work_dir_id);
 	if (false == custom_ref.is_immediately)
@@ -1111,6 +1113,11 @@ W2X_COMMON_API bool LogError(LPCTSTR _format_str, ...)
 
 W2X_COMMON_API bool LogDebug(LPCTSTR _format_str, ...)
 {
+#ifndef _DEBUG
+		// Release模式下不打印调试日志
+		return true;
+#endif
+
 	if (NULL == _format_str)
 	{
 		ASSERT(false);

@@ -1,6 +1,5 @@
 *.pdb
 *.suo
-*.user
 *.obj
 *.pch
 *.idb

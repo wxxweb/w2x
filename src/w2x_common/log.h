@@ -25,7 +25,7 @@ enum Category {
 	kCategoryInfo,		///< 信息, 一般日志信息, 无蜂鸣及弹框提示。
 	kCategoryWarn,		///< 警告, 在Debug模式下有蜂鸣警报。
 	kCategoryError,		///< 出错, 在Debug模式下有蜂鸣警报，并弹框提示。
-	kCategoryDebug,		///< 调试, 在Debug模式下会打印到日志文件, Release模式下可用DbgView等工具捕获调试输出。
+	kCategoryDebug,		///< 调试, 在Debug模式下会打印到日志文件, Release模式下不打印。
 };
 
 /** 日志目录 ID 类型 */
