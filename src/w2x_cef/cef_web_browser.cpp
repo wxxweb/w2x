@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "cef_web_browser.h"
 #include "cef_web_browser_impl.h"
+#include "cef_web_browser_event_handler_i.h"
 #include <string>
 
 // 
@@ -505,7 +506,14 @@ bool CCefWebBrowser::Create(
 	ICefWebBrowserEventHandler* _handler
 	)
 {
-	return m_impl_ptr->Create(_url, _parent_hwnd, _handler);
+	if (true == m_impl_ptr->Create(_url, _parent_hwnd, _handler))
+	{
+		if (NULL != _handler) {
+			_handler->RegisterWebBrowser(this);
+		}
+		return true;
+	}
+	return false;
 }
 
 void CCefWebBrowser::Destory(void)

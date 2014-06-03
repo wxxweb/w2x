@@ -487,15 +487,15 @@ void CCefWebBrowserImpl::OnUncaughtException(CefRefPtr<CefBrowser> browser,
 {
 	if (true == sm_is_console_alloc)
 	{
-		_ftprintf_s(stderr, TEXT(""),
-			TEXT(">\n")
-			TEXT("> [UNCAUGHT EXCPTION]\n")
-			TEXT(">   DESC: %s\n")
-			TEXT(">   FILE: %s\n")
-			TEXT(">   LINE: %d\n")
-			TEXT(">   COL:  %d\n")
-			TEXT(">   SRC:  %s\n")
-			TEXT(">\n"),
+		_ftprintf_s(stderr,
+			TEXT("CEF>\n")
+			TEXT("CEF> [UNCAUGHT EXCPTION]\n")
+			TEXT("CEF>   DESC: %s\n")
+			TEXT("CEF>   FILE: %s\n")
+			TEXT("CEF>   LINE: %d\n")
+			TEXT("CEF>   COL:  %d\n")
+			TEXT("CEF>   SRC:  %s\n")
+			TEXT("CEF>\n"),
 			exception->GetMessage().c_str(),
 			exception->GetScriptResourceName().c_str(),
 			exception->GetLineNumber(),
@@ -622,11 +622,6 @@ bool CCefWebBrowserImpl::Create(
 	if (false == is_successed)
 	{
 		return false;
-	}
-
-	if (NULL != m_event_handler)
-	{
-		m_event_handler->RegisterWebBrowser(this);
 	}
 
 	return true;
@@ -834,7 +829,7 @@ LRESULT CCefWebBrowserImpl::WebViewHostWndProc(
 					{
 						FILE* pFile = NULL;
 						::freopen_s(&pFile, "CONOUT$", "w", stdout);
-						::freopen_s(&pFile, "CONERR$", "w", stderr);
+						::freopen_s(&pFile, "CONOUT$", "w", stderr);
 						sm_is_console_alloc = true;
 					}
 					else
