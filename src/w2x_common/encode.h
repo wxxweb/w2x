@@ -25,6 +25,28 @@ enum EncodeType {
 	kUtf8,
 };
 
+
+/** 单纯的拷贝一个字符串到栈中，如果传入 NULL，返回带结束符的空字符串 */
+W2X_COMMON_API LPTSTR AllocString(LPCTSTR _t_str);
+
+/** 是否由 AllocStringXXX 分配的多字节字符串栈空间 */
+W2X_COMMON_API bool FreeStringA(LPSTR* _a_pptr);
+W2X_COMMON_API bool FreeStringA(LPCSTR* _a_pptr);
+
+/** 是否由 AllocStringXXX 分配的宽字节字符串栈空间 */
+W2X_COMMON_API bool FreeStringW(LPWSTR* _w_pptr);
+W2X_COMMON_API bool FreeStringW(LPCWSTR* _w_pptr);
+
+#define W2X_FREE_STR_A(p)	w2x::encode::FreeStringA(&(p))
+#define W2X_FREE_STR_W(p)	w2x::encode::FreeStringW(&(p))
+
+#ifdef UNICODE
+#  define W2X_FREE_STR(p)	w2x::encode::FreeStringW(&(p))
+#else
+#  define W2X_FREE_STR(p)	w2x::encode::FreeStringA(&(p))
+#endif
+
+
 /** 将 ASCII 字符编码转换为 UNICODE 字符串编码 */
 W2X_COMMON_API LPWSTR AllocStringA2W(
 	LPCSTR _a_str,
@@ -39,6 +61,36 @@ W2X_COMMON_API LPWSTR AllocStringA2W(
 #  define W2X_ALLOC_STR_A2T(s)	(s)
 #endif
 
+#ifdef UNICODE
+#  define W2X_ALLOC_STR_T2W(s)	(s)
+#else
+#  define W2X_ALLOC_STR_T2W(s)	w2x::encode::AllocStringA2W(s)
+#endif
+
+
+__forceinline std::wstring W2X_A2W(LPCSTR pszAscii)
+{
+	LPWSTR pszWide = w2x::encode::AllocStringA2W(pszAscii);
+	std::wstring strWide = pszWide;
+	w2x::encode::FreeStringW(&pszWide);
+	return strWide;
+}
+
+#define W2X_A2W(s)		w2x::encode::W2X_A2W(s)
+
+#ifdef UNICODE
+#  define W2X_A2T(s)	W2X_A2W(s)
+#else
+#  define W2X_A2T(s)	(s)
+#endif
+
+#ifdef UNICODE
+#  define W2X_T2W(s)	(s)
+#else
+#  define W2X_T2W(s)	W2X_A2W(s)
+#endif
+
+
 /** 将 UNICODE 字符编码转换为 ASCII 字符串编码 */
 W2X_COMMON_API LPSTR AllocStringW2A(
 	LPCWSTR _w_str,
@@ -52,6 +104,29 @@ W2X_COMMON_API LPSTR AllocStringW2A(
 #else
 #  define W2X_ALLOC_STR_T2A(s)	(s)
 #endif
+
+__forceinline std::string W2X_W2A(LPCWSTR pszWide)
+{
+	LPSTR pszAscii = w2x::encode::AllocStringW2A(pszWide);
+	std::string strAscii = pszAscii;
+	w2x::encode::FreeStringA(&pszAscii);
+	return strAscii;
+}
+
+#define W2X_W2A(s)		w2x::encode::W2X_W2A(s)
+
+#ifdef UNICODE
+#  define W2X_T2A(s)	W2X_W2A(s)
+#else
+#  define W2X_T2A(s)	(s)
+#endif
+
+#ifdef UNICODE
+#  define W2X_W2T(s)	(s)
+#else
+#  define W2X_W2T(s)	W2X_W2A(s)
+#endif
+
 
 /** 将 UTF-8 字符编码转换为 ASCII 字符串编码 */
 W2X_COMMON_API LPSTR AllocStringUTF2A(
@@ -72,6 +147,32 @@ W2X_COMMON_API LPWSTR AllocStringUTF2W(
 #  define W2X_ALLOC_STR_UTF2T	w2x::encode::AllocStringUTF2W
 #else
 #  define W2X_ALLOC_STR_UTF2T	w2x::encode::AllocStringUTF2A
+#endif
+
+__forceinline std::string W2X_UTF2A(LPCSTR pszUtf8)
+{
+	LPSTR pszAscii = w2x::encode::AllocStringUTF2A(pszUtf8);
+	std::string strAscii = pszAscii;
+	w2x::encode::FreeStringA(&pszAscii);
+	return strAscii;
+}
+
+#define W2X_UTF2A(s)	w2x::encode::W2X_UTF2A(s)
+
+__forceinline std::wstring W2X_UTF2W(LPCSTR pszUtf8)
+{
+	LPWSTR pszWide = w2x::encode::AllocStringUTF2W(pszUtf8);
+	std::wstring strWide = pszWide;
+	w2x::encode::FreeStringW(&pszWide);
+	return strWide;
+}
+
+#define W2X_UTF2W(s)	w2x::encode::W2X_UTF2W(s)
+
+#ifdef UNICODE
+#  define W2X_UTF2T(s)	W2X_UTF2W(s)
+#else
+#  define W2X_UTF2T(s)	W2X_UTF2A(s)
 #endif
 
 /** 将 UNICODE 字符编码转换为 UTF-8 字符串编码 */
@@ -95,24 +196,30 @@ W2X_COMMON_API LPSTR AllocStringA2UTF(
 #  define W2X_ALLOC_STR_T2UTF	w2x::encode::AllocStringA2UTF
 #endif
 
-/** 单纯的拷贝一个字符串到栈中，如果传入 NULL，返回带结束符的空字符串 */
-W2X_COMMON_API LPTSTR AllocString(LPCTSTR _t_str);
+__forceinline std::string W2X_A2UTF(LPCSTR pszAscii)
+{
+	LPSTR pszUtf8 = w2x::encode::AllocStringA2UTF(pszAscii);
+	std::string strUtf8 = pszUtf8;
+	w2x::encode::FreeStringA(&pszUtf8);
+	return strUtf8;
+}
 
-/** 是否由 AllocStringXXX 分配的多字节字符串栈空间 */
-W2X_COMMON_API bool FreeStringA(LPSTR* _a_pptr);
-W2X_COMMON_API bool FreeStringA(LPCSTR* _a_pptr);
+#define W2X_A2UTF(s)	w2x::encode::W2X_A2UTF(s)
 
-/** 是否由 AllocStringXXX 分配的宽字节字符串栈空间 */
-W2X_COMMON_API bool FreeStringW(LPWSTR* _w_pptr);
-W2X_COMMON_API bool FreeStringW(LPCWSTR* _w_pptr);
+__forceinline std::string W2X_W2UTF(LPCWSTR pszWide)
+{
+	LPSTR pszUtf8 = w2x::encode::AllocStringW2UTF(pszWide);
+	std::string strUtf8 = pszUtf8;
+	w2x::encode::FreeStringA(&pszUtf8);
+	return strUtf8;
+}
 
-#define W2X_FREE_STR_A(p)	w2x::encode::FreeStringA(&(p))
-#define W2X_FREE_STR_W(p)	w2x::encode::FreeStringW(&(p))
+#define W2X_W2UTF	w2x::encode::W2X_W2UTF(s)
 
 #ifdef UNICODE
-#  define W2X_FREE_STR(p)	w2x::encode::FreeStringW(&(p))
+#  define W2X_T2UTF(s)	W2X_W2UTF(s)
 #else
-#  define W2X_FREE_STR(p)	w2x::encode::FreeStringA(&(p))
+#  define W2X_T2UTF(s)	W2X_A2UTF(s)
 #endif
 
 

@@ -10,6 +10,7 @@
 #include "w2x_network/utility.h"
 #include "w2x_network/tiny_socket.h"
 #include "w2x_common/file_sys.h"
+#include "w2x_common/encode.h"
 
 class CDerived;
 class CBase
@@ -492,6 +493,21 @@ void TestFileSys(void)
 	TSTDSTR strModDir2 = w2x::file::GetModuleDirectoryPath();
 }
 
+void TestEncode(void)
+{
+	LPCWSTR pszWdie = L"大写aBCd中文";
+	LPCSTR pszAscii = "小写edzD英文";
+	LPCTSTR pszType = TEXT("字母dddAd评语");
+
+	std::wstring strWide = W2X_A2W(pszAscii);
+	std::string strAscii = W2X_W2A(pszWdie);
+	TSTDSTR strType = W2X_A2T(pszAscii);
+
+	strAscii = W2X_T2A(pszType);
+	strWide = W2X_T2W(pszType);
+	strType = W2X_W2T(pszWdie);
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	w2x::debug::EnableExcptionHandle(/*HandleExcption*/);
@@ -502,8 +518,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	//TestExcption();
 	//TestNetwork();
 	//TestLog();
-
-	TestFileSys();
+	//TestFileSys();
+	TestEncode();
 	
 	system("pause");
 	return 0;
