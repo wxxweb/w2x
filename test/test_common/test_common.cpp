@@ -9,6 +9,7 @@
 #include "w2x_common/version.h"
 #include "w2x_network/utility.h"
 #include "w2x_network/tiny_socket.h"
+#include "w2x_common/file_sys.h"
 
 class CDerived;
 class CBase
@@ -477,6 +478,20 @@ void TestNetwork(void)
 	w2x::net::IpAddr2Str(ip_addr_str, ip_addr);
 }
 
+
+void TestFileSys(void)
+{
+	TSTDSTR strWorkDir = w2x::file::GetWorkingDirectoryPath();
+	TSTDSTR strModDir = w2x::file::GetModuleDirectoryPath();
+
+	::SetCurrentDirectory(TEXT("C:\\"));
+	TCHAR szWorkDir[MAX_PATH] = TEXT("");
+	::GetCurrentDirectory(MAX_PATH, szWorkDir);
+
+	strWorkDir = w2x::file::GetWorkingDirectoryPath();
+	TSTDSTR strModDir2 = w2x::file::GetModuleDirectoryPath();
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	w2x::debug::EnableExcptionHandle(/*HandleExcption*/);
@@ -486,7 +501,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	//TestVariable();
 	//TestExcption();
 	//TestNetwork();
-	TestLog();
+	//TestLog();
+
+	TestFileSys();
 	
 	system("pause");
 	return 0;

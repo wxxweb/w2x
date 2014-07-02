@@ -223,21 +223,21 @@
 
 
 /** 定义模块的导入导出宏 */
-#ifdef W2X_COMMON_BUILD_STATIC //< 构建静态库时定义该宏，否则为动态库
+#ifdef W2X_COMMON_BUILD_STATIC ///< 构建静态库时定义该宏，否则为动态库
 #  ifndef W2X_COMMON_API
 #    define W2X_COMMON_API
 #  endif
-#else //< !W2X_COMMON_BUILD_STATIC
-#  ifdef W2X_COMMON_EXPORTS //< 需要从本动态库中导出符号时定义该宏
+#else ///< !W2X_COMMON_BUILD_STATIC
+#  ifdef W2X_COMMON_EXPORTS ///< 需要从本动态库中导出符号时定义该宏
 #    ifndef W2X_COMMON_API
 #      define W2X_COMMON_API __declspec(dllexport)
 #    endif
-#  else //< !W2X_COMMON_EXPORTS
+#  else ///< !W2X_COMMON_EXPORTS
 #    ifndef W2X_COMMON_API
 #      define W2X_COMMON_API __declspec(dllimport)
 #    endif
-#  endif // W2X_COMMON_EXPORTS
-#endif //< W2X_COMMON_BUILD_STATIC
+#  endif ///< W2X_COMMON_EXPORTS
+#endif ///< W2X_COMMON_BUILD_STATIC
 
 
 #endif /* __W2X_COMMON_UTILITY_MACROS_H__ */

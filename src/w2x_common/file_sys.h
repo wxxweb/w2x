@@ -15,6 +15,7 @@
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(file)
 
+
 /** 文件枚举处理器回调函数类型指针, 返回true继续遍历, 返回false停止遍历。 */
 typedef bool (CALLBACK *FileEnumHandler)(
 	LPCTSTR pszDirPath,		///< 文件所在目录全路径
@@ -30,6 +31,21 @@ W2X_COMMON_API bool TraverseDirectory(
 	PVOID pParam = NULL,		///< 传给处理函数的参数
 	UINT dwHierarchy = 0		///< 最大遍历层级, 0为无限制
 	);
+
+/** 
+ * 获取主程序当前工作目录路径，路径字符串末尾包含字符 ‘\’。
+ * @note 首次调用，内部通过系统 API GetCurrentDirectory 来获取当前工作目录路径并缓存下来，
+ * 下次调用直接返回缓存值。因此，尽量在主程序入口处调用该函数，以免受 SetCurrentDirectory 影响。
+ */
+W2X_COMMON_API LPCTSTR GetWorkingDirectoryPath(void);
+
+/** 
+ * 获取主程序模块所在目录路径，路径字符串末尾包含字符 ‘\’。
+ * @note 首次调用，内部通过系统 API GetModuleFileName 来获取主程序模块所在目录路径并缓存下来，
+ * 下次调用直接返回缓存值。之前有发现因调用 GetModuleFileName 导致的死锁。
+ */
+W2X_COMMON_API LPCTSTR GetModuleDirectoryPath(void);
+
 
 W2X_DEFINE_NAME_SPACE_END(file)
 W2X_NAME_SPACE_END

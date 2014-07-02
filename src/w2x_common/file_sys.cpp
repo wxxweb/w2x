@@ -14,7 +14,8 @@ W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(file)
 
 
-W2X_COMMON_API bool TraverseDirectory(LPCTSTR pszDirPath, 
+W2X_COMMON_API bool TraverseDirectory(
+	LPCTSTR pszDirPath, 
 	FileEnumHandler pEnumProc, 
 	PVOID pParam,
 	UINT nHierarchy)
@@ -80,6 +81,37 @@ W2X_COMMON_API bool TraverseDirectory(LPCTSTR pszDirPath,
 
 	::FindClose(hFind);
 	return true;
+}
+
+
+W2X_COMMON_API LPCTSTR GetWorkingDirectoryPath(void)
+{
+	static TCHAR s_szDir[MAX_PATH] = TEXT("");
+	if (TEXT('\0') != s_szDir[0])
+	{
+		return s_szDir;
+	}
+
+	::GetCurrentDirectory(MAX_PATH, s_szDir);
+	_tcscat_s(s_szDir, TEXT("\\"));
+
+	return s_szDir;
+}
+
+
+W2X_COMMON_API LPCTSTR GetModuleDirectoryPath(void)
+{
+	static TCHAR s_szDir[MAX_PATH] = TEXT("");
+	if (TEXT('\0') != s_szDir[0])
+	{
+		return s_szDir;
+	}
+
+	::GetModuleFileName(NULL, s_szDir, MAX_PATH);
+	::PathRemoveFileSpec(s_szDir);
+	_tcscat_s(s_szDir, TEXT("\\"));
+
+	return s_szDir;
 }
 
 
