@@ -17,7 +17,6 @@
 
 #include "./base.h"
 #include "./command.h"
-#include "./common.h"
 #include "./debug.h"
 #include "./encode.h"
 #include "./error.h"
