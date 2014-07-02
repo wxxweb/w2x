@@ -4,7 +4,7 @@
 作者:	wu.xiongxing					
 邮箱:	wxxweb@gmail.com
 日期:	2013-12-10
-修改:		2014-05-21
+修改:	2014-07-02
 *******************************************************************************/
 
 #ifndef __W2X_COMMON_MUTEX_H__
@@ -24,7 +24,7 @@ W2X_DEFINE_NAME_SPACE_BEGIN(mutex)
 // 线程互斥体，对临界区代码段保护进行 RAII 封装, 当线程互斥体对象被构造时初始化临界区对象，
 // 对象被析构时删除临界区对象。通过调用 Lock() 进入临界区，调用 Unlock() 离开临界区。
 //-----------------------------------------------------------------------------
-class W2X_COMMON_API CThreadMutex
+class CThreadMutex
 {
 public:
 	CThreadMutex(void) {
