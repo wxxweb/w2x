@@ -68,7 +68,7 @@ W2X_COMMON_API LPWSTR AllocStringA2W(
 #endif
 
 
-__forceinline std::wstring W2X_A2W(LPCSTR pszAscii)
+__forceinline std::wstring _W2X_A2W(LPCSTR pszAscii)
 {
 	LPWSTR pszWide = w2x::encode::AllocStringA2W(pszAscii);
 	std::wstring strWide = pszWide;
@@ -76,7 +76,7 @@ __forceinline std::wstring W2X_A2W(LPCSTR pszAscii)
 	return strWide;
 }
 
-#define W2X_A2W(s)		w2x::encode::W2X_A2W(s)
+#define W2X_A2W(s)		w2x::encode::_W2X_A2W(s)
 
 #ifdef UNICODE
 #  define W2X_A2T(s)	W2X_A2W(s)
@@ -105,7 +105,7 @@ W2X_COMMON_API LPSTR AllocStringW2A(
 #  define W2X_ALLOC_STR_T2A(s)	(s)
 #endif
 
-__forceinline std::string W2X_W2A(LPCWSTR pszWide)
+__forceinline std::string _W2X_W2A(LPCWSTR pszWide)
 {
 	LPSTR pszAscii = w2x::encode::AllocStringW2A(pszWide);
 	std::string strAscii = pszAscii;
@@ -113,7 +113,7 @@ __forceinline std::string W2X_W2A(LPCWSTR pszWide)
 	return strAscii;
 }
 
-#define W2X_W2A(s)		w2x::encode::W2X_W2A(s)
+#define W2X_W2A(s)		w2x::encode::_W2X_W2A(s)
 
 #ifdef UNICODE
 #  define W2X_T2A(s)	W2X_W2A(s)
@@ -149,7 +149,7 @@ W2X_COMMON_API LPWSTR AllocStringUTF2W(
 #  define W2X_ALLOC_STR_UTF2T	w2x::encode::AllocStringUTF2A
 #endif
 
-__forceinline std::string W2X_UTF2A(LPCSTR pszUtf8)
+__forceinline std::string _W2X_UTF2A(LPCSTR pszUtf8)
 {
 	LPSTR pszAscii = w2x::encode::AllocStringUTF2A(pszUtf8);
 	std::string strAscii = pszAscii;
@@ -157,9 +157,9 @@ __forceinline std::string W2X_UTF2A(LPCSTR pszUtf8)
 	return strAscii;
 }
 
-#define W2X_UTF2A(s)	w2x::encode::W2X_UTF2A(s)
+#define W2X_UTF2A(s)	w2x::encode::_W2X_UTF2A(s)
 
-__forceinline std::wstring W2X_UTF2W(LPCSTR pszUtf8)
+__forceinline std::wstring _W2X_UTF2W(LPCSTR pszUtf8)
 {
 	LPWSTR pszWide = w2x::encode::AllocStringUTF2W(pszUtf8);
 	std::wstring strWide = pszWide;
@@ -167,7 +167,7 @@ __forceinline std::wstring W2X_UTF2W(LPCSTR pszUtf8)
 	return strWide;
 }
 
-#define W2X_UTF2W(s)	w2x::encode::W2X_UTF2W(s)
+#define W2X_UTF2W(s)	w2x::encode::_W2X_UTF2W(s)
 
 #ifdef UNICODE
 #  define W2X_UTF2T(s)	W2X_UTF2W(s)
@@ -196,7 +196,7 @@ W2X_COMMON_API LPSTR AllocStringA2UTF(
 #  define W2X_ALLOC_STR_T2UTF	w2x::encode::AllocStringA2UTF
 #endif
 
-__forceinline std::string W2X_A2UTF(LPCSTR pszAscii)
+__forceinline std::string _W2X_A2UTF(LPCSTR pszAscii)
 {
 	LPSTR pszUtf8 = w2x::encode::AllocStringA2UTF(pszAscii);
 	std::string strUtf8 = pszUtf8;
@@ -204,9 +204,9 @@ __forceinline std::string W2X_A2UTF(LPCSTR pszAscii)
 	return strUtf8;
 }
 
-#define W2X_A2UTF(s)	w2x::encode::W2X_A2UTF(s)
+#define W2X_A2UTF(s)	w2x::encode::_W2X_A2UTF(s)
 
-__forceinline std::string W2X_W2UTF(LPCWSTR pszWide)
+__forceinline std::string _W2X_W2UTF(LPCWSTR pszWide)
 {
 	LPSTR pszUtf8 = w2x::encode::AllocStringW2UTF(pszWide);
 	std::string strUtf8 = pszUtf8;
@@ -214,7 +214,7 @@ __forceinline std::string W2X_W2UTF(LPCWSTR pszWide)
 	return strUtf8;
 }
 
-#define W2X_W2UTF	w2x::encode::W2X_W2UTF(s)
+#define W2X_W2UTF	w2x::encode::_W2X_W2UTF(s)
 
 #ifdef UNICODE
 #  define W2X_T2UTF(s)	W2X_W2UTF(s)
