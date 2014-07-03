@@ -23,6 +23,7 @@
 #include "./event.h"
 #include "./event_dispatcher.h"
 #include "./file_sys.h"
+#include "./log.h"
 #include "./macros.h"
 #include "./msg_loop.h"
 #include "./mutex.h"
