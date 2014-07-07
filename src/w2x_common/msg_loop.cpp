@@ -246,6 +246,9 @@ inline bool CMsgLoop::CImpl::WaitMsg(void)
 {
 	while (NULL == m_msg_event_handle)
 	{
+		if (NULL == m_loop_thread) {
+			return false;
+		}
 		::Sleep(50);
 	}
 
