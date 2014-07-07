@@ -195,7 +195,7 @@
 #ifndef W2X_DEFINE_NS_BEGIN
 #  define W2X_DEFINE_NS_BEGIN(name) namespace name {
 #endif
-#ifndef W2X_DEFINE_NAME_SPACE_END
+#ifndef W2X_DEFINE_NS_END
 #  define W2X_DEFINE_NS_END(name) };
 #endif
 
