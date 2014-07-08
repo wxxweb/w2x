@@ -26,6 +26,7 @@
 
 // C++库函数
 #include <string>
+#include <list>
 
 // C 运行时头文件
 //#include <cassert>

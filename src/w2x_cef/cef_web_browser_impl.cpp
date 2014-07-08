@@ -317,7 +317,7 @@ void CCefWebBrowserImpl::OnLoadStart(
 
 	if (NULL != m_event_handler)
 	{
-		m_event_handler->OnLoadStart(frame->GetURL());
+		m_event_handler->OnLoadStart(frame->GetURL(), frame->IsMain());
 	}
 }
 
@@ -345,7 +345,7 @@ void CCefWebBrowserImpl::OnLoadEnd(
 
 	if (NULL != m_event_handler)
 	{
-		m_event_handler->OnLoadEnd(frame->GetURL());
+		m_event_handler->OnLoadEnd(frame->GetURL(), frame->IsMain());
 	}
 }
 
@@ -475,7 +475,7 @@ void CCefWebBrowserImpl::OnContextCreated(
 
 	if (NULL != m_event_handler)
 	{
-		m_event_handler->OnContextCreated(frame->GetURL());
+		m_event_handler->OnContextCreated(frame->GetURL(), frame->IsMain());
 	}
 }
 
@@ -1015,6 +1015,11 @@ bool CCefWebBrowserImpl::Initialize(LPCTSTR _cache_path, LPCTSTR _log_file)
 
 	// Initialize CEF.
 	return CefInitialize(settings, app);
+}
+
+void CCefWebBrowserImpl::Uninitialize(void)
+{
+	CefShutdown();
 }
 
 bool CCefWebBrowserImpl::RegisterCustomScheme(

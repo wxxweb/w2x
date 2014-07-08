@@ -562,7 +562,8 @@ bool CCefWebBrowser::Initialize(LPCTSTR _cache_path, LPCTSTR _log_file)
 	return CCefWebBrowserImpl::Initialize(_cache_path, _log_file);
 }
 
-
-
-
+void CCefWebBrowser::Uninitialize(void)
+{
+	CCefWebBrowserImpl::Uninitialize();
+}
 

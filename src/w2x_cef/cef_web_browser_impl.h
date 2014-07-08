@@ -13,7 +13,7 @@
 #define __W2X_CEF_WEB_BROWSER_IMPL_H__
 #pragma once
 
-#include "cef_web_browser_i.h"
+//#include "cef_web_browser_i.h"
 //#include "w2x_common/macros.h"
 //#include "w2x_common/mutex.h"
 #include "w2x_common/msg_loop.h"
@@ -37,7 +37,7 @@ class CCefWebBrowserImpl
 	, public CefLoadHandler
 	, public CefV8ContextHandler
 	, public CefDisplayHandler
-	, public ICefWebBrowser
+	//, public ICefWebBrowser
 	//, public CefRequestHandler
 	//, public CefFocusHandler
 	//, public CefKeyboardHandler
@@ -191,11 +191,6 @@ public:
 //       const CefString& extensionName
 //	 );
 
-	bool CallJsFunction(
-		const TSTDSTR& _fn_name,
-		const TSTDSTR& _args
-		);
-
 public:
 	bool Create(
 		const CefString& url = "about:blank",
@@ -230,7 +225,14 @@ public:
 
 	bool AddJsCode(const TSTDSTR& _js_code);
 
+	bool CallJsFunction(
+		const TSTDSTR& _fn_name,
+		const TSTDSTR& _args
+		);
+
 	static bool Initialize(LPCTSTR _cache_path, LPCTSTR _log_file);
+
+	static void Uninitialize(void);
 
 	static bool RegisterCustomScheme(
 		const TSTDSTR& _scheme_name, 

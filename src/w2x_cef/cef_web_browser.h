@@ -125,6 +125,13 @@ public:
 	static bool Initialize(LPCTSTR _cache_path, LPCTSTR _log_file);
 
 	/**
+	 * @brief 释放全局浏览器资源。
+	 * 
+	 * @note 此函数必须在主程序退出时调用，否则将导致模块无法卸载而使主程序进程无法退出。
+	 */
+	static void Uninitialize(void);
+
+	/**
 	 * @brief 注册自定义协议。
 	 * 
 	 * 注册自定义协议，指定协议名称，区别于内置协议（http、ftp等）。当在系统中运行指定协议的
