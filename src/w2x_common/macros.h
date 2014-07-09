@@ -18,17 +18,17 @@
 #  else
 #    define NULL ((void *)0)
 #  endif
-#endif /* NULL */
+#endif // NULL
 
 /** 模仿 MFC 的 ASSERT */
 #ifndef ASSERT
 #  define ASSERT _ASSERT
-#endif /* ASSERT */
+#endif // ASSERT
 
 /** 指明一个函数是回调函数 */
 #ifndef CALLBACK
 #  define CALLBACK
-#endif /* CALLBACK */
+#endif // CALLBACK
 
 
 /** 指明一个参数是输入参数 */
@@ -60,7 +60,7 @@
 #  else
 #    define UNUSED_ALWAYS(x) ((x) = (x))
 #  endif
-#endif /* UNUSED */
+#endif // UNUSED
 
 
 /** 安全释放栈内存，防止 delete 后产生野指针 */
@@ -72,7 +72,7 @@
 #	 define SAFE_DELETE(p) \
 	 do{ if (NULL != (p)) { try{ delete (p); } catch(...){} (p) = NULL; } }while(0)
 #  endif
-#endif /* SAFE_DELETE */
+#endif // SAFE_DELETE
 
 
 /** 安全释放栈内存，防止 delete[] 后产生野指针 */
@@ -84,7 +84,7 @@
 #	 define SAFE_DELETE_ARRAY(p) \
 	 do{ if (NULL != (p)) { try{ delete[] (p); } catch(...){} (p) = NULL; } }while(0)
 #  endif
-#endif /* SAFE_DELETE_ARRAY */
+#endif // SAFE_DELETE_ARRAY
 
 
 /** 安全释放栈内存，防止 free() 后产生野指针 */
@@ -96,7 +96,7 @@
 #	 define SAFE_FREE(p) \
 	 do{ if (NULL != (p)) { try { free((p)); } catch(...) {} (p) = NULL; } }while(0)
 #  endif
-#endif /* SAFE_FREE */
+#endif // SAFE_FREE
 
 
 /** 判断表达式 e 的结果是否为真 */
@@ -181,7 +181,7 @@
 	private:									\
 	ClassName(const ClassName&);			\
 	void operator =(const ClassName&);
-#endif /* W2X_DISALLOW_COPY_AND_ASSIGN */
+#endif // W2X_DISALLOW_COPY_AND_ASSIGN
 
 
 /** 定义命名空间并标记其开始和结束位置 */
@@ -222,22 +222,34 @@
 #endif
 
 
+/** 定义 C 语言方式导出宏 */
+#ifndef __cplusplus
+#  ifndef W2X_EXTERN_C
+#    define W2X_EXTERN_C
+#  endif
+#else
+#  ifndef W2X_EXTERN_C
+#    define W2X_EXTERN_C extern "C"
+#  endif
+#endif
+
+
 /** 定义模块的导入导出宏 */
-#ifdef W2X_COMMON_BUILD_STATIC ///< 构建静态库时定义该宏，否则为动态库
+#ifdef W2X_COMMON_BUILD_STATIC // 构建静态库时定义该宏，否则为动态库
 #  ifndef W2X_COMMON_API
 #    define W2X_COMMON_API
 #  endif
-#else ///< !W2X_COMMON_BUILD_STATIC
-#  ifdef W2X_COMMON_EXPORTS ///< 需要从本动态库中导出符号时定义该宏
+#else // !W2X_COMMON_BUILD_STATIC
+#  ifdef W2X_COMMON_EXPORTS // 需要从本动态库中导出符号时定义该宏
 #    ifndef W2X_COMMON_API
 #      define W2X_COMMON_API __declspec(dllexport)
 #    endif
-#  else ///< !W2X_COMMON_EXPORTS
+#  else // !W2X_COMMON_EXPORTS
 #    ifndef W2X_COMMON_API
 #      define W2X_COMMON_API __declspec(dllimport)
 #    endif
-#  endif ///< W2X_COMMON_EXPORTS
-#endif ///< W2X_COMMON_BUILD_STATIC
+#  endif // W2X_COMMON_EXPORTS
+#endif // W2X_COMMON_BUILD_STATIC
 
 
 #endif /* __W2X_COMMON_UTILITY_MACROS_H__ */
