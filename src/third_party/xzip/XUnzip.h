@@ -380,4 +380,11 @@ XEXTERN bool IsZipHandleU(HZIP hz);
 #endif
 
 
+XEXTERN int UnzipHttpGZ(
+	BYTE* _data_out,
+	UINT* _bytes_out,
+	BYTE* _data_in,
+	UINT _bytes_in
+	);
+
 #endif //XUNZIP_H

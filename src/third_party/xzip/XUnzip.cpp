@@ -4377,3 +4377,37 @@ bool IsZipHandleU(HZIP hz)
 }
 
 
+int UnzipHttpGZ(
+	BYTE* _data_out,
+	UINT* _bytes_out,
+	BYTE* _data_in,
+	UINT _bytes_in
+	)
+{
+	int ret = Z_OK;
+	z_stream d_stream;
+	memset(&d_stream, 0, sizeof(z_stream));
+
+	d_stream.next_in = _data_in;
+	d_stream.avail_in = _bytes_in;
+	d_stream.next_out = _data_out;
+	d_stream.avail_out = *_bytes_out;
+
+	ret = inflateInit2(&d_stream);
+	if (ret != Z_OK) {
+		return ret;
+	}
+
+	d_stream.next_in += 10; // skip gzip header
+
+	ret = inflate(&d_stream, Z_FINISH);
+	if (Z_STREAM_END != ret) {
+		inflateEnd(&d_stream);
+		return ret == Z_OK ? Z_BUF_ERROR : ret;
+	}
+
+	*_bytes_out = d_stream.total_out;
+	ret = inflateEnd(&d_stream);
+
+	return ret;
+}
