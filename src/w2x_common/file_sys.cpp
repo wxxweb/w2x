@@ -84,6 +84,48 @@ W2X_COMMON_API bool TraverseDirectory(
 }
 
 
+W2X_COMMON_API bool EnsureDirectoryExists(LPCTSTR _path)
+{
+	if (NULL == _path)
+	{
+		ASSERT(false);
+		return false;
+	}
+
+	size_t offset = 0;
+	TCHAR ch = TEXT('\0');
+	TCHAR sub_folder[MAX_PATH] = TEXT("");
+
+	for (size_t i = 0; i < MAX_PATH; ++i)
+	{
+		ch = _path[i];
+		if (TEXT('\\') != ch && TEXT('/') != ch && TEXT('\0') != ch) {
+			continue;
+		}
+		
+		_tcsncpy_s(
+			sub_folder + offset, MAX_PATH - offset,
+			_path + offset, i - offset + 1);
+		offset = i + 1;
+
+		if (TRUE == ::PathFileExists(sub_folder)) {
+			if (TEXT('\0') == ch) {
+				break;
+			}
+			continue;
+		}
+		if (FALSE == ::CreateDirectory(sub_folder, NULL)) {
+			return false;
+		}
+		if (TEXT('\0') == ch) {
+			break;
+		}
+	}
+
+	return true;
+}
+
+
 W2X_COMMON_API LPCTSTR GetWorkingDirectoryPath(void)
 {
 	static TCHAR s_szDir[MAX_PATH] = TEXT("");

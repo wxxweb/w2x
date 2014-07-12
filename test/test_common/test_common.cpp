@@ -491,6 +491,10 @@ void TestFileSys(void)
 
 	strWorkDir = w2x::file::GetWorkingDirectoryPath();
 	TSTDSTR strModDir2 = w2x::file::GetModuleDirectoryPath();
+
+	w2x::file::EnsureDirectoryExists(TEXT("C:\\1\\df\\dkdt\\"));
+	w2x::file::EnsureDirectoryExists(TEXT("C:\\1\\df\\dfwws"));
+	w2x::file::EnsureDirectoryExists(TEXT("C:/2/ggh/gh"));
 }
 
 void TestEncode(void)
@@ -518,8 +522,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	//TestExcption();
 	//TestNetwork();
 	//TestLog();
-	//TestFileSys();
-	TestEncode();
+	TestFileSys();
+	//TestEncode();
 	
 	system("pause");
 	return 0;
