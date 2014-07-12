@@ -60,6 +60,24 @@
     <ClCompile Include="zutil.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="ioapi.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="iowin32.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="minigzip.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mztools.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="unzip.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="zip.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="crc32.h">
@@ -93,6 +111,24 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="zutil.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="crypt.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ioapi.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="iowin32.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mztools.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="unzip.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="zip.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
