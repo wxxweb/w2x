@@ -206,6 +206,52 @@ W2X_COMMON_API LPTSTR AllocString(LPCTSTR _t_str)
 	return buffer;
 }
 
+
+W2X_COMMON_API LPSTR AllocStringA(LPCSTR _a_str)
+{
+	if (NULL == _a_str) {
+		_a_str = "";
+	}
+	const size_t len = strlen(_a_str);
+	LPSTR buffer = NULL;
+	try {
+		buffer = new char[len + 1];
+		IF_NULL_ASSERT_RETURN_VALUE(buffer, NULL);
+	}
+	catch (std::exception e) {
+		MessageBoxA(NULL, e.what(), "w2x:AllocStringA", MB_ICONERROR);
+		return NULL;
+	}
+	memcpy(buffer, _a_str, len);
+	buffer[len] = '\0';
+	return buffer;
+}
+
+
+W2X_COMMON_API LPTSTR AllocStringW(LPCWSTR _w_str)
+{
+	if (NULL == _w_str) {
+		_w_str = L"";
+	}
+	const size_t len = wcslen(_w_str);
+	LPWSTR buffer = NULL;
+	try {
+		buffer = new WCHAR[len + 1];
+		IF_NULL_ASSERT_RETURN_VALUE(buffer, NULL);
+	}
+	catch (std::exception e) {
+		LPCWSTR error_msg = AllocStringA2W(e.what());
+		MessageBoxW(NULL, 
+			error_msg, L"w2x:AllocString", MB_ICONERROR);
+		FreeStringW(&error_msg);
+		return NULL;
+	}
+	memcpy(buffer, _w_str, len * sizeof(WCHAR));
+	buffer[len] = L'\0';
+	return buffer;
+}
+
+
 W2X_COMMON_API bool FreeStringA(LPSTR* _a_pptr)
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_a_pptr, false);

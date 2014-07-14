@@ -28,12 +28,23 @@ enum EncodeType {
 
 /** 单纯的拷贝一个字符串到栈中，如果传入 NULL，返回带结束符的空字符串 */
 W2X_COMMON_API LPTSTR AllocString(LPCTSTR _t_str);
+W2X_COMMON_API LPSTR AllocStringA(LPCSTR _a_str);
+W2X_COMMON_API LPTSTR AllocStringW(LPCWSTR _w_str);
 
-/** 是否由 AllocStringXXX 分配的多字节字符串栈空间 */
+#define W2X_ALLOC_STRA(s)	w2x::encode::AllocStringA(s)
+#define W2X_ALLOC_STRW(s)	w2x::encode::AllocStringW(s)
+
+#ifdef UNICODE
+#  define W2X_ALLOC_STR(s)	w2x::encode::AllocStringW(s)
+#else
+#  define W2X_ALLOC_STR(s)	w2x::encode::AllocStringA(s)
+#endif
+
+/** 释放由 AllocStringXXX 分配的多字节字符串栈空间 */
 W2X_COMMON_API bool FreeStringA(LPSTR* _a_pptr);
 W2X_COMMON_API bool FreeStringA(LPCSTR* _a_pptr);
 
-/** 是否由 AllocStringXXX 分配的宽字节字符串栈空间 */
+/** 释放由 AllocStringXXX 分配的宽字节字符串栈空间 */
 W2X_COMMON_API bool FreeStringW(LPWSTR* _w_pptr);
 W2X_COMMON_API bool FreeStringW(LPCWSTR* _w_pptr);
 
