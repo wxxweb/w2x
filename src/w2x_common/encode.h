@@ -31,8 +31,8 @@ W2X_COMMON_API LPTSTR AllocString(LPCTSTR _t_str);
 W2X_COMMON_API LPSTR AllocStringA(LPCSTR _a_str);
 W2X_COMMON_API LPTSTR AllocStringW(LPCWSTR _w_str);
 
-#define W2X_ALLOC_STRA(s)	w2x::encode::AllocStringA(s)
-#define W2X_ALLOC_STRW(s)	w2x::encode::AllocStringW(s)
+#define W2X_ALLOC_STR_A(s)	w2x::encode::AllocStringA(s)
+#define W2X_ALLOC_STR_W(s)	w2x::encode::AllocStringW(s)
 
 #ifdef UNICODE
 #  define W2X_ALLOC_STR(s)	w2x::encode::AllocStringW(s)
