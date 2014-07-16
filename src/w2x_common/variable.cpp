@@ -340,7 +340,7 @@ Var::operator LPCTSTR(void) const
 	}
 	else if (kBool == m_type || 0 == m_value.nt || 1 == m_value.nt)
 	{
-		return m_value.bl ? TEXT("1") : TEXT("0");
+		return m_value.bl ? TEXT("true") : TEXT("false");
 	}
 	else if (NULL != m_num_str)
 	{
