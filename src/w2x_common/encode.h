@@ -225,7 +225,7 @@ __forceinline std::string _W2X_W2UTF(LPCWSTR pszWide)
 	return strUtf8;
 }
 
-#define W2X_W2UTF	w2x::encode::_W2X_W2UTF(s)
+#define W2X_W2UTF(s)	w2x::encode::_W2X_W2UTF(s)
 
 #ifdef UNICODE
 #  define W2X_T2UTF(s)	W2X_W2UTF(s)
