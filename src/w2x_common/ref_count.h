@@ -27,7 +27,7 @@ public:
 
 	/** 原子级别的引用计数值递减。当不再被引用时删除对象。*/
 	int w2xRelease() {
-		return InterlockedIncrement(&m_ref_count);
+		return InterlockedDecrement(&m_ref_count);
 	}
 
 	/** 返回当前的引用计数值。*/

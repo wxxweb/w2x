@@ -108,7 +108,7 @@
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>python "$(SolutionDir)tool\modify_version_num.py" "$(ProjectDir)$(TargetName).rc" 0.3.2</Command>
+      <Command>python "$(SolutionDir)tool\modify_version_num.py" "$(ProjectDir)$(TargetName).rc" 0.3.3</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

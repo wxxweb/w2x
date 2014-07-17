@@ -17,6 +17,7 @@
 
 #include "macros.h"
 #include "ref_count.h"
+#include "ref_ptr.h"
 
 W2X_NAME_SPACE_BEGIN
 
