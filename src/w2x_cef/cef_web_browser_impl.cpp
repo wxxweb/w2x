@@ -739,110 +739,162 @@ BOOL CCefWebBrowserImpl::WebViewHostFinder(HWND hwnd, LPARAM lParam)
 LRESULT CCefWebBrowserImpl::WebViewHostWndProc(
 	HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam)
 {
+	LRESULT lResult = 1;
 	switch (nMsg)
 	{
 	case WM_LBUTTONDOWN:
-		{
-			HWND parent_hwnd = ::GetParent(hWnd);
-			CCefWebBrowserImpl* this_ptr = 
-				CCefWebBrowserImpl::GetThisPtr(parent_hwnd);
-			if (NULL == this_ptr) {
-				break;
-			}
-			POINT pt = {0};
-			RECT rtCaption = {0};
-			::GetWindowRect(parent_hwnd, &rtCaption);
-			::ScreenToClient(parent_hwnd, (LPPOINT)&rtCaption);
-			::ScreenToClient(parent_hwnd, ((LPPOINT)&rtCaption) + 1);
-			pt.x = LOWORD(lParam);
-			pt.y = HIWORD(lParam);
-			rtCaption.left += this_ptr->m_caption_margin.left;
-			rtCaption.right -= this_ptr->m_caption_margin.right;
-			rtCaption.top += this_ptr->m_caption_margin.top;
-			rtCaption.bottom = rtCaption.top + this_ptr->m_caption_margin.bottom;
-
-			if (TRUE == ::PtInRect(&rtCaption, pt))
-			{
-				HWND parent_parent_hwnd = ::GetParent(parent_hwnd);
-				if (NULL != parent_parent_hwnd)
-				{
-					return ::PostMessage(
-						parent_parent_hwnd, WM_NCLBUTTONDOWN, HTCAPTION, lParam);
-				}
-				return ::PostMessage(
-					parent_hwnd, WM_LBUTTONDOWN, wParam, lParam);
-			}
-		}
+		lResult = CCefWebBrowserImpl::OnLButtonDown(hWnd, wParam, lParam);
 		break;
 
 	case WM_RBUTTONDOWN:
-		{
-			if (0 == (wParam & MK_CONTROL) || 0 == (wParam & MK_SHIFT))
-			{
-				return 0;
-			}
-
-			HWND parent_hwnd = GetParent(hWnd);
-			if (NULL == parent_hwnd || FALSE == ::IsWindow(parent_hwnd))
-			{
-				ASSERT(false);
-				return 0;
-			}
-
-			HMENU hMenu = ::CreatePopupMenu();
-			::AppendMenu(hMenu, MF_STRING | MF_POPUP, FRAME_CMD_REFRESH, TEXT("刷新"));
-			::AppendMenu(hMenu, MF_STRING | MF_POPUP, FRAME_CMD_CONSOLE, TEXT("控制台"));
-
-			POINT ptMouse = {0};
-			::GetCursorPos(&ptMouse);
-			::SendMessage(parent_hwnd, WM_ENTERMENULOOP, TRUE, 0);
-			BOOL bTrack = ::TrackPopupMenu(
-				hMenu, TPM_LEFTALIGN, ptMouse.x, ptMouse.y, 0, hWnd, NULL);
-			ASSERT(TRUE == bTrack);
-			::SendMessage(parent_hwnd, WM_EXITMENULOOP, FALSE, 0);
-			::DestroyMenu(hMenu);
-		}
-		return 0;
-
-	case WM_RBUTTONUP:
+		lResult = CCefWebBrowserImpl::OnRButtonDown(hWnd, wParam, lParam);
 		return 0;
 
 	case WM_COMMAND:
+		lResult = CCefWebBrowserImpl::OnCommand(hWnd, wParam, lParam);
+		break;
+
+	default:
+		break;
+	}
+
+	if (0 == lResult) {
+		return lResult;
+	}
+
+	return ::CallWindowProc(sm_old_wnd_proc, hWnd, nMsg, wParam, lParam);
+}
+
+LRESULT CCefWebBrowserImpl::OnLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	HWND parent_hwnd = ::GetParent(hWnd);
+	CCefWebBrowserImpl* this_ptr = 
+		CCefWebBrowserImpl::GetThisPtr(parent_hwnd);
+	if (NULL == this_ptr) {
+		return 1;
+	}
+	POINT pt = {0};
+	pt.x = LOWORD(lParam);
+	pt.y = HIWORD(lParam);
+	RECT rtCaption = {0};
+	::GetWindowRect(parent_hwnd, &rtCaption);
+	::ScreenToClient(parent_hwnd, (LPPOINT)&rtCaption);
+	::ScreenToClient(parent_hwnd, ((LPPOINT)&rtCaption) + 1);
+	rtCaption.left += this_ptr->m_caption_margin.left;
+	rtCaption.right -= this_ptr->m_caption_margin.right;
+	rtCaption.top += this_ptr->m_caption_margin.top;
+	rtCaption.bottom = rtCaption.top + this_ptr->m_caption_margin.bottom;
+	
+	BOOL bRetVal = FALSE;
+	if (TRUE == ::PtInRect(&rtCaption, pt))
+	{
+		HWND parent_parent_hwnd = ::GetParent(parent_hwnd);
+		if (NULL != parent_parent_hwnd)
 		{
-			/* MENU */
-			if (0 == HIWORD(wParam))
-			{
-				HWND parent_hwnd = ::GetParent(hWnd);
-				CCefWebBrowserImpl* this_ptr = 
-					CCefWebBrowserImpl::GetThisPtr(parent_hwnd);
-				if (NULL == this_ptr) {
-					break;
-				}
-				switch (LOWORD(wParam))
-				{
-				case FRAME_CMD_REFRESH:
-					this_ptr->m_browser->Reload();
-					break;
+			::PostMessage(parent_parent_hwnd, WM_NCLBUTTONDOWN, HTCAPTION, lParam);
+		}
+		else {
+			::PostMessage(parent_hwnd, WM_LBUTTONDOWN, wParam, lParam);
+		}
+		return 0;
+	}
+	return 1;
+}
 
-				case FRAME_CMD_CONSOLE:
-					if (TRUE == ::AllocConsole())
-					{
-						FILE* pFile = NULL;
-						::freopen_s(&pFile, "CONOUT$", "w", stdout);
-						::freopen_s(&pFile, "CONOUT$", "w", stderr);
-						sm_is_console_alloc = true;
-					}
-					else
-					{
-						::FreeConsole();
-						sm_is_console_alloc = false;
-					}
-					break;
+LRESULT CCefWebBrowserImpl::OnRButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	if (0 == (wParam & MK_CONTROL) || 0 == (wParam & MK_SHIFT))
+	{
+		return 1;
+	}
 
-				default:
-					break;
-				}
-			}
+	HWND parent_hwnd = GetParent(hWnd);
+	if (NULL == parent_hwnd || FALSE == ::IsWindow(parent_hwnd))
+	{
+		ASSERT(false);
+		return 1;
+	}
+	CCefWebBrowserImpl* this_ptr = 
+		CCefWebBrowserImpl::GetThisPtr(parent_hwnd);
+	if (NULL == this_ptr) {
+		return 1;
+	}
+	
+	UINT nGoBackFlags = this_ptr->m_browser->CanGoBack() ? MF_ENABLED : MF_GRAYED;
+	UINT nGoForwardFlags = this_ptr->m_browser->CanGoForward() ? MF_ENABLED : MF_GRAYED;
+
+	HMENU hMenu = ::CreatePopupMenu();
+	::AppendMenu(hMenu, MF_STRING | MF_POPUP | nGoBackFlags, 
+		FRAME_CMD_GO_BACK, TEXT("返回"));
+	::AppendMenu(hMenu, MF_STRING | MF_POPUP | nGoForwardFlags, 
+		FRAME_CMD_GO_FORWARD, TEXT("前进"));
+	::AppendMenu(hMenu, MF_STRING | MF_POPUP, FRAME_CMD_SHOW_URL, TEXT("地址"));
+	::AppendMenu(hMenu, MF_STRING | MF_POPUP, FRAME_CMD_REFRESH, TEXT("刷新"));
+	::AppendMenu(hMenu, MF_STRING | MF_POPUP, FRAME_CMD_CONSOLE, TEXT("控制台"));
+
+	POINT ptMouse = {0};
+	::GetCursorPos(&ptMouse);
+	::SendMessage(parent_hwnd, WM_ENTERMENULOOP, TRUE, 0);
+	BOOL bTrack = ::TrackPopupMenu(
+		hMenu, TPM_LEFTALIGN, ptMouse.x, ptMouse.y, 0, hWnd, NULL);
+	ASSERT(TRUE == bTrack);
+	::SendMessage(parent_hwnd, WM_EXITMENULOOP, FALSE, 0);
+	::DestroyMenu(hMenu);
+
+	return 0;
+}
+
+LRESULT CCefWebBrowserImpl::OnCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	if (0 != lParam)
+	{
+		return 1;
+	}
+
+	// MENU
+	HWND parent_hwnd = ::GetParent(hWnd);
+	CCefWebBrowserImpl* this_ptr = 
+		CCefWebBrowserImpl::GetThisPtr(parent_hwnd);
+	if (NULL == this_ptr) {
+		return 1;
+	}
+	switch (LOWORD(wParam))
+	{
+	case FRAME_CMD_GO_BACK:
+		if (this_ptr->m_browser->CanGoBack()) {
+			this_ptr->m_browser->GoBack();
+		}
+		break;
+
+	case FRAME_CMD_GO_FORWARD:
+		if (this_ptr->m_browser->CanGoForward()) {
+			this_ptr->m_browser->GoForward();
+		}
+		break;
+
+	case FRAME_CMD_SHOW_URL:
+		::MessageBox(NULL, 
+			this_ptr->m_browser->GetFocusedFrame()->GetURL().c_str(),
+			TEXT("URL"), MB_OK);
+		this_ptr->m_browser->ShowDevTools();
+		break;
+
+	case FRAME_CMD_REFRESH:
+		this_ptr->m_browser->Reload();
+		break;
+
+	case FRAME_CMD_CONSOLE:
+		if (TRUE == ::AllocConsole())
+		{
+			FILE* pFile = NULL;
+			::freopen_s(&pFile, "CONOUT$", "w", stdout);
+			::freopen_s(&pFile, "CONOUT$", "w", stderr);
+			sm_is_console_alloc = true;
+		}
+		else
+		{
+			::FreeConsole();
+			sm_is_console_alloc = false;
 		}
 		break;
 
@@ -850,7 +902,7 @@ LRESULT CCefWebBrowserImpl::WebViewHostWndProc(
 		break;
 	}
 
-	return ::CallWindowProc(sm_old_wnd_proc, hWnd, nMsg, wParam, lParam);
+	return 0;
 }
 
 bool CCefWebBrowserImpl::OnBeforePopup(

@@ -46,8 +46,11 @@ class CCefWebBrowserImpl
 {
 public:
 	enum { 
-		FRAME_CMD_REFRESH = 4001,
-		FRAME_CMD_CONSOLE = 4002,
+		FRAME_CMD_REFRESH		= 4001,
+		FRAME_CMD_CONSOLE		= 4002,
+		FRAME_CMD_GO_BACK		= 4003,
+		FRAME_CMD_GO_FORWARD	= 4004,
+		FRAME_CMD_SHOW_URL		= 4005,
 	};
 
 public:
@@ -264,6 +267,11 @@ private:
 		size_t nBytes, 
 		PVOID pvParam
 		);
+
+private:
+	static LRESULT OnLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
+	static LRESULT OnRButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
+	static LRESULT OnCommand(HWND hWnd, WPARAM wParam, LPARAM lParam);
 
 private:
 	// The child browser window
