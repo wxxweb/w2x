@@ -98,7 +98,7 @@ public:
 
 	template <class X>
 	CRefPtr<T>& operator=(const CRefPtr<X>& _ref) {
-		return *this = _ref.m_ptr;
+		return *this = _ref.get();
 	}
 
 	CRefPtr<T>& operator=(const CRefPtr<T>& _ref) {
