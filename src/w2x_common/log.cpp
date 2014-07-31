@@ -369,6 +369,7 @@ if (kCategoryDebug == custom_ref.category)
 
 #ifdef _DEBUG
 	::OutputDebugString(log_buffer);
+	::OutputDebugString(TEXT("\n"));
 	if (kCategoryError == custom_ref.category) {
 		::MessageBeep(MB_ICONERROR);
 		::MessageBox(NULL, log_buffer, TEXT("Log Error"), MB_ICONERROR);

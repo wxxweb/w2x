@@ -18,7 +18,7 @@
 #include "w2x_common/log.h"
 #include "w2x_common/ref_ptr.h"
 #include "w2x_common/system.h"
-#include "third-party/include/rapidxml/rapidxml.hpp"
+#include "third_party/include/rapidxml/rapidxml.hpp"
 
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(ui)

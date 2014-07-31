@@ -38,7 +38,7 @@
 // C 运行时头文件
 
 // 需放在 debug.h 前，否则编不过去
-#include "third-party/include/rapidxml/rapidxml.hpp"
+#include "third_party/include/rapidxml/rapidxml.hpp"
 
 // TODO: 在此处引用程序需要的其他头文件
 #include "..\w2x_common\debug.h"

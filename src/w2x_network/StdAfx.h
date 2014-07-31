@@ -39,7 +39,7 @@
 
 // TODO: 在此处引用程序需要的其他头文件
 #include "w2x_common/macros.h"
-#include "third-party/include/rapidxml/rapidxml.hpp"
+#include "third_party/include/rapidxml/rapidxml.hpp"
 #include "w2x_common/debug.h"
 
 #ifdef W2X_NETWORK_EXPORTS
