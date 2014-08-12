@@ -126,6 +126,67 @@ W2X_COMMON_API bool EnsureDirectoryExists(LPCTSTR _path)
 }
 
 
+W2X_COMMON_API bool RemoveDirectoryRecursively(LPCTSTR _path)
+{
+	if (NULL == _path)
+	{
+		ASSERT(false);
+		return false;
+	}
+
+	if (FALSE == ::PathIsDirectory(_path))
+	{
+		ASSERT(false);
+		return false;
+	}
+
+	const size_t org_len = _tcslen(_path);
+	TCHAR find_path[MAX_PATH] = TEXT("");
+	_tcscpy_s(find_path, MAX_PATH, _path);
+	_tcscpy_s(find_path + org_len, MAX_PATH - org_len, TEXT("\\*.*"));
+
+	WIN32_FIND_DATA wfd = {0};
+	HANDLE finder = ::FindFirstFile(find_path, &wfd);
+	if (INVALID_HANDLE_VALUE == finder)
+	{
+		ASSERT(false);
+		return false;
+	}
+
+	bool successed = true;
+	do {
+		if (FILE_ATTRIBUTE_DIRECTORY == wfd.dwFileAttributes
+			&& (0 == _tcscmp(wfd.cFileName, TEXT(".")) ||
+			    0 == _tcscmp(wfd.cFileName, TEXT(".."))))
+		{
+			continue;
+		}
+
+		_tcscpy_s(find_path + org_len + 1,
+			MAX_PATH - org_len - 1, wfd.cFileName);
+		if (FILE_ATTRIBUTE_DIRECTORY == wfd.dwFileAttributes)
+		{
+			successed = RemoveDirectoryRecursively(find_path);
+		}
+		else
+		{
+			successed = (FALSE != ::DeleteFile(find_path));
+			ASSERT(successed);
+		}
+	} 
+	while (false != successed && FALSE != ::FindNextFile(finder, &wfd));
+
+	::FindClose(finder);
+
+	if (false != successed)
+	{
+		successed = (FALSE != ::RemoveDirectory(_path));
+		ASSERT(successed);
+	}
+	return successed;
+}
+
+
 W2X_COMMON_API LPCTSTR GetWorkingDirectoryPath(void)
 {
 	static TCHAR s_szDir[MAX_PATH] = TEXT("");

@@ -492,9 +492,11 @@ void TestFileSys(void)
 	strWorkDir = w2x::file::GetWorkingDirectoryPath();
 	TSTDSTR strModDir2 = w2x::file::GetModuleDirectoryPath();
 
-	w2x::file::EnsureDirectoryExists(TEXT("C:\\1\\df\\dkdt\\"));
-	w2x::file::EnsureDirectoryExists(TEXT("C:\\1\\df\\dfwws"));
-	w2x::file::EnsureDirectoryExists(TEXT("C:/2/ggh/gh"));
+	w2x::file::EnsureDirectoryExists(TEXT("C:\\test1\\df\\dkdt\\"));
+	w2x::file::EnsureDirectoryExists(TEXT("C:\\test1\\df\\dfwws"));
+	w2x::file::EnsureDirectoryExists(TEXT("C:/test2/ggh/gh"));
+
+	w2x::file::RemoveDirectoryRecursively(TEXT("C:\\test1"));
 }
 
 void TestEncode(void)

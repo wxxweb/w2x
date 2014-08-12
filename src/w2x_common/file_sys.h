@@ -35,6 +35,9 @@ W2X_COMMON_API bool TraverseDirectory(
 /** 确保指定路径所对应的各层级目录均存在 */
 W2X_COMMON_API bool EnsureDirectoryExists(LPCTSTR _path);
 
+/** 通过递归方式移除目录及其子目录 */
+W2X_COMMON_API bool RemoveDirectoryRecursively(LPCTSTR _path);
+
 /** 
  * 获取主程序当前工作目录路径，路径字符串末尾包含字符 ‘\’。
  * @note 首次调用，内部通过系统 API GetCurrentDirectory 来获取当前工作目录路径并缓存下来，
