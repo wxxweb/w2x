@@ -87,6 +87,9 @@
     <ClInclude Include="w2x_common.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="event_listener.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -141,6 +144,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="file_sys.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="event_listener.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -20,40 +20,39 @@ W2X_DEFINE_NAME_SPACE_BEGIN(events)
 
 class CEventDispatcher::CDispImpl
 {
-	struct ListenerInfo {
-		EventListener _listener;
-		PVOID _param;
-	};
-
-	typedef std::multimap<TSTDSTR, ListenerInfo> EventListeners;
+	typedef std::multimap<TSTDSTR, EventListenerPtr> EventListeners;
 
 public:
 	CDispImpl(LPCTSTR _target_name);
 	~CDispImpl(void);
 
 W2X_DISALLOW_COPY_AND_ASSIGN(CDispImpl)
-W2X_IMPLEMENT_LOCKING(CDispImpl, CAutoLock)
 
 public:
 	inline bool AddEventListener(
-		LPCTSTR _type_name, 
-		EventListener _listener_fn,
-		PVOID _param
+		LPCTSTR _event_type,
+		EventListenerPtr& _listener
 	);
 
-	bool DispatchEvent(CEvent& _event_ref);
+	bool DispatchEvent(CEvent& _event);
 
-	inline bool HasEventListener(LPCTSTR _type_name) const;
+	inline bool HasEventListener(LPCTSTR _event_type);
 
-	bool RemoveEventListener(LPCTSTR _type_name, EventListener _listener_fn);
+	bool RemoveEventListener(
+		LPCTSTR _event_type, 
+		const EventListenerPtr& _listener
+		);
+
+	bool RemoveEventListener(
+		LPCTSTR _event_type, 
+		LPCTSTR _listener_id
+		);
 
 private:
-	LPTSTR			m_target_name_ptr;
-	EventListeners	m_listeners;
+	LPTSTR m_target_name_ptr;
+	EventListeners m_listeners;
+	mutex::CThreadMutex m_thread_mutex;
 };
-
-
-W2X_IMPLEMENT_LOCKING_CLASS(CEventDispatcher::CDispImpl, CAutoLock)
 
 
 CEventDispatcher::CDispImpl::CDispImpl(LPCTSTR _target_name)
@@ -73,55 +72,52 @@ CEventDispatcher::CDispImpl::CDispImpl(LPCTSTR _target_name)
 
 CEventDispatcher::CDispImpl::~CDispImpl(void)
 {
-	CAutoLock this_lock(this);
 	SAFE_DELETE(m_target_name_ptr);
 }
 
 
 inline bool CEventDispatcher::CDispImpl::AddEventListener(
-	LPCTSTR _type_name, 
-	EventListener _listener_fn,
-	PVOID _param
+	LPCTSTR _event_type,
+	EventListenerPtr& _listener
 	)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_type_name, false);
-	IF_NULL_ASSERT_RETURN_VALUE(_listener_fn, false);
+	IF_NULL_ASSERT_RETURN_VALUE(_event_type, false);
+	IF_NULL_ASSERT_RETURN_VALUE(_listener.get(), false);
 
-	ListenerInfo info = {0};
-	info._listener = _listener_fn;
-	info._param = _param;
-
-	CAutoLock this_lock(this);
+	mutex::CScopedLock lock(m_thread_mutex);
 
 	m_listeners.insert(
-		std::pair<TSTDSTR, ListenerInfo>(_type_name, info));
+		std::pair<TSTDSTR, EventListenerPtr>(_event_type, _listener));
+	_listener->SetRegistered(true);
 
 	return true;
 }
 
 
-bool CEventDispatcher::CDispImpl::DispatchEvent(CEvent& _event_ref)
+bool CEventDispatcher::CDispImpl::DispatchEvent(CEvent& _event)
 {
-	LPCTSTR type_name_ptr = _event_ref.GetTypeName();
+	LPCTSTR type_name_ptr = _event.GetTypeName();
 	IF_NULL_ASSERT_RETURN_VALUE(type_name_ptr, false);
 
-	CAutoLock this_lock(this);
+	mutex::CScopedLock lock(m_thread_mutex);
 
-	EventListener listener_fn = NULL;
 	for (std::pair<EventListeners::iterator, EventListeners::iterator> range 
 		 = m_listeners.equal_range(type_name_ptr);
 		 range.first != range.second; ++(range.first))
 	{
-		listener_fn = range.first->second._listener;
-		IF_NULL_ASSERT (listener_fn)
-		{
+		EventListenerPtr& listener = range.first->second;
+		IF_NULL_ASSERT (listener.get()) {
+			continue;
+		}
+		if (false == listener->IsEnabled()) {
 			continue;
 		}
 
-		if (NULL != m_target_name_ptr && TEXT('\0') != m_target_name_ptr[0]) {
-			_event_ref.SetTargetName(m_target_name_ptr);
+		if (NULL != m_target_name_ptr && TEXT('\0') != m_target_name_ptr[0])
+		{
+			_event.SetTargetName(m_target_name_ptr);
 		}
-		listener_fn(_event_ref, range.first->second._param);
+		listener->Execute(_event);
 	}
 
 	return true;
@@ -129,31 +125,59 @@ bool CEventDispatcher::CDispImpl::DispatchEvent(CEvent& _event_ref)
 
 
 inline bool CEventDispatcher::CDispImpl::HasEventListener(
-	LPCTSTR _type_name
-	) const
+	LPCTSTR _event_type
+	)
 {
-	CAutoLock this_lock(const_cast<CDispImpl*>(this));
+	mutex::CScopedLock lock(m_thread_mutex);
 
-	return m_listeners.end() != m_listeners.find(_type_name);
+	return m_listeners.end() != m_listeners.find(_event_type);
 }
 
 
 bool CEventDispatcher::CDispImpl::RemoveEventListener(
-	LPCTSTR _type_name,
-	EventListener _listener_fn
+	LPCTSTR _event_type,
+	const EventListenerPtr& _listener
 	)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_type_name, false);
-	IF_NULL_ASSERT_RETURN_VALUE(_listener_fn, false);
+	IF_NULL_ASSERT_RETURN_VALUE(_event_type, false);
+	IF_NULL_ASSERT_RETURN_VALUE(_listener.get(), false);
 
-	CAutoLock this_lock(this);
+	mutex::CScopedLock lock(m_thread_mutex);
 
 	for (std::pair<EventListeners::iterator, EventListeners::iterator> range 
-		 = m_listeners.equal_range(_type_name);
+		 = m_listeners.equal_range(_event_type);
 		 range.first != range.second; ++(range.first))
 	{
-		if (_listener_fn == range.first->second._listener)
+		if (range.first->second == _listener)
 		{
+			range.first->second->SetRegistered(false);
+			m_listeners.erase(range.first);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+bool CEventDispatcher::CDispImpl::RemoveEventListener(
+	LPCTSTR _event_type,
+	LPCTSTR _listener_id
+	)
+{
+	IF_NULL_ASSERT_RETURN_VALUE(_event_type, false);
+	IF_NULL_ASSERT_RETURN_VALUE(_listener_id, false);
+
+	mutex::CScopedLock lock(m_thread_mutex);
+
+	for (std::pair<EventListeners::iterator, EventListeners::iterator> range 
+		= m_listeners.equal_range(_event_type);
+		range.first != range.second; ++(range.first))
+	{
+		LPCTSTR id = range.first->second->GetListenerId();
+		if (0 == _tcscmp(id, _listener_id))
+		{
+			range.first->second->SetRegistered(false);
 			m_listeners.erase(range.first);
 			return true;
 		}
@@ -177,32 +201,40 @@ CEventDispatcher::~CEventDispatcher(void)
 
 
 bool CEventDispatcher::AddEventListener(
-	LPCTSTR _type_name, 
-	EventListener _listener_fn,
-	PVOID _param
+	LPCTSTR _event_type,
+	EventListenerPtr& _listener
 	)
 {
-	return m_disp_impl_ptr->AddEventListener(_type_name, _listener_fn, _param);
+	return m_disp_impl_ptr->AddEventListener(_event_type, _listener);
 }
 
-bool CEventDispatcher::DispatchEvent(CEvent& _event_ref) const
+bool CEventDispatcher::DispatchEvent(CEvent& _event) const
 {
-	return m_disp_impl_ptr->DispatchEvent(_event_ref);
+	return m_disp_impl_ptr->DispatchEvent(_event);
 }
 
 
-bool CEventDispatcher::HasEventListener(LPCTSTR _type_name) const
+bool CEventDispatcher::HasEventListener(LPCTSTR _event_type) const
 {
-	return m_disp_impl_ptr->HasEventListener(_type_name);
+	return m_disp_impl_ptr->HasEventListener(_event_type);
 }
 
 
 bool CEventDispatcher::RemoveEventListener(
 	LPCTSTR _type_name, 
-	EventListener _listener_fn
+	LPCTSTR _listener_id
 	)
 {
-	return m_disp_impl_ptr->RemoveEventListener(_type_name, _listener_fn);
+	return m_disp_impl_ptr->RemoveEventListener(_type_name, _listener_id);
+}
+
+
+bool CEventDispatcher::RemoveEventListener(
+	LPCTSTR _type_name, 
+	const EventListenerPtr& _listener
+	)
+{
+	return m_disp_impl_ptr->RemoveEventListener(_type_name, _listener);
 }
 
 

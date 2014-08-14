@@ -1,7 +1,6 @@
 /*******************************************************************************
 文件:	event_dispathcer.h
-描述:	IEventDispatcher 接口定义用于添加或删除事件侦听器的方法，检查是否已注册特定
-        类型的事件侦听器，并调度事件。
+描述:	类 CEventDispatcher 用于管理事件监听器对事件的订阅，以及分发器对事件的分发。
 		通常，让用户自定义的类能够调度事件，最简单方法是继承或聚合 CEventDispatcher。
 		但是，如果由于逻辑关系或继承关系等缘故，无法或不便直接继承 CEventDispatcher，
 		也可以通过实现 IEventDispatcher 接口，创建 CEventDispatcher 成员，并编写
@@ -9,15 +8,15 @@
 作者:	wu.xiongxing					
 邮箱:	wxxweb@gmail.com
 日期:	2014-02-23
-修改:	2014-05-21
+修改:	2014-08-14
 *******************************************************************************/
 
 #ifndef __W2X_COMMON_EVENT_DISPATCHER_H__
 #define __W2X_COMMON_EVENT_DISPATCHER_H__
 
-#include "macros.h"
+
 #include "base.h"
-#include "ref_ptr.h"
+#include "event_listener.h"
 
 
 W2X_NAME_SPACE_BEGIN
@@ -26,10 +25,6 @@ W2X_DEFINE_NAME_SPACE_BEGIN(events)
 
 class CEvent;
 
-/*
- * 事件侦听器函数类型。
- */
-typedef void (CALLBACK *EventListener)(const CEvent& _evt, PVOID _param);
 
 class W2X_COMMON_API IEventDispatcher: public IBase
 {
@@ -39,42 +34,42 @@ public:
 W2X_IMPLEMENT_REFCOUNTING(IEventDispatcher)
 
 public:
-	/*
-	 * 请使用 CEventDispatcher 对象注册事件侦听器函数，以使侦听器能够接收事件通知。
-	 * _source_ptr 为事件源指针，一般是指向事件侦听器 _listener 的拥有者类对象，
-	 * 这样就可以在事件侦听器函数（全局函数或静态成员函数）中调用对象的成员函数。GC
-	 * 会检测事件源对象的引用计数，若引用计数值为 1 则删除对应的事件侦听器。
+	/** 
+	 * 注册事件监听器，用于订阅特定事件通知。
+	 * @note 请使用 CEventDispatcher 对象注册事件侦听器函数，以使侦听器能够接收事件通知。
+	 * @param _event_type 指定所要订阅的事件类型名称。
+	 * @param _listener 事件监听器对象智能引用指针。
+	 * @see IEventListener
 	 */
 	virtual bool AddEventListener(
-		LPCTSTR _type_name, 
-		EventListener _listener_fn,
-		PVOID _param
+		LPCTSTR _event_type,
+		EventListenerPtr& _listener
 	) = 0;
 
-	/*
-	 * 将事件分发给事件侦听器。
-	 */
-	virtual bool DispatchEvent(CEvent& _event_ref) const = 0;
+	/** 将事件分发给事件侦听器 */
+	virtual bool DispatchEvent(CEvent& _event) const = 0;
 
-	/*
-	 * 检查 CEventDispatcher 对象是否为特定事件类型注册了事件侦听器。
-	 */
-	virtual bool HasEventListener(LPCTSTR _type_name) const = 0;
+	/** 检查是否为特定事件类型注册了事件侦听器 */
+	virtual bool HasEventListener(LPCTSTR _event_type) const = 0;
 
-	/*
-	 * 从 CEventDispatcher 对象中删除事件侦听器。
-	 */
+	/** 根据事件监听器对象指针，移除已注册的事件监听器 */
 	virtual bool RemoveEventListener(
-		LPCTSTR _type_name, 
-		EventListener _listener_fn
+		LPCTSTR _event_type,
+		const EventListenerPtr& _listener
 	) = 0;
+
+	/** 根据事件监听器 ID，移除已注册的事件监听器 */
+	virtual bool RemoveEventListener(
+		LPCTSTR _event_type,
+		LPCTSTR _listener_id
+		) = 0;
 };
 
 
 class W2X_COMMON_API CEventDispatcher: public IEventDispatcher
 {
 public:
-	/*
+	/**
 	 * CEventDispatcher 类通常作为基类，这意味着大多数情况下无需使用此构造函数，
 	 * 但是，如果不便于继承 CEventDispatcher 或者需要实现 IEventDispatcher 接口，
 	 * 那么请使用此构造函数来聚合 CEventDispatcher 类的实例。
@@ -87,32 +82,29 @@ public:
 W2X_DISALLOW_COPY_AND_ASSIGN(CEventDispatcher)
 
 public:
-	/*
-	 * 注册事件侦听器函数，以使侦听器能够接收事件通知。
-	 */
+	/** 注册事件侦听器函数，以使侦听器能够接收事件通知 */
 	virtual bool AddEventListener(
-		LPCTSTR _type_name, 
-		EventListener _listener_fn,
-		PVOID _param
+		LPCTSTR _event_type,
+		EventListenerPtr& _listener
 	);
 
-	/*
-	 * 将事件分发给事件侦听器。
-	 */
-	virtual bool DispatchEvent(CEvent& _event_ref) const;
+	/** 将事件分发给事件侦听器 */
+	virtual bool DispatchEvent(CEvent& _event) const;
 
-	/*
-	 * 检查是否为特定事件类型注册了事件侦听器。
-	 */
-	virtual bool HasEventListener(LPCTSTR _type_name) const;
+	/** 检查是否为特定事件类型注册了事件侦听器 */
+	virtual bool HasEventListener(LPCTSTR _event_type) const;
 
-	/*
-	 * 删除事件侦听器。
-	 */
+	/** 根据事件监听器对象指针，移除已注册的事件监听器 */
 	virtual bool RemoveEventListener(
-		LPCTSTR _type_name, 
-		EventListener _listener_fn
-	);
+		LPCTSTR _event_type,
+		const EventListenerPtr& _listener
+		);
+
+	/** 根据事件监听器 ID，移除已注册的事件监听器 */
+	virtual bool RemoveEventListener(
+		LPCTSTR _event_type,
+		LPCTSTR _listener_id
+		);
 
 private:
 	class CDispImpl;
