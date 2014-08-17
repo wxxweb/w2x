@@ -14,6 +14,13 @@
 
 #include "macros.h"
 #include "base.h"
+#include <functional>
+
+
+/** 构建用于回调的类函数对象，对象绑定带有一个参数的类成员函数 */
+#define W2X_CALLBACK_1(__selector__, __target__) \
+	std::bind(&__selector__, __target__, std::placeholders::_1)
+
 
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(events)
@@ -25,8 +32,7 @@ typedef CRefPtr<IEventListener> EventListenerPtr;
 class W2X_COMMON_API IEventListener: public IBase
 {
 public:
-	typedef void (CALLBACK *Function)(PVOID, const CEvent&);
-	typedef void (CALLBACK IBase::*Selector)(const CEvent&);
+	typedef std::function<void(CEvent&)> Callback;
 	
 public:
 	virtual ~IEventListener(void) = 0;
@@ -34,18 +40,15 @@ public:
 W2X_IMPLEMENT_REFCOUNTING(IEventListener)
 
 public:
-	/** 使用全局函数/类静态函数创建事件监听器 */
+	/** 
+	 * 创建事件监听器。
+	 * @param _listener_id 事件监听器唯一标识。
+	 * @param _callback 类函数对象，用做事件回调，可通过宏 W2X_CALLBACK_1 来构建。
+	 * @see Callback
+	 */
 	static EventListenerPtr Create(
-		LPCTSTR _listener_id, 
-		PVOID _target,
-		Function _function
-		);
-
-	/** 使用类成员函数创建事件监听器 */
-	static EventListenerPtr Create(
-		LPCTSTR _listener_id, 
-		IBase* _target,
-		Selector _selector
+		LPCTSTR _listener_id,
+		const Callback& _callback
 		);
 
 public:
@@ -59,7 +62,7 @@ public:
     virtual bool IsEnabled(void) const = 0;
 
 	 /** 标记该事件监听器已经被事件分发器注册过 */
-	virtual void SetRegistered(bool _registered);
+	virtual void SetRegistered(bool _registered) = 0;
 
 	/** 检查该事件监听器是否被事件分发器注册过 */
 	virtual bool IsRegistered() const = 0;
@@ -68,7 +71,7 @@ public:
     virtual LPCTSTR GetListenerId(void) const = 0;
 
 	/** 执行事件监听器事件回调函数 */
-	virtual void Execute(const CEvent& _event) = 0;
+	virtual void Execute(CEvent& _event) = 0;
 };
 
 

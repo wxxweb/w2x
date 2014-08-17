@@ -16,6 +16,7 @@
 
 
 #include "base.h"
+#include "event.h"
 #include "event_listener.h"
 
 
@@ -56,7 +57,7 @@ public:
 	virtual bool RemoveEventListener(
 		LPCTSTR _event_type,
 		const EventListenerPtr& _listener
-	) = 0;
+		) = 0;
 
 	/** 根据事件监听器 ID，移除已注册的事件监听器 */
 	virtual bool RemoveEventListener(
@@ -64,6 +65,9 @@ public:
 		LPCTSTR _listener_id
 		) = 0;
 };
+
+
+typedef CRefPtr<IEventDispatcher> EventDispatcherPtr;
 
 
 class W2X_COMMON_API CEventDispatcher: public IEventDispatcher

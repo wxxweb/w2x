@@ -11,6 +11,7 @@
 #define __W2X_COMMON_VARIABLE_H__
 
 #include "macros.h"
+#include <WTypes.h>
 #include <map>
 #include <vector>
 

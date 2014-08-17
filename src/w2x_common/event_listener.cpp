@@ -25,8 +25,7 @@ IEventListener::~IEventListener(void)
 class CEventListener: public IEventListener
 {
 public:
-	CEventListener(LPCTSTR _listener_id, PVOID _target, Function _function);
-	CEventListener(LPCTSTR _listener_id, IBase* _target, Selector _selector);
+	CEventListener(LPCTSTR _listener_id, const Callback& _callback);
 	virtual ~CEventListener(void);
 
 public:
@@ -42,7 +41,7 @@ public:
 
 	virtual inline LPCTSTR GetListenerId(void) const;
 
-	virtual void Execute(const CEvent& _event);
+	virtual inline void Execute(CEvent& _event);
 
 private:
 	inline bool SetListenerId(LPCTSTR _listener_id);
@@ -50,39 +49,15 @@ private:
 private:
 	bool m_enabled;
 	bool m_registered;
-	Function m_function;
-	Selector m_selector;
-	PVOID m_selector_target;
+	Callback m_callback;
 	LPTSTR m_listener_id;
 };
 
 
-CEventListener::CEventListener(
-	LPCTSTR _listener_id,
-	PVOID _target,
-	Function _function
-	)
+CEventListener::CEventListener(LPCTSTR _listener_id, const Callback& _callback)
 	: m_enabled(true)
 	, m_registered(false)
-	, m_function(_function)
-	, m_selector(NULL)
-	, m_selector_target(_target)
-	, m_listener_id(NULL)
-{
-	this->SetListenerId(_listener_id);
-}
-
-
-CEventListener::CEventListener(
-	LPCTSTR _listener_id, 
-	IBase* _target, 
-	Selector _function
-	)
-	: m_enabled(true)
-	, m_registered(false)
-	, m_function(NULL)
-	, m_selector(_function)
-	, m_selector_target(_target)
+	, m_callback(_callback)
 	, m_listener_id(NULL)
 {
 	this->SetListenerId(_listener_id);
@@ -97,29 +72,33 @@ CEventListener::~CEventListener(void)
 
 inline bool CEventListener::IsValid(void) const
 {
-	return (NULL != m_function) || 
-		(NULL != m_selector_target && NULL != m_selector);
+	return (NULL != m_callback);
 }
+
 
 inline void CEventListener::SetEnabled(bool _enabled)
 {
 	m_enabled = _enabled;
 }
 
+
 inline bool CEventListener::IsEnabled(void) const
 {
 	return m_enabled;
 }
+
 
 inline void CEventListener::SetRegistered(bool _registered)
 {
 	m_registered = _registered;
 }
 
+
 inline bool CEventListener::IsRegistered() const
 {
 	return m_registered;
 }
+
 
 inline LPCTSTR CEventListener::GetListenerId(void) const
 {
@@ -141,44 +120,24 @@ inline bool CEventListener::SetListenerId(LPCTSTR _listener_id)
 }
 
 
-void CEventListener::Execute(const CEvent& _event)
+inline void CEventListener::Execute(CEvent& _event)
 {
-	if (NULL != m_function) {
-		m_function(m_selector_target, _event);
-	}
-	else if (NULL != m_selector_target && NULL != m_selector) {
-		IBase* selector_target = static_cast<IBase*>(m_selector_target);
-		(selector_target->*m_selector)(_event);
+	if (NULL != m_callback) {
+		m_callback(_event);
 	}
 }
 
 
 EventListenerPtr IEventListener::Create(
-	LPCTSTR _listener_id,
-	PVOID _target,
-	Function _function
+	LPCTSTR _listener_id, 
+	const Callback& _callback
 	)
 {
-	_ASSERT(NULL != _function);
-	if (NULL == _function) {
+	_ASSERT(NULL != _callback);
+	if (NULL == _callback) {
 		return NULL;
 	}
-	return EventListenerPtr(new CEventListener(_listener_id, _target, _function));
-}
-
-
-EventListenerPtr IEventListener::Create(
-	LPCTSTR _listener_id,
-	IBase* _target,
-	Selector _selector
-	)
-{
-	_ASSERT(NULL != _target);
-	_ASSERT(NULL != _selector);
-	if (NULL == _target || NULL == _selector) {
-		return NULL;
-	}
-	return EventListenerPtr(new CEventListener(_listener_id, _target, _selector));
+	return EventListenerPtr(new CEventListener(_listener_id, _callback));
 }
 
 
