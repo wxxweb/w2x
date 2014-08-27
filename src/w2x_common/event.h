@@ -62,6 +62,12 @@ public:
 	/** 判断是否为相同事件类型 */
 	bool operator ==(const CEvent& _event) const;
 
+	/** 判断是否不为指定事件类型 */
+	bool operator !=(LPCTSTR _type_name) const;
+
+	/** 判断是否不为相同事件类型 */
+	bool operator !=(const CEvent& _event) const;
+
 	/**
 	 * 获取产生事件的目标对象名称，目标对象（事件目标）是指被动产生事件的对象，而
 	 * 不是主动触发事件的对象。比如某人咬了一口苹果，那么苹果就是这个动作事件
@@ -88,6 +94,13 @@ private:
 inline bool operator ==(LPCTSTR _type_name, const CEvent& _event)
 {
 	return _event.IsTypeOf(_type_name);
+}
+
+
+/** 判断是否不为指定事件类型 */
+inline bool operator !=(LPCTSTR _type_name, const CEvent& _event)
+{
+	return (false == _event.IsTypeOf(_type_name));
 }
 
 

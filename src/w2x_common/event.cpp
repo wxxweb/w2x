@@ -148,6 +148,18 @@ bool CEvent::operator ==(const CEvent& _event) const
 }
 
 
+bool CEvent::operator !=(LPCTSTR _type_name) const
+{
+	return (false == this->IsTypeOf(_type_name));
+}
+
+
+bool CEvent::operator !=(const CEvent& _event) const
+{
+	return (false == this->IsTypeOf(_event.GetTypeName()));
+}
+
+
 LPCTSTR CEvent::GetTargetName(void) const
 {
 	return m_event_impl_ptr->m_target_name_ptr;
