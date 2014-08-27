@@ -175,11 +175,33 @@
 #endif
 
 
+/** 构建用于回调的类函数对象，对象绑定不带参数的类成员函数 */
+#ifndef W2X_CALLBACK_0
+#  define W2X_CALLBACK_0(__selector__, __target__) \
+	std::bind(&__selector__, __target__)
+#endif
+
+
+/** 构建用于回调的类函数对象，对象绑定带有1个参数的类成员函数 */
+#ifndef W2X_CALLBACK_1
+#  define W2X_CALLBACK_1(__selector__, __target__) \
+	 std::bind(&__selector__, __target__, std::placeholders::_1)
+#endif
+
+
+/** 构建用于回调的类函数对象，对象绑定带有2个参数的类成员函数 */
+#ifndef W2X_CALLBACK_2
+#  define W2X_CALLBACK_2(__selector__, __target__) \
+	std::bind(&__selector__, __target__, \
+      std::placeholders::_1, std::placeholders::_2)
+#endif
+
+
 /** 禁止使用拷贝构造函数和 operator= 赋值操作的宏应该类的 private: 中使用 */
 #ifndef W2X_DISALLOW_COPY_AND_ASSIGN
 #define W2X_DISALLOW_COPY_AND_ASSIGN(ClassName)	\
-	private:									\
-	ClassName(const ClassName&);			\
+	private: \
+	ClassName(const ClassName&); \
 	void operator =(const ClassName&);
 #endif // W2X_DISALLOW_COPY_AND_ASSIGN
 

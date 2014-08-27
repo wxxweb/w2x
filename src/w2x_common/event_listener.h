@@ -17,11 +17,6 @@
 #include <functional>
 
 
-/** 构建用于回调的类函数对象，对象绑定带有一个参数的类成员函数 */
-#define W2X_CALLBACK_1(__selector__, __target__) \
-	std::bind(&__selector__, __target__, std::placeholders::_1)
-
-
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(events)
 
