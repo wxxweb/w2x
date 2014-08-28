@@ -61,8 +61,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,4,1,43
- PRODUCTVERSION 0,4,1,43
+ FILEVERSION 0,4,2,44
+ PRODUCTVERSION 0,4,2,44
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -77,12 +77,12 @@ BEGIN
     BEGIN
         BLOCK "080404b0"
         BEGIN
-            VALUE "FileVersion", "0.4.1.43"
+            VALUE "FileVersion", "0.4.2.44"
             VALUE "InternalName", "w2x_common.dll"
             VALUE "LegalCopyright", "Copyright (C) 2014"
             VALUE "OriginalFilename", "w2x_common.dll"
             VALUE "ProductName", "w2x_common"
-            VALUE "ProductVersion", "0.4.1.43"
+            VALUE "ProductVersion", "0.4.2.44"
         END
     END
     BLOCK "VarFileInfo"
