@@ -160,6 +160,7 @@
     <ClCompile Include="file_sys.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="msg_loop.cpp" />
+    <ClCompile Include="mutex.cpp" />
     <ClCompile Include="process.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

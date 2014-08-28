@@ -149,6 +149,9 @@
     <ClCompile Include="event_listener.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="mutex.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="w2x_common.rc">
