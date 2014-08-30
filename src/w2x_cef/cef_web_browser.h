@@ -13,10 +13,9 @@
 #define __W2X_CEF_WEB_BROWSER_H__
 #pragma once
 
-#include "exports.h"
+
 #include "cef_web_browser_i.h"
-//#include "w2x_common/macros.h"
-#include <string>
+
 
 class ICefWebBrowserEventHandler;
 class CCefWebBrowserImpl;
@@ -26,8 +25,8 @@ class W2X_CEF_API CCefWebBrowser: public ICefWebBrowser
 public:
 	/** 自定义协议处理器，传入捕获到的对应 URL */
 	typedef bool (CALLBACK* CustomSchemeHandler)(
-		const TSTDSTR& _scheme_name, 
-		const TSTDSTR& _url
+		LPCTSTR _scheme_name, 
+		LPCTSTR _url
 		);
 
 public:
@@ -146,7 +145,7 @@ public:
 	 * @return 注册成功返回 true。
 	 */
 	static bool RegisterCustomScheme(
-		const TSTDSTR& _scheme_name, 
+		LPCTSTR _scheme_name, 
 		CustomSchemeHandler _handler
 		);
 

@@ -26,8 +26,8 @@
 class ICefWebBrowserEventHandler;
 
 typedef bool (CALLBACK* CustomSchemeHandler)(
-	const TSTDSTR& _scheme_name, 
-	const TSTDSTR& _url
+	LPCTSTR _scheme_name, 
+	LPCTSTR _url
 	);
 
 // CCefWebBrowser implementation.
@@ -238,7 +238,7 @@ public:
 	static void Uninitialize(void);
 
 	static bool RegisterCustomScheme(
-		const TSTDSTR& _scheme_name, 
+		LPCTSTR _scheme_name, 
 		CustomSchemeHandler _handler
 		);
 

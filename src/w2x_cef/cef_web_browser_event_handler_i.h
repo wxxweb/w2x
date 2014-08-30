@@ -11,9 +11,17 @@
 #define __W2X_CEF_WEB_BROWSER_EVENT_HANDLER_H__
 #pragma once
 
-#include "exports.h"
-//#include "w2x_common/macros.h"
 #include <string>
+
+#ifdef W2X_CEF_EXPORTS
+#  ifndef  W2X_CEF_API
+#    define W2X_CEF_API __declspec(dllexport)
+#  endif
+#else
+#  ifndef W2X_CEF_API
+#    define W2X_CEF_API __declspec(dllimport)
+#  endif
+#endif
 
 /** 根据UNICODE决定使用宽字符或多字符版C++字符串 */
 #ifndef TSTDSTR
@@ -26,10 +34,9 @@
 
 class ICefWebBrowser;
 
-class W2X_CEF_API ICefWebBrowserEventHandler
+class ICefWebBrowserEventHandler
 {
 public:
-	ICefWebBrowserEventHandler(void) {}
 	virtual ~ICefWebBrowserEventHandler(void) {}
 
 public:

@@ -550,7 +550,7 @@ bool CCefWebBrowser::CallJsFunction(
 }
 
 bool CCefWebBrowser::RegisterCustomScheme(
-	const TSTDSTR& _scheme_name,
+	LPCTSTR _scheme_name,
 	CustomSchemeHandler _handler
 	)
 {

@@ -12,8 +12,19 @@
 #define __W2X_CEF_WEB_BROWSER_INTERFACE_H__
 #pragma once
 
-#include "exports.h"
+
 #include <string>
+
+
+#ifdef W2X_CEF_EXPORTS
+#  ifndef  W2X_CEF_API
+#    define W2X_CEF_API __declspec(dllexport)
+#  endif
+#else
+#  ifndef W2X_CEF_API
+#    define W2X_CEF_API __declspec(dllimport)
+#  endif
+#endif
 
 
 /** 根据UNICODE决定使用宽字符或多字符版C++字符串 */
@@ -26,10 +37,9 @@
 #endif
 
 
-class W2X_CEF_API ICefWebBrowser
+class ICefWebBrowser
 {
 public:
-	ICefWebBrowser(void) {}
 	virtual ~ICefWebBrowser(void) = 0 {}
 
 public:

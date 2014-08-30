@@ -201,7 +201,7 @@ bool CCustomSchemeHandler::ProcessRequest(
 	if (NULL != m_handler)
 	{
 		CefString url = request->GetURL();
-		return m_handler(m_scheme_name, url);
+		return m_handler(m_scheme_name.c_str(), url.c_str());
 	}
 
 	return false;
@@ -1075,10 +1075,10 @@ void CCefWebBrowserImpl::Uninitialize(void)
 }
 
 bool CCefWebBrowserImpl::RegisterCustomScheme(
-	const TSTDSTR& _scheme_name,
+	LPCTSTR _scheme_name,
 	CustomSchemeHandler _handler)
 {
-	if (NULL == _scheme_name.c_str())
+	if (NULL == _scheme_name)
 	{
 		return false;
 	}
