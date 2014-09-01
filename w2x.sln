@@ -14,9 +14,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "w2x_flash", "src\w2x_flash\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "w2x_cef", "src\w2x_cef\w2x_cef.vcxproj", "{4EC1A179-6BF5-408E-812E-302F4255725C}"
-	ProjectSection(ProjectDependencies) = postProject
-		{ECBACAC8-7894-4E26-9309-037BF4B7C938} = {ECBACAC8-7894-4E26-9309-037BF4B7C938}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

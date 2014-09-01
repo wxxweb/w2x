@@ -958,7 +958,7 @@ bool CCefWebBrowserImpl::MoveBrowser(int _x, int _y, int _width, int _height)
 {
 	if (NULL != m_browser_hwnd)
 	{
-		return TRUE == ::MoveWindow(m_browser_hwnd, 0, 0, _width, _height, FALSE);
+		return TRUE == ::MoveWindow(m_browser_hwnd, _x, _y, _width, _height, FALSE);
 	}
 	return false;
 }
@@ -1064,6 +1064,12 @@ bool CCefWebBrowserImpl::Initialize(LPCTSTR _cache_path, LPCTSTR _log_file)
 
 	settings.multi_threaded_message_loop = true;
 	settings.uncaught_exception_stack_size = 1;
+
+	// ”Ô—‘∞¸Œª÷√
+	TCHAR locales_dir_path[MAX_PATH] = TEXT("");
+	::GetCurrentDirectory(MAX_PATH, locales_dir_path);
+	_tcscat_s(locales_dir_path, TEXT("\\locales"));
+	CefString(&settings.locales_dir_path) = locales_dir_path;
 
 	// Initialize CEF.
 	return CefInitialize(settings, app);
