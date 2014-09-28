@@ -268,6 +268,8 @@ private:
 		PVOID pvParam
 		);
 
+	static UINT CALLBACK UninitializeThread(PVOID _param);
+
 private:
 	static LRESULT OnLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	static LRESULT OnRButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
@@ -314,6 +316,8 @@ private:
 	static bool sm_is_console_alloc;
 
 	static WNDPROC sm_old_wnd_proc;
+
+	static int sm_instance_count;
 };
 
 #endif ///< __W2X_CEF_WEB_BROWSER_IMPL_H__

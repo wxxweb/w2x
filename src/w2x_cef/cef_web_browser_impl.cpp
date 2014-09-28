@@ -16,6 +16,7 @@
 #include "util.h"
 //#include "w2x_common/log.h"
 #include <string>
+#include <process.h>
 
 // #define REQUIRE_UI_THREAD()   ASSERT(CefCurrentlyOn(TID_UI));
 // #define REQUIRE_IO_THREAD()   ASSERT(CefCurrentlyOn(TID_IO));
@@ -237,7 +238,7 @@ bool CCefWebBrowserImpl::sm_is_console_alloc = false;
 WNDPROC CCefWebBrowserImpl::sm_old_wnd_proc = NULL;
 CCefWebBrowserImpl::ThisPtrMap CCefWebBrowserImpl::sm_this_ptrs;
 CefCriticalSection CCefWebBrowserImpl::sm_this_ptrs_mutex;
-
+int CCefWebBrowserImpl::sm_instance_count = 0;
 
 CCefWebBrowserImpl::CCefWebBrowserImpl(void)
 	: m_parent_hwnd(NULL)
@@ -245,12 +246,14 @@ CCefWebBrowserImpl::CCefWebBrowserImpl(void)
 	, m_event_handler(NULL)
 	//, m_bFormElementHasFocus(false)
 {
+	++sm_instance_count;
 	memset(&m_caption_margin, 0, sizeof(m_caption_margin));
 }
 
 
 CCefWebBrowserImpl::~CCefWebBrowserImpl()
 {
+	--sm_instance_count;
 }
 
 
@@ -1077,7 +1080,8 @@ bool CCefWebBrowserImpl::Initialize(LPCTSTR _cache_path, LPCTSTR _log_file)
 
 void CCefWebBrowserImpl::Uninitialize(void)
 {
-	CefShutdown();
+	::CloseHandle((HANDLE)_beginthreadex(
+		NULL, 0, CCefWebBrowserImpl::UninitializeThread, NULL, 0, NULL));
 }
 
 bool CCefWebBrowserImpl::RegisterCustomScheme(
@@ -1120,4 +1124,17 @@ bool CCefWebBrowserImpl::AddJsCode(const TSTDSTR& _js_code)
 {
 	return m_cpp_msg_loop.AddMsg(_js_code.c_str(), 
 		(_js_code.length() + 1) * sizeof(TCHAR), NULL);
+}
+
+UINT CALLBACK CCefWebBrowserImpl::UninitializeThread(PVOID _param)
+{
+	DWORD begin_time = ::GetTickCount();
+	do {
+		::Sleep(500);
+	} 
+	while (0 < sm_instance_count && 5000 > ::GetTickCount() - begin_time);
+
+	CefShutdown();
+
+	return 0;
 }
