@@ -473,6 +473,7 @@ CCefWebBrowser::CCefWebBrowser(void)
 
 CCefWebBrowser::~CCefWebBrowser(void)
 {
+	m_impl_ptr->Close();
 	m_impl_ptr->Release();
 }
 

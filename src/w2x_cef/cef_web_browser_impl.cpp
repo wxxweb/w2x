@@ -295,6 +295,8 @@ void CCefWebBrowserImpl::OnBeforeClose(CefRefPtr<CefBrowser> browser)
 		m_event_handler = NULL;
 	}
 
+	m_V8Handlers.clear();
+	
 	m_cpp_msg_loop.StopLoopThread();
 
 	if (m_browser_hwnd == browser->GetWindowHandle()) 
@@ -950,6 +952,13 @@ void CCefWebBrowserImpl::OnAddressChange(
 
 void CCefWebBrowserImpl::Close(void)
 {
+	if (NULL != m_event_handler)
+	{
+		m_event_handler->UnregisterWebBrowser();
+		m_event_handler->OnBeforeClose();
+		m_event_handler = NULL;
+	}
+
 	if (NULL != m_browser)
 	{
 		m_browser->ParentWindowWillClose();
@@ -1069,10 +1078,10 @@ bool CCefWebBrowserImpl::Initialize(LPCTSTR _cache_path, LPCTSTR _log_file)
 	settings.uncaught_exception_stack_size = 1;
 
 	// ”Ô—‘∞¸Œª÷√
-	TCHAR locales_dir_path[MAX_PATH] = TEXT("");
-	::GetCurrentDirectory(MAX_PATH, locales_dir_path);
-	_tcscat_s(locales_dir_path, TEXT("\\locales"));
-	CefString(&settings.locales_dir_path) = locales_dir_path;
+	//TCHAR locales_dir_path[MAX_PATH] = TEXT("");
+	//::GetCurrentDirectory(MAX_PATH, locales_dir_path);
+	//_tcscat_s(locales_dir_path, TEXT("\\locales"));
+	//CefString(&settings.locales_dir_path) = locales_dir_path;
 
 	// Initialize CEF.
 	return CefInitialize(settings, app);
@@ -1080,8 +1089,16 @@ bool CCefWebBrowserImpl::Initialize(LPCTSTR _cache_path, LPCTSTR _log_file)
 
 void CCefWebBrowserImpl::Uninitialize(void)
 {
-	::CloseHandle((HANDLE)_beginthreadex(
-		NULL, 0, CCefWebBrowserImpl::UninitializeThread, NULL, 0, NULL));
+	//::CloseHandle((HANDLE)_beginthreadex(
+	//	NULL, 0, CCefWebBrowserImpl::UninitializeThread, NULL, 0, NULL));
+
+	const DWORD begin_time = ::GetTickCount();
+	while (0 < sm_instance_count && 1000 > ::GetTickCount() - begin_time)
+	{
+		::Sleep(50);
+	}
+
+	CefShutdown();
 }
 
 bool CCefWebBrowserImpl::RegisterCustomScheme(
@@ -1124,17 +1141,4 @@ bool CCefWebBrowserImpl::AddJsCode(const TSTDSTR& _js_code)
 {
 	return m_cpp_msg_loop.AddMsg(_js_code.c_str(), 
 		(_js_code.length() + 1) * sizeof(TCHAR), NULL);
-}
-
-UINT CALLBACK CCefWebBrowserImpl::UninitializeThread(PVOID _param)
-{
-	DWORD begin_time = ::GetTickCount();
-	do {
-		::Sleep(500);
-	} 
-	while (0 < sm_instance_count && 5000 > ::GetTickCount() - begin_time);
-
-	CefShutdown();
-
-	return 0;
 }

@@ -268,8 +268,6 @@ private:
 		PVOID pvParam
 		);
 
-	static UINT CALLBACK UninitializeThread(PVOID _param);
-
 private:
 	static LRESULT OnLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	static LRESULT OnRButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
