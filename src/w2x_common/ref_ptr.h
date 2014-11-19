@@ -1,14 +1,14 @@
 /******************************************************************************
- * 文件:		ref_ptr.h
- * 描述:		智能指针类 CRefPtr 用于对象的引用计数。使用该类来替代手动操作，即在引用计数对
- *			象中手动调用函数 AddRef() 和函数 Release()。通过自动操作，避免经常因忘记释
- *			放一个对象而造成的内存泄露。CRefPtr 对象所管理的引用计数对象需要实现成员函数
- *			AddRef() 和 Release()。最简单的办法是让用户自定义的类继承 IBase，并通过宏
- *			W2X_IMPLEMENT_REFCOUNTING 来实现引用计数相关函数接口，请参加 base.h。
- * 作者:		wu.xiongxing					
- * 邮箱:		wxxweb@gmail.com
- * 创建:		2014-02-23
- * 修改:		2014-05-21
+文件:	ref_ptr.h
+描述:	智能指针类 CRefPtr 用于对象的引用计数。使用该类来替代手动操作，即在引用计数对
+		象中手动调用函数 AddRef() 和函数 Release()。通过自动操作，避免经常因忘记释
+		放一个对象而造成的内存泄露。CRefPtr 对象所管理的引用计数对象需要实现成员函数
+		AddRef() 和 Release()。最简单的办法是让用户自定义的类继承 IBase，并通过宏
+		W2X_IMPLEMENT_REFCOUNTING 来实现引用计数相关函数接口，请参加 base.h。
+作者:	wu.xiongxing					
+邮箱:	wxxweb@gmail.com
+创建:	2014-02-23
+修改:	2014-11-19
  ******************************************************************************/
 
 #ifndef __W2X_COMMON_REF_PTR_H__
@@ -59,15 +59,15 @@ public:
 	}
 
 	template <class X>
-	bool operator==(X* _ptr) {
+	bool operator==(const X* _ptr) const {
 		return _ptr == static_cast<T*>(m_ptr);
 	}
 
-	bool operator==(T* _ptr) {
+	bool operator==(const T* _ptr) const {
 		return _ptr == m_ptr;
 	}
 
-	bool operator==(CRefPtr<T>& _ref) {
+	bool operator==(const CRefPtr<T>& _ref) const {
 		return _ref.m_ptr == m_ptr;
 	}
 
@@ -145,4 +145,10 @@ private:
 W2X_NAME_SPACE_END
 
 
-#endif /* __W2X_COMMON_REF_PTR_H__ */
+template <class T>
+bool operator==(void* _ptr, const w2x::CRefPtr<T>& _ref) {
+	return _ref.get() == _ptr;
+}
+
+
+#endif // __W2X_COMMON_REF_PTR_H__
