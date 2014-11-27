@@ -44,14 +44,19 @@ public:
 	virtual inline void Execute(CEvent& _event);
 
 private:
-	inline bool SetListenerId(LPCTSTR _listener_id);
+	inline void SetListenerId(LPCTSTR _listener_id);
 
 private:
 	bool m_enabled;
 	bool m_registered;
 	Callback m_callback;
 	LPTSTR m_listener_id;
+
+	static size_t sm_next_auto_listener_id;
 };
+
+
+size_t CEventListener::sm_next_auto_listener_id = 0;
 
 
 CEventListener::CEventListener(LPCTSTR _listener_id, const Callback& _callback)
@@ -106,17 +111,19 @@ inline LPCTSTR CEventListener::GetListenerId(void) const
 }
 
 
-inline bool CEventListener::SetListenerId(LPCTSTR _listener_id)
+inline void CEventListener::SetListenerId(LPCTSTR _listener_id)
 {
 	_ASSERT(NULL != _listener_id);
-	if (NULL == m_listener_id) {
-		return false;
+	if (NULL == _listener_id || TEXT('\0') == _listener_id[0]) {
+		m_listener_id = new TCHAR[32];
+		_stprintf_s(m_listener_id, 32,
+			TEXT("w2x:listener:%d"), sm_next_auto_listener_id++);
+		return;
 	}
 	SAFE_DELETE_ARRAY(m_listener_id);
 	const size_t words_count = _tcslen(_listener_id) + 1;
 	m_listener_id = new TCHAR[words_count];
 	_tcscpy_s(m_listener_id, words_count, _listener_id);
-	return true;
 }
 
 

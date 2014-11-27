@@ -37,7 +37,7 @@ W2X_IMPLEMENT_REFCOUNTING(IEventListener)
 public:
 	/** 
 	 * 创建事件监听器。
-	 * @param _listener_id 事件监听器唯一标识。
+	 * @param _listener_id 事件监听器唯一标识，如果为 NULL 或空字符串则自动分配。
 	 * @param _callback 类函数对象，用做事件回调，可通过宏 W2X_CALLBACK_1 来构建。
 	 * @see Callback
 	 */
