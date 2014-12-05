@@ -79,7 +79,7 @@ W2X_COMMON_API LPWSTR AllocStringA2W(
 #endif
 
 
-__forceinline std::wstring _W2X_A2W(LPCSTR pszAscii)
+inline std::wstring _W2X_A2W(LPCSTR pszAscii)
 {
 	LPWSTR pszWide = w2x::encode::AllocStringA2W(pszAscii);
 	std::wstring strWide = pszWide;
@@ -116,7 +116,7 @@ W2X_COMMON_API LPSTR AllocStringW2A(
 #  define W2X_ALLOC_STR_T2A(s)	(s)
 #endif
 
-__forceinline std::string _W2X_W2A(LPCWSTR pszWide)
+inline std::string _W2X_W2A(LPCWSTR pszWide)
 {
 	LPSTR pszAscii = w2x::encode::AllocStringW2A(pszWide);
 	std::string strAscii = pszAscii;
@@ -160,7 +160,7 @@ W2X_COMMON_API LPWSTR AllocStringUTF2W(
 #  define W2X_ALLOC_STR_UTF2T	w2x::encode::AllocStringUTF2A
 #endif
 
-__forceinline std::string _W2X_UTF2A(LPCSTR pszUtf8)
+inline std::string _W2X_UTF2A(LPCSTR pszUtf8)
 {
 	LPSTR pszAscii = w2x::encode::AllocStringUTF2A(pszUtf8);
 	std::string strAscii = pszAscii;
@@ -170,7 +170,7 @@ __forceinline std::string _W2X_UTF2A(LPCSTR pszUtf8)
 
 #define W2X_UTF2A(s)	w2x::encode::_W2X_UTF2A(s)
 
-__forceinline std::wstring _W2X_UTF2W(LPCSTR pszUtf8)
+inline std::wstring _W2X_UTF2W(LPCSTR pszUtf8)
 {
 	LPWSTR pszWide = w2x::encode::AllocStringUTF2W(pszUtf8);
 	std::wstring strWide = pszWide;
@@ -207,7 +207,7 @@ W2X_COMMON_API LPSTR AllocStringA2UTF(
 #  define W2X_ALLOC_STR_T2UTF	w2x::encode::AllocStringA2UTF
 #endif
 
-__forceinline std::string _W2X_A2UTF(LPCSTR pszAscii)
+inline std::string _W2X_A2UTF(LPCSTR pszAscii)
 {
 	LPSTR pszUtf8 = w2x::encode::AllocStringA2UTF(pszAscii);
 	std::string strUtf8 = pszUtf8;
@@ -217,7 +217,7 @@ __forceinline std::string _W2X_A2UTF(LPCSTR pszAscii)
 
 #define W2X_A2UTF(s)	w2x::encode::_W2X_A2UTF(s)
 
-__forceinline std::string _W2X_W2UTF(LPCWSTR pszWide)
+inline std::string _W2X_W2UTF(LPCWSTR pszWide)
 {
 	LPSTR pszUtf8 = w2x::encode::AllocStringW2UTF(pszWide);
 	std::string strUtf8 = pszUtf8;
@@ -249,13 +249,121 @@ W2X_COMMON_API bool Guid2String(
 #  define W2X_GUID_STR_LEN	37
 #endif
 
-/*
- * 生成文件 MD5 消息摘要
- */
+/** 生成文件 MD5 消息摘要 */
 W2X_COMMON_API bool GenerateFileMD5(
 	OUT TSTDSTR _md5_digest,
 	LPCTSTR _file_path
 );
+
+/** URL 编码：多字节字符串进行 UTF-8 编码 */
+W2X_COMMON_API LPSTR AllocStringUrlEncodeA(LPCSTR _a_str);
+
+/** URL 编码：宽字节字符串进行 UTF-8 编码 */
+W2X_COMMON_API LPWSTR AllocStringUrlEncodeW(LPCWSTR _w_str);
+
+/** URL 编码：UTF-8 字符串进行 UTF-8 编码 */
+W2X_COMMON_API LPSTR AllocStringUrlEncodeUTF8(LPCSTR _utf8_str);
+
+#define W2X_ALLOC_STR_URL_ENCODE_A		w2x::encode::AllocStringUrlEncodeA
+#define W2X_ALLOC_STR_URL_ENCODE_W		w2x::encode::AllocStringUrlEncodeW
+#define W2X_ALLOC_STR_URL_ENCODE_UTF8	w2x::encode::AllocStringUrlEncodeUTF8
+
+#ifdef UNICODE
+#  define W2X_ALLOC_STR_URL_ENCODE	w2x::encode::AllocStringUrlEncodeW
+#else
+#  define W2X_ALLOC_STR_URL_ENCODE	w2x::encode::AllocStringUrlEncodeA
+#endif
+
+inline std::string _W2X_URL_ENCODE_A(LPCSTR _ascii)
+{
+	LPSTR encode_ascii = w2x::encode::AllocStringUrlEncodeA(_ascii);
+	std::string ret_str = encode_ascii;
+	w2x::encode::FreeStringA(&encode_ascii);
+	return ret_str;
+}
+
+#define W2X_URL_ENCODE_A	w2x::encode::_W2X_URL_ENCODE_A
+
+inline std::wstring _W2X_URL_ENCODE_W(LPCWSTR _unicode)
+{
+	LPWSTR encode_unicode = w2x::encode::AllocStringUrlEncodeW(_unicode);
+	std::wstring ret_str = encode_unicode;
+	w2x::encode::FreeStringW(&encode_unicode);
+	return ret_str;
+}
+
+#define W2X_URL_ENCODE_W	w2x::encode::_W2X_URL_ENCODE_W
+
+inline std::string _W2X_URL_ENCODE_UTF8(LPCSTR _utf8)
+{
+	LPSTR encode_utf8 = w2x::encode::AllocStringUrlEncodeUTF8(_utf8);
+	std::string ret_str = encode_utf8;
+	w2x::encode::FreeStringA(&encode_utf8);
+	return ret_str;
+}
+
+#define W2X_URL_ENCODE_UTF8	w2x::encode::_W2X_URL_ENCODE_UTF8
+
+#ifdef UNICODE
+#  define W2X_URL_ENCODE	W2X_URL_ENCODE_W
+#else
+#  define W2X_URL_ENCODE	W2X_URL_ENCODE_A
+#endif
+
+/** URL 解码：多字节字符串进行 UTF-8 解码 */
+W2X_COMMON_API LPSTR AllocStringUrlDecodeA(LPCSTR _a_str);
+
+/** URL 解码：宽字节字符串进行 UTF-8 解码 */
+W2X_COMMON_API LPWSTR AllocStringUrlDecodeW(LPCWSTR _w_str);
+
+/** URL 解码：UTF-8 字节字符串进行 UTF-8 解码 */
+W2X_COMMON_API LPSTR AllocStringUrlDecodeUTF8(LPCSTR _utf8_str);
+
+#define W2X_ALLOC_STR_URL_DECODE_A		w2x::encode::AllocStringUrlDecodeA
+#define W2X_ALLOC_STR_URL_DECODE_W		w2x::encode::AllocStringUrlDecodeW
+#define W2X_ALLOC_STR_URL_DECODE_UTF8	w2x::encode::AllocStringUrlDecodeUTF8
+
+#ifdef UNICODE
+#  define W2X_ALLOC_STR_URL_DECODE	w2x::encode::AllocStringUrlDecodeW
+#else
+#  define W2X_ALLOC_STR_URL_DECODE	w2x::encode::AllocStringUrlDecodeA
+#endif
+
+inline std::string _W2X_URL_DECODE_A(LPCSTR _ascii)
+{
+	LPSTR decode_ascii = w2x::encode::AllocStringUrlDecodeA(_ascii);
+	std::string ret_str = decode_ascii;
+	w2x::encode::FreeStringA(&decode_ascii);
+	return ret_str;
+}
+
+#define W2X_URL_DECODE_A	w2x::encode::_W2X_URL_DECODE_A
+
+inline std::wstring _W2X_URL_DECODE_W(LPCWSTR _unicode)
+{
+	LPWSTR decode_unicode = w2x::encode::AllocStringUrlDecodeW(_unicode);
+	std::wstring ret_str = decode_unicode;
+	w2x::encode::FreeStringW(&decode_unicode);
+	return ret_str;
+}
+
+#define W2X_URL_DECODE_W	w2x::encode::_W2X_URL_DECODE_W
+
+inline std::string _W2X_URL_DECODE_UTF8(LPCSTR _utf8)
+{
+	LPSTR decode_utf8 = w2x::encode::AllocStringUrlDecodeA(_utf8);
+	std::string ret_str = decode_utf8;
+	w2x::encode::FreeStringA(&decode_utf8);
+	return ret_str;
+}
+
+#define W2X_URL_DECODE_UTF8		w2x::encode::_W2X_URL_DECODE_UTF8
+
+#ifdef UNICODE
+#  define W2X_URL_DECODE	W2X_URL_DECODE_W
+#else
+#  define W2X_URL_DECODE	W2X_URL_DECODE_A
+#endif
 
 
 W2X_DEFINE_NAME_SPACE_END(encode)

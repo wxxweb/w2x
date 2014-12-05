@@ -386,5 +386,189 @@ generate_md5_digest_error:
 }
 
 
+
+/* Portable character check (remember EBCDIC). Do not use isalnum() because
+   its behavior is altered by the current locale.
+   See http://tools.ietf.org/html/rfc3986#section-2.3
+*/
+static bool Curl_isunreserved(unsigned char in)
+{
+  switch (in) {
+    case '0': case '1': case '2': case '3': case '4':
+    case '5': case '6': case '7': case '8': case '9':
+    case 'a': case 'b': case 'c': case 'd': case 'e':
+    case 'f': case 'g': case 'h': case 'i': case 'j':
+    case 'k': case 'l': case 'm': case 'n': case 'o':
+    case 'p': case 'q': case 'r': case 's': case 't':
+    case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+    case 'A': case 'B': case 'C': case 'D': case 'E':
+    case 'F': case 'G': case 'H': case 'I': case 'J':
+    case 'K': case 'L': case 'M': case 'N': case 'O':
+    case 'P': case 'Q': case 'R': case 'S': case 'T':
+    case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+    case '-': case '.': case '_': case '~':
+      return true;
+    default:
+      break;
+  }
+  return false;
+}
+
+
+static char *Curl_escape(const char *string, int inlength)
+{
+	size_t alloc = (inlength?(size_t)inlength:strlen(string))+1;
+	char *ns;
+	char *testing_ptr = NULL;
+	unsigned char in; /* we need to treat the characters unsigned */
+	size_t newlen = alloc;
+	size_t strindex=0;
+	size_t length;
+
+	ns = new char[alloc];
+	if(!ns)
+		return NULL;
+
+	length = alloc-1;
+	while(length--) {
+		in = *string;
+
+		if(Curl_isunreserved(in))
+			/* just copy this */
+			ns[strindex++]=in;
+		else {
+			/* encode it */
+			newlen += 2; /* the size grows with two, since this'll become a %XX */
+			if(newlen > alloc) {
+				alloc *= 2;
+				testing_ptr = new char[alloc];
+				if(!testing_ptr) {
+					delete [] ns;
+					return NULL;
+				}
+				else {
+					memcpy_s(testing_ptr, alloc, ns, strindex);
+					delete [] ns;
+					ns = testing_ptr;
+				}
+			}
+
+			_snprintf_s(&ns[strindex], 5, 4, "%%%02X", in);
+			strindex+=3;
+		}
+		string++;
+	}
+	ns[strindex]=0; /* terminate it */
+	return ns;
+}
+
+/** URL decodes the given string. */
+static bool Curl_urldecode(const char *string, size_t length,
+                    char **ostring, size_t *olen)
+{
+  size_t alloc = (length?length:strlen(string))+1;
+  char *ns = (char *)malloc(alloc);
+  unsigned char in;
+  size_t strindex=0;
+  unsigned long hex;
+
+  if(!ns)
+    return false;
+
+  while(--alloc > 0) {
+    in = *string;
+    if(('%' == in) && (alloc > 2) &&
+       isxdigit((int) ((unsigned char)string[1])) &&
+	   isxdigit((int) ((unsigned char)string[2]))) {
+      /* this is two hexadecimal digits following a '%' */
+      char hexstr[3];
+      char *ptr;
+      hexstr[0] = string[1];
+      hexstr[1] = string[2];
+      hexstr[2] = 0;
+
+      hex = strtoul(hexstr, &ptr, 16);
+
+	  /* this long is never bigger than 255 anyway */
+      in = (unsigned char)(hex & (unsigned long) 0xFF);
+
+      string+=2;
+      alloc-=2;
+    }
+
+    ns[strindex++] = in;
+    string++;
+  }
+  ns[strindex]=0; /* terminate it */
+
+  if(olen)
+    /* store output size */
+    *olen = strindex;
+
+  if(ostring)
+    /* store output string */
+    *ostring = ns;
+
+  return true;
+}
+
+
+W2X_COMMON_API LPSTR AllocStringUrlEncodeA(LPCSTR _a_str)
+{
+	LPSTR utf_str = AllocStringA2UTF(_a_str);
+	LPSTR utf_str_encode = Curl_escape(utf_str, 0);
+	FreeStringA(&utf_str);
+	return AllocStringUTF2A(utf_str_encode);
+}
+
+
+W2X_COMMON_API LPWSTR AllocStringUrlEncodeW(LPCWSTR _w_str)
+{
+	LPSTR utf_str = AllocStringW2UTF(_w_str);
+	LPSTR utf_str_encode = Curl_escape(utf_str, 0);
+	FreeStringA(&utf_str);
+	return AllocStringUTF2W(utf_str_encode);
+}
+
+
+W2X_COMMON_API LPSTR AllocStringUrlEncodeUTF8(LPCSTR _utf8_str)
+{
+	return Curl_escape(_utf8_str, 0);
+}
+
+
+W2X_COMMON_API LPSTR AllocStringUrlDecodeA(LPCSTR _a_str)
+{
+	char* out_str = NULL;
+	size_t out_len = 0;
+
+	LPSTR utf_str = AllocStringA2UTF(_a_str);
+	Curl_urldecode(utf_str, 0, &out_str, &out_len);
+	FreeStringA(&utf_str);
+	return AllocStringUTF2A(out_str);
+}
+
+
+W2X_COMMON_API LPWSTR AllocStringUrlDecodeW(LPCWSTR _w_str)
+{
+	char* out_str = NULL;
+	size_t out_len = 0;
+
+	LPSTR utf_str = AllocStringW2UTF(_w_str);
+	Curl_urldecode(utf_str, 0, &out_str, &out_len);
+	FreeStringA(&utf_str);
+	return AllocStringUTF2W(out_str);
+}
+
+
+W2X_COMMON_API LPSTR AllocStringUrlDecodeUTF8(LPCSTR _utf8_str)
+{
+	char* out_str = NULL;
+	size_t out_len = 0;
+	Curl_urldecode(_utf8_str, 0, &out_str, &out_len);
+	return out_str;
+}
+
+
 W2X_DEFINE_NAME_SPACE_END(encode)
 W2X_NAME_SPACE_END
