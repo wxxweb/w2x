@@ -17,19 +17,19 @@ W2X_DEFINE_NAME_SPACE_BEGIN(encode)
 
 
 W2X_COMMON_API LPWSTR AllocStringA2W(
-	LPCSTR _a_str,
+	LPCSTR _mbs,
 	int _mbs_bytes
 	)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_a_str, 0);
+	IF_NULL_ASSERT_RETURN_VALUE(_mbs, 0);
 
 	if (0 >= _mbs_bytes) {
 		_mbs_bytes = -1;
 	}
 
-	int w_str_count = 
-		::MultiByteToWideChar(CP_ACP, 0, _a_str, -1, NULL, 0);  
-	IF_FALSE_ASSERT (0 < w_str_count)
+	int wcs_count = 
+		::MultiByteToWideChar(CP_ACP, 0, _mbs, -1, NULL, 0);  
+	IF_FALSE_ASSERT (0 < wcs_count)
 	{
 		const DWORD last_error = ::GetLastError();
 		w2x::log::LogError(TEXT("convert the ASCII to UNICODE failed(%d)."),
@@ -37,30 +37,30 @@ W2X_COMMON_API LPWSTR AllocStringA2W(
 		return 0;
 	}
 
-	WCHAR* w_buffer = new wchar_t[w_str_count + 1];
+	WCHAR* w_buffer = new wchar_t[wcs_count + 1];
 	IF_NULL_ASSERT_RETURN_VALUE(w_buffer, 0);
 
-	::MultiByteToWideChar(CP_ACP, 0, _a_str, -1, w_buffer, w_str_count);
+	::MultiByteToWideChar(CP_ACP, 0, _mbs, -1, w_buffer, wcs_count);
 
-	w_buffer[w_str_count] = 0;
+	w_buffer[wcs_count] = 0;
 
 	return w_buffer;
 }
 
 
 W2X_COMMON_API LPSTR AllocStringW2A(
-	LPCWSTR _w_str,
-	int _wbs_bytes
+	LPCWSTR _wcs,
+	int _wcs_bytes
 	)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_w_str, 0);
+	IF_NULL_ASSERT_RETURN_VALUE(_wcs, 0);
 
-	if (0 >= _wbs_bytes) {
-		_wbs_bytes = -1;
+	if (0 >= _wcs_bytes) {
+		_wcs_bytes = -1;
 	}
-	int a_str_bytes = ::WideCharToMultiByte(
-		CP_ACP, 0, _w_str, _wbs_bytes, NULL, 0, NULL, NULL);  
-	IF_FALSE_ASSERT (0 < a_str_bytes)
+	int mbs_bytes = ::WideCharToMultiByte(
+		CP_ACP, 0, _wcs, _wcs_bytes, NULL, 0, NULL, NULL);  
+	IF_FALSE_ASSERT (0 < mbs_bytes)
 	{
 		const DWORD last_error = ::GetLastError();
 		w2x::log::LogError(TEXT("Convert the UNICODE to ASCII failed(%d)."),
@@ -68,16 +68,16 @@ W2X_COMMON_API LPSTR AllocStringW2A(
 		return 0;
 	}
 
-	LPSTR a_buffer = new char[a_str_bytes + 1];
+	LPSTR a_buffer = new char[mbs_bytes + 1];
 	IF_NULL_ASSERT_RETURN_VALUE(a_buffer, 0);
 
-	int w_str_count = 
-		-1 == _wbs_bytes ? -1 : _wbs_bytes * sizeof(TCHAR);
+	int wcs_count = 
+		-1 == _wcs_bytes ? -1 : _wcs_bytes * sizeof(TCHAR);
 
-	::WideCharToMultiByte(CP_ACP, 0, _w_str, 
-		w_str_count, a_buffer, a_str_bytes, NULL, NULL);
+	::WideCharToMultiByte(CP_ACP, 0, _wcs, 
+		wcs_count, a_buffer, mbs_bytes, NULL, NULL);
 
-	a_buffer[a_str_bytes] = 0;
+	a_buffer[mbs_bytes] = 0;
 
 	return a_buffer;
 }
@@ -94,9 +94,9 @@ W2X_COMMON_API LPWSTR AllocStringUTF2W(
 		_mbs_bytes = -1;
 	}
 
-	int w_str_count = ::MultiByteToWideChar(
+	int wcs_count = ::MultiByteToWideChar(
 		CP_UTF8, 0, _utf8_str, _mbs_bytes, NULL, 0);
-	IF_FALSE_ASSERT (0 < w_str_count)
+	IF_FALSE_ASSERT (0 < wcs_count)
 	{
 		const DWORD last_error = ::GetLastError();
 		w2x::log::LogError(TEXT("convert the UTF-8 to UNICODE failed(%d)."),
@@ -104,30 +104,30 @@ W2X_COMMON_API LPWSTR AllocStringUTF2W(
 		return 0;
 	}
 
-	LPWSTR w_buffer = new wchar_t[w_str_count + 1];
+	LPWSTR w_buffer = new wchar_t[wcs_count + 1];
 	IF_NULL_ASSERT_RETURN_VALUE(w_buffer, 0);
 
 	::MultiByteToWideChar(CP_UTF8, 0, _utf8_str, 
-		_mbs_bytes, w_buffer, w_str_count);
-	w_buffer[w_str_count] = 0;
+		_mbs_bytes, w_buffer, wcs_count);
+	w_buffer[wcs_count] = 0;
 
 	return w_buffer;
 }
 
 
 W2X_COMMON_API LPSTR AllocStringW2UTF(
-	LPCTSTR _w_str,
-	int _wbs_bytes
+	LPCTSTR _wcs,
+	int _wcs_bytes
 	)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_w_str, 0);
+	IF_NULL_ASSERT_RETURN_VALUE(_wcs, 0);
 
-	if (0 >= _wbs_bytes) {
-		_wbs_bytes = -1;
+	if (0 >= _wcs_bytes) {
+		_wcs_bytes = -1;
 	}
 
 	int utf8_str_bytes = ::WideCharToMultiByte(
-		CP_UTF8, 0, _w_str, -1, NULL, 0, NULL, NULL);  
+		CP_UTF8, 0, _wcs, -1, NULL, 0, NULL, NULL);  
 	IF_FALSE_ASSERT (0 < utf8_str_bytes)
 	{
 		const DWORD last_error = ::GetLastError();
@@ -139,11 +139,11 @@ W2X_COMMON_API LPSTR AllocStringW2UTF(
 	LPSTR utf8_buffer = new char[utf8_str_bytes + 1];
 	IF_NULL_ASSERT_RETURN_VALUE(utf8_buffer, 0);
 
-	int w_str_count = 
-		-1 == _wbs_bytes ? -1 : _wbs_bytes * sizeof(TCHAR);
+	int wcs_count = 
+		-1 == _wcs_bytes ? -1 : _wcs_bytes * sizeof(TCHAR);
 
- 	::WideCharToMultiByte(CP_UTF8, 0, _w_str, 
- 		w_str_count, utf8_buffer, utf8_str_bytes, NULL, NULL);
+ 	::WideCharToMultiByte(CP_UTF8, 0, _wcs, 
+ 		wcs_count, utf8_buffer, utf8_str_bytes, NULL, NULL);
 
 	utf8_buffer[utf8_str_bytes] = 0;
 
@@ -158,27 +158,27 @@ W2X_COMMON_API LPSTR AllocStringUTF2A(
 {
 	IF_NULL_ASSERT_RETURN_VALUE(_utf8_str, 0);
 
-	LPTSTR w_str = AllocStringUTF2W(_utf8_str, _mbs_bytes);
-	LPSTR  a_str = AllocStringW2A(w_str);
-	SAFE_DELETE_ARRAY(w_str);
-	IF_NULL_ASSERT (a_str)
+	LPTSTR wcs = AllocStringUTF2W(_utf8_str, _mbs_bytes);
+	LPSTR  mbs = AllocStringW2A(wcs);
+	SAFE_DELETE_ARRAY(wcs);
+	IF_NULL_ASSERT (mbs)
 	{
 		w2x::log::LogError(TEXT("convert the UTF-8 to ASCII failed(%d)."));
 	}
-	return a_str;
+	return mbs;
 }
 
 
 W2X_COMMON_API LPSTR AllocStringA2UTF(
-	LPCSTR _a_str,
+	LPCSTR _mbs,
 	int _mbs_bytes
 	)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_a_str, 0);
+	IF_NULL_ASSERT_RETURN_VALUE(_mbs, 0);
 
-	LPTSTR w_str = AllocStringA2W(_a_str);
-	LPSTR utf8_str = AllocStringW2UTF(w_str);
-	SAFE_DELETE_ARRAY(w_str);
+	LPTSTR wcs = AllocStringA2W(_mbs);
+	LPSTR utf8_str = AllocStringW2UTF(wcs);
+	SAFE_DELETE_ARRAY(wcs);
 	IF_NULL_ASSERT (utf8_str)
 	{
 		w2x::log::LogError(TEXT("convert the ASCII to UTF-8 failed(%d)."));
@@ -207,12 +207,12 @@ W2X_COMMON_API LPTSTR AllocString(LPCTSTR _t_str)
 }
 
 
-W2X_COMMON_API LPSTR AllocStringA(LPCSTR _a_str)
+W2X_COMMON_API LPSTR AllocStringA(LPCSTR _mbs)
 {
-	if (NULL == _a_str) {
-		_a_str = "";
+	if (NULL == _mbs) {
+		_mbs = "";
 	}
-	const size_t len = strlen(_a_str);
+	const size_t len = strlen(_mbs);
 	LPSTR buffer = NULL;
 	try {
 		buffer = new char[len + 1];
@@ -222,18 +222,18 @@ W2X_COMMON_API LPSTR AllocStringA(LPCSTR _a_str)
 		MessageBoxA(NULL, e.what(), "w2x:AllocStringA", MB_ICONERROR);
 		return NULL;
 	}
-	memcpy(buffer, _a_str, len);
+	memcpy(buffer, _mbs, len);
 	buffer[len] = '\0';
 	return buffer;
 }
 
 
-W2X_COMMON_API LPTSTR AllocStringW(LPCWSTR _w_str)
+W2X_COMMON_API LPTSTR AllocStringW(LPCWSTR _wcs)
 {
-	if (NULL == _w_str) {
-		_w_str = L"";
+	if (NULL == _wcs) {
+		_wcs = L"";
 	}
-	const size_t len = wcslen(_w_str);
+	const size_t len = wcslen(_wcs);
 	LPWSTR buffer = NULL;
 	try {
 		buffer = new WCHAR[len + 1];
@@ -246,37 +246,37 @@ W2X_COMMON_API LPTSTR AllocStringW(LPCWSTR _w_str)
 		FreeStringW(&error_msg);
 		return NULL;
 	}
-	memcpy(buffer, _w_str, len * sizeof(WCHAR));
+	memcpy(buffer, _wcs, len * sizeof(WCHAR));
 	buffer[len] = L'\0';
 	return buffer;
 }
 
 
-W2X_COMMON_API bool FreeStringA(LPSTR* _a_pptr)
+W2X_COMMON_API bool FreeStringA(LPSTR* _mbs_pptr)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_a_pptr, false);
-	SAFE_DELETE_ARRAY(*_a_pptr);
+	IF_NULL_ASSERT_RETURN_VALUE(_mbs_pptr, false);
+	SAFE_DELETE_ARRAY(*_mbs_pptr);
 	return true;
 }
 
-W2X_COMMON_API bool FreeStringA(LPCSTR* _a_pptr)
+W2X_COMMON_API bool FreeStringA(LPCSTR* _mbs_pptr)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_a_pptr, false);
-	SAFE_DELETE_ARRAY(*_a_pptr);
+	IF_NULL_ASSERT_RETURN_VALUE(_mbs_pptr, false);
+	SAFE_DELETE_ARRAY(*_mbs_pptr);
 	return true;
 }
 
-W2X_COMMON_API bool FreeStringW(LPWSTR* _w_pptr)
+W2X_COMMON_API bool FreeStringW(LPWSTR* _wcs_pptr)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_w_pptr, false);
-	SAFE_DELETE_ARRAY(*_w_pptr);
+	IF_NULL_ASSERT_RETURN_VALUE(_wcs_pptr, false);
+	SAFE_DELETE_ARRAY(*_wcs_pptr);
 	return true;
 }
 
-W2X_COMMON_API bool FreeStringW(LPCWSTR* _w_pptr)
+W2X_COMMON_API bool FreeStringW(LPCWSTR* _wcs_pptr)
 {
-	IF_NULL_ASSERT_RETURN_VALUE(_w_pptr, false);
-	SAFE_DELETE_ARRAY(*_w_pptr);
+	IF_NULL_ASSERT_RETURN_VALUE(_wcs_pptr, false);
+	SAFE_DELETE_ARRAY(*_wcs_pptr);
 	return true;
 }
 
@@ -513,18 +513,18 @@ static bool Curl_urldecode(const char *string, size_t length,
 }
 
 
-W2X_COMMON_API LPSTR AllocStringUrlEncodeA(LPCSTR _a_str)
+W2X_COMMON_API LPSTR AllocStringUrlEncodeA(LPCSTR _mbs)
 {
-	LPSTR utf_str = AllocStringA2UTF(_a_str);
+	LPSTR utf_str = AllocStringA2UTF(_mbs);
 	LPSTR utf_str_encode = Curl_escape(utf_str, 0);
 	FreeStringA(&utf_str);
 	return AllocStringUTF2A(utf_str_encode);
 }
 
 
-W2X_COMMON_API LPWSTR AllocStringUrlEncodeW(LPCWSTR _w_str)
+W2X_COMMON_API LPWSTR AllocStringUrlEncodeW(LPCWSTR _wcs)
 {
-	LPSTR utf_str = AllocStringW2UTF(_w_str);
+	LPSTR utf_str = AllocStringW2UTF(_wcs);
 	LPSTR utf_str_encode = Curl_escape(utf_str, 0);
 	FreeStringA(&utf_str);
 	return AllocStringUTF2W(utf_str_encode);
@@ -537,24 +537,24 @@ W2X_COMMON_API LPSTR AllocStringUrlEncodeUTF8(LPCSTR _utf8_str)
 }
 
 
-W2X_COMMON_API LPSTR AllocStringUrlDecodeA(LPCSTR _a_str)
+W2X_COMMON_API LPSTR AllocStringUrlDecodeA(LPCSTR _mbs)
 {
 	char* out_str = NULL;
 	size_t out_len = 0;
 
-	LPSTR utf_str = AllocStringA2UTF(_a_str);
+	LPSTR utf_str = AllocStringA2UTF(_mbs);
 	Curl_urldecode(utf_str, 0, &out_str, &out_len);
 	FreeStringA(&utf_str);
 	return AllocStringUTF2A(out_str);
 }
 
 
-W2X_COMMON_API LPWSTR AllocStringUrlDecodeW(LPCWSTR _w_str)
+W2X_COMMON_API LPWSTR AllocStringUrlDecodeW(LPCWSTR _wcs)
 {
 	char* out_str = NULL;
 	size_t out_len = 0;
 
-	LPSTR utf_str = AllocStringW2UTF(_w_str);
+	LPSTR utf_str = AllocStringW2UTF(_wcs);
 	Curl_urldecode(utf_str, 0, &out_str, &out_len);
 	FreeStringA(&utf_str);
 	return AllocStringUTF2W(out_str);
