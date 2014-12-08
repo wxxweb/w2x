@@ -512,6 +512,27 @@ void TestEncode(void)
 	strAscii = W2X_T2A(pszType);
 	strWide = W2X_T2W(pszType);
 	strType = W2X_W2T(pszWdie);
+
+	std::string strUtf8 = W2X_A2UTF(pszAscii);
+	strWide = W2X_UTF2W(strUtf8.c_str());
+	strUtf8 = W2X_W2UTF(strWide.c_str());
+
+	std::string strGbk = W2X_A2GBK(pszAscii);
+	strWide = W2X_GBK2W(strGbk.c_str());
+
+	strGbk = W2X_T2GBK(pszType);
+	strType = W2X_GBK2T(strGbk.c_str());
+
+	strUtf8 = W2X_GBK2UTF(strGbk.c_str());
+	strGbk = W2X_UTF2GBK(strUtf8.c_str());
+
+	std::string strUrlEnA = W2X_URL_ENCODE_A(pszAscii);
+	std::string strUrlDeA = W2X_URL_DECODE_A(strUrlEnA.c_str());
+	std::wstring strUrlEnW = W2X_URL_ENCODE_W(pszWdie);
+	std::wstring strUrlDeW = W2X_URL_DECODE_W(strUrlEnW.c_str());
+	std::string strUrlEnUtf8 = W2X_URL_ENCODE_UTF8(strUtf8.c_str());
+	std::string strUrlDeUtf8 = W2X_URL_DECODE_UTF8(strUrlEnUtf8.c_str());
+
 }
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -524,8 +545,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	//TestExcption();
 	//TestNetwork();
 	//TestLog();
-	TestFileSys();
-	//TestEncode();
+	//TestFileSys();
+	TestEncode();
 	
 	system("pause");
 	return 0;

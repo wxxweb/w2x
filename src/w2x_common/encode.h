@@ -27,18 +27,8 @@ enum EncodeType {
 
 
 /** 单纯的拷贝一个字符串到栈中，如果传入 NULL，返回带结束符的空字符串 */
-W2X_COMMON_API LPTSTR AllocString(LPCTSTR _t_str);
-W2X_COMMON_API LPSTR AllocStringA(LPCSTR _mbs);
-W2X_COMMON_API LPTSTR AllocStringW(LPCWSTR _wcs);
-
-#define W2X_ALLOC_STR_A	w2x::encode::AllocStringA
-#define W2X_ALLOC_STR_W	w2x::encode::AllocStringW
-
-#ifdef UNICODE
-#  define W2X_ALLOC_STR	w2x::encode::AllocStringW
-#else
-#  define W2X_ALLOC_STR	w2x::encode::AllocStringA
-#endif
+W2X_COMMON_API LPSTR AllocStringA(LPCSTR _mbs, int _bytes = -1);
+W2X_COMMON_API LPWSTR AllocStringW(LPCWSTR _wcs, int _char_count = -1);
 
 /** 释放由 AllocStringXXX 分配的多字节字符串栈空间，包括 UTF-8 */
 W2X_COMMON_API bool FreeStringA(LPSTR* _mbs_pptr);
@@ -48,36 +38,109 @@ W2X_COMMON_API bool FreeStringA(LPCSTR* _mbs_pptr);
 W2X_COMMON_API bool FreeStringW(LPWSTR* _wcs_pptr);
 W2X_COMMON_API bool FreeStringW(LPCWSTR* _wcs_pptr);
 
-#define W2X_FREE_STR_A(p)	w2x::encode::FreeStringA(&(p))
-#define W2X_FREE_STR_W(p)	w2x::encode::FreeStringW(&(p))
+/** 将指定代码页的多字节字符串转换为宽字节字符串 */
+W2X_COMMON_API LPWSTR AllocStringM2W(
+	UINT _code_page,
+	LPCSTR _mbs,
+	int _mbs_bytes
+	);
 
-#ifdef UNICODE
-#  define W2X_FREE_STR(p)	w2x::encode::FreeStringW(&(p))
-#else
-#  define W2X_FREE_STR(p)	w2x::encode::FreeStringA(&(p))
-#endif
-
-
-/** 将多字节字符串转换为宽字节字符串 */
+/** 将当前系统代码页的多字节字符串转换为宽字节字符串 */
 W2X_COMMON_API LPWSTR AllocStringA2W(
 	LPCSTR _mbs,
 	int _mbs_bytes = -1
 );
 
-#define W2X_ALLOC_STR_A2W		w2x::encode::AllocStringA2W
+/** 将宽字节字符串转换为指定代码页的多字节字符串 */
+W2X_COMMON_API LPSTR AllocStringW2M(
+	UINT _code_page,
+	LPCWSTR _wcs,
+	int _char_count = -1
+	);
 
-#ifdef UNICODE
-#  define W2X_ALLOC_STR_A2T		w2x::encode::AllocStringA2W
-#else
-#  define W2X_ALLOC_STR_A2T(s)	(s)
-#endif
+/** 将宽字节字符串转换为当前系统代码页的多字节字符串 */
+W2X_COMMON_API LPSTR AllocStringW2A(
+	LPCWSTR wcs,
+	int _char_count = -1
+	);
 
-#ifdef UNICODE
-#  define W2X_ALLOC_STR_T2W(s)	(s)
-#else
-#  define W2X_ALLOC_STR_T2W	w2x::encode::AllocStringA2W
-#endif
+/** 将当前系统代码页的多字节字符串转换为 GBK 字符串 */
+W2X_COMMON_API LPSTR AllocStringA2GBK(
+	LPCSTR _mbs,
+	int _mbs_bytes = -1
+	);
 
+/** 将 GBK 字符串转换为当前系统代码页的多字节字符串 */
+W2X_COMMON_API LPSTR AllocStringGBK2A(
+	LPCSTR _gbk,
+	int _gbk_bytes = -1
+	);
+
+/** 将宽字节字符串编码转换为 GBK 字符串编码 */
+W2X_COMMON_API LPSTR AllocStringW2GBK(
+	LPCWSTR _wcs,
+	int _wcs_char_count = -1
+	);
+
+/** 将 GBK 字符串编码转换为宽字节字符串编码 */
+W2X_COMMON_API LPWSTR AllocStringGBK2W(
+	LPCSTR _gbk,
+	int _gbk_bytes = -1
+	);
+
+/** 将 UTF-8 字符串转换为 GBK 字符串 */
+W2X_COMMON_API LPSTR AllocStringUTF2GBK(
+	LPCSTR _utf8,
+	int _utf8_bytes = -1
+	);
+
+/** 将 GBK 字符串转换为 UTF-8 字符串 */
+W2X_COMMON_API LPSTR AllocStringGBK2UTF(
+	LPCSTR _gbk,
+	int _gbk_bytes = -1
+	);
+
+/** 将当前系统代码页的多字节字符串转换为 UTF-8 字符串 */
+W2X_COMMON_API LPSTR AllocStringA2UTF(
+	LPCSTR _mbs,
+	int _mbs_bytes = -1
+	);
+
+/** 将宽字节字符串转换为 UTF-8 字符串 */
+W2X_COMMON_API LPSTR AllocStringW2UTF(
+	LPCTSTR _wcs,
+	int _wcs_char_count = -1
+	);
+
+/** 将 UTF-8 字符串转换为当前系统代码页的多字节字符串 */
+W2X_COMMON_API LPSTR AllocStringUTF2A(
+	LPCSTR _utf8_str,
+	int _utf8_bytes = -1
+	);
+
+/** 将 UTF-8 字符串转换为宽字节字符串 */
+W2X_COMMON_API LPWSTR AllocStringUTF2W(
+	LPCSTR _utf8_str,
+	int _utf8_bytes = -1
+	);
+
+/** URL 编码：多字节字符串进行 UTF-8 编码 */
+W2X_COMMON_API LPSTR AllocStringUrlEncodeA(LPCSTR _mbs);
+
+/** URL 编码：宽字节字符串进行 UTF-8 编码 */
+W2X_COMMON_API LPWSTR AllocStringUrlEncodeW(LPCWSTR _wcs);
+
+/** URL 编码：UTF-8 字符串进行 UTF-8 编码 */
+W2X_COMMON_API LPSTR AllocStringUrlEncodeUTF8(LPCSTR _utf8);
+
+/** URL 解码：多字节字符串进行 UTF-8 解码 */
+W2X_COMMON_API LPSTR AllocStringUrlDecodeA(LPCSTR _mbs);
+
+/** URL 解码：宽字节字符串进行 UTF-8 解码 */
+W2X_COMMON_API LPWSTR AllocStringUrlDecodeW(LPCWSTR _wcs);
+
+/** URL 解码：UTF-8 字节字符串进行 UTF-8 解码 */
+W2X_COMMON_API LPSTR AllocStringUrlDecodeUTF8(LPCSTR _utf8);
 
 inline std::wstring _W2X_A2W(LPCSTR _mbs)
 {
@@ -87,35 +150,6 @@ inline std::wstring _W2X_A2W(LPCSTR _mbs)
 	return str;
 }
 
-#define W2X_A2W		w2x::encode::_W2X_A2W
-
-#ifdef UNICODE
-#  define W2X_A2T	W2X_A2W
-#else
-#  define W2X_A2T(s)	(s)
-#endif
-
-#ifdef UNICODE
-#  define W2X_T2W(s)	(s)
-#else
-#  define W2X_T2W	W2X_A2W
-#endif
-
-
-/** 将宽字节字符串转换为多字节字符串 */
-W2X_COMMON_API LPSTR AllocStringW2A(
-	LPCWSTR wcs,
-	int _wcs_bytes = -1
-);
-
-#define W2X_ALLOC_STR_W2A		w2x::encode::AllocStringW2A
-
-#ifdef UNICODE
-#  define W2X_ALLOC_STR_T2A		w2x::encode::AllocStringW2A
-#else
-#  define W2X_ALLOC_STR_T2A(s)	(s)
-#endif
-
 inline std::string _W2X_W2A(LPCWSTR _wcs)
 {
 	LPSTR mbs = w2x::encode::AllocStringW2A(_wcs);
@@ -124,41 +158,37 @@ inline std::string _W2X_W2A(LPCWSTR _wcs)
 	return str;
 }
 
-#define W2X_W2A		w2x::encode::_W2X_W2A
+inline std::string _W2X_GBK2A(LPCSTR _gbk)
+{
+	LPSTR mbs = w2x::encode::AllocStringGBK2A(_gbk);
+	std::string str = mbs;
+	w2x::encode::FreeStringA(&mbs);
+	return str;
+}
 
-#ifdef UNICODE
-#  define W2X_T2A	W2X_W2A
-#else
-#  define W2X_T2A(s)	(s)
-#endif
+inline std::string _W2X_A2GBK(LPCSTR _mbs)
+{
+	LPSTR gbk = w2x::encode::AllocStringA2GBK(_mbs);
+	std::string str = gbk;
+	w2x::encode::FreeStringA(&gbk);
+	return str;
+}
 
-#ifdef UNICODE
-#  define W2X_W2T(s)	(s)
-#else
-#  define W2X_W2T	W2X_W2A
-#endif
+inline std::wstring _W2X_GBK2W(LPCSTR _gbk)
+{
+	LPWSTR wcs = w2x::encode::AllocStringGBK2W(_gbk);
+	std::wstring str = wcs;
+	w2x::encode::FreeStringW(&wcs);
+	return str;
+}
 
-
-/** 将 UTF-8 字符串编码转换为多字节字符串编码 */
-W2X_COMMON_API LPSTR AllocStringUTF2A(
-	LPCSTR _utf8_str,
-	int _mbs_bytes = -1
-);
-
-/** 将 UTF-8 字符串编码转换为宽字节字符串编码 */
-W2X_COMMON_API LPWSTR AllocStringUTF2W(
-	LPCSTR _utf8_str,
-	int _mbs_bytes = -1
-);
-
-#define W2X_ALLOC_STR_UTF2A		w2x::encode::AllocStringUTF2A
-#define W2X_ALLOC_STR_UTF2W		w2x::encode::AllocStringUTF2W
-
-#ifdef UNICODE
-#  define W2X_ALLOC_STR_UTF2T	w2x::encode::AllocStringUTF2W
-#else
-#  define W2X_ALLOC_STR_UTF2T	w2x::encode::AllocStringUTF2A
-#endif
+inline std::string _W2X_W2GBK(LPCWSTR _wcs)
+{
+	LPSTR gbk = w2x::encode::AllocStringW2GBK(_wcs);
+	std::string str = gbk;
+	w2x::encode::FreeStringA(&gbk);
+	return str;
+}
 
 inline std::string _W2X_UTF2A(LPCSTR _utf8)
 {
@@ -168,7 +198,13 @@ inline std::string _W2X_UTF2A(LPCSTR _utf8)
 	return str;
 }
 
-#define W2X_UTF2A	w2x::encode::_W2X_UTF2A
+inline std::string _W2X_A2UTF(LPCSTR _mbs)
+{
+	LPSTR utf8 = w2x::encode::AllocStringA2UTF(_mbs);
+	std::string str = utf8;
+	w2x::encode::FreeStringA(&utf8);
+	return str;
+}
 
 inline std::wstring _W2X_UTF2W(LPCSTR _utf8)
 {
@@ -178,45 +214,6 @@ inline std::wstring _W2X_UTF2W(LPCSTR _utf8)
 	return str;
 }
 
-#define W2X_UTF2W	w2x::encode::_W2X_UTF2W
-
-#ifdef UNICODE
-#  define W2X_UTF2T	W2X_UTF2W
-#else
-#  define W2X_UTF2T	W2X_UTF2A
-#endif
-
-/** 将宽字节字符串编码转换为 UTF-8 字符串编码 */
-W2X_COMMON_API LPSTR AllocStringW2UTF(
-	LPCTSTR _wcs,
-	int _wcs_bytes = -1
-);
-
-/** 将多字节字符串编码转换为 UTF-8 字符串编码 */
-W2X_COMMON_API LPSTR AllocStringA2UTF(
-	LPCSTR _mbs,
-	int _mbs_bytes = -1
-);
-
-#define W2X_ALLOC_STR_A2UTF		w2x::encode::AllocStringA2UTF
-#define W2X_ALLOC_STR_W2UTF		w2x::encode::AllocStringW2UTF
-
-#ifdef UNICODE
-#  define W2X_ALLOC_STR_T2UTF	w2x::encode::AllocStringW2UTF
-#else
-#  define W2X_ALLOC_STR_T2UTF	w2x::encode::AllocStringA2UTF
-#endif
-
-inline std::string _W2X_A2UTF(LPCSTR _mbs)
-{
-	LPSTR utf8 = w2x::encode::AllocStringA2UTF(_mbs);
-	std::string str = utf8;
-	w2x::encode::FreeStringA(&utf8);
-	return str;
-}
-
-#define W2X_A2UTF	w2x::encode::_W2X_A2UTF
-
 inline std::string _W2X_W2UTF(LPCWSTR _wcs)
 {
 	LPSTR utf8 = w2x::encode::AllocStringW2UTF(_wcs);
@@ -225,14 +222,69 @@ inline std::string _W2X_W2UTF(LPCWSTR _wcs)
 	return str;
 }
 
-#define W2X_W2UTF	w2x::encode::_W2X_W2UTF
+inline std::string _W2X_GBK2UTF(LPCSTR _gbk)
+{
+	LPSTR utf8 = w2x::encode::AllocStringGBK2UTF(_gbk);
+	std::string str = utf8;
+	w2x::encode::FreeStringA(&utf8);
+	return str;
+}
 
-#ifdef UNICODE
-#  define W2X_T2UTF	W2X_W2UTF
-#else
-#  define W2X_T2UTF	W2X_A2UTF
-#endif
+inline std::string _W2X_UTF2GBK(LPCSTR _utf8)
+{
+	LPSTR gbk = w2x::encode::AllocStringUTF2GBK(_utf8);
+	std::string str = gbk;
+	w2x::encode::FreeStringA(&gbk);
+	return str;
+}
 
+inline std::string _W2X_URL_ENCODE_A(LPCSTR _mbs)
+{
+	LPSTR encode_mbs = w2x::encode::AllocStringUrlEncodeA(_mbs);
+	std::string ret_str = encode_mbs;
+	w2x::encode::FreeStringA(&encode_mbs);
+	return ret_str;
+}
+
+inline std::wstring _W2X_URL_ENCODE_W(LPCWSTR _wcs)
+{
+	LPWSTR encode_wcs = w2x::encode::AllocStringUrlEncodeW(_wcs);
+	std::wstring ret_str = encode_wcs;
+	w2x::encode::FreeStringW(&encode_wcs);
+	return ret_str;
+}
+
+inline std::string _W2X_URL_ENCODE_UTF8(LPCSTR _utf8)
+{
+	LPSTR encode_utf8 = w2x::encode::AllocStringUrlEncodeUTF8(_utf8);
+	std::string ret_str = encode_utf8;
+	w2x::encode::FreeStringA(&encode_utf8);
+	return ret_str;
+}
+
+inline std::string _W2X_URL_DECODE_A(LPCSTR _mbs)
+{
+	LPSTR decode_mbs = w2x::encode::AllocStringUrlDecodeA(_mbs);
+	std::string ret_str = decode_mbs;
+	w2x::encode::FreeStringA(&decode_mbs);
+	return ret_str;
+}
+
+inline std::wstring _W2X_URL_DECODE_W(LPCWSTR _wcs)
+{
+	LPWSTR decode_wcs = w2x::encode::AllocStringUrlDecodeW(_wcs);
+	std::wstring ret_str = decode_wcs;
+	w2x::encode::FreeStringW(&decode_wcs);
+	return ret_str;
+}
+
+inline std::string _W2X_URL_DECODE_UTF8(LPCSTR _utf8)
+{
+	LPSTR decode_utf8 = w2x::encode::AllocStringUrlDecodeA(_utf8);
+	std::string ret_str = decode_utf8;
+	w2x::encode::FreeStringA(&decode_utf8);
+	return ret_str;
+}
 
 /**
  * 将 16字节(128位) 的 GUID 转换成字符串表现形式，例如：
@@ -255,115 +307,96 @@ W2X_COMMON_API bool GenerateFileMD5(
 	LPCTSTR _file_path
 );
 
-/** URL 编码：多字节字符串进行 UTF-8 编码 */
-W2X_COMMON_API LPSTR AllocStringUrlEncodeA(LPCSTR _mbs);
 
-/** URL 编码：宽字节字符串进行 UTF-8 编码 */
-W2X_COMMON_API LPWSTR AllocStringUrlEncodeW(LPCWSTR _wcs);
-
-/** URL 编码：UTF-8 字符串进行 UTF-8 编码 */
-W2X_COMMON_API LPSTR AllocStringUrlEncodeUTF8(LPCSTR _utf8);
-
+#define W2X_ALLOC_STR_A					w2x::encode::AllocStringA
+#define W2X_ALLOC_STR_W					w2x::encode::AllocStringW
+#define W2X_FREE_STR_A(p)				w2x::encode::FreeStringA(&(p))
+#define W2X_FREE_STR_W(p)				w2x::encode::FreeStringW(&(p))
+#define W2X_ALLOC_STR_A2W				w2x::encode::AllocStringA2W
+#define W2X_ALLOC_STR_W2A				w2x::encode::AllocStringW2A
+#define W2X_ALLOC_STR_A2GBK				w2x::encode::AllocStringA2GBK
+#define W2X_ALLOC_STR_GBK2A				w2x::encode::AllocStringGBK2A
+#define W2X_ALLOC_STR_W2GBK				w2x::encode::AllocStringW2GBK
+#define W2X_ALLOC_STR_GBK2W				w2x::encode::AllocStringGBK2W
+#define W2X_ALLOC_STR_UTF2A				w2x::encode::AllocStringUTF2A
+#define W2X_ALLOC_STR_UTF2W				w2x::encode::AllocStringUTF2W
+#define W2X_ALLOC_STR_A2UTF				w2x::encode::AllocStringA2UTF
+#define W2X_ALLOC_STR_W2UTF				w2x::encode::AllocStringW2UTF
+#define W2X_ALLOC_STR_GBK2UTF			w2x::encode::AllocStringGBK2UTF
+#define W2X_ALLOC_STR_UTF2GBK			w2x::encode::AllocStringUTF2GBK
+#define W2X_A2W							w2x::encode::_W2X_A2W
+#define W2X_W2A							w2x::encode::_W2X_W2A
+#define W2X_A2GBK						w2x::encode::_W2X_A2GBK
+#define W2X_GBK2A						w2x::encode::_W2X_GBK2A
+#define W2X_W2GBK						w2x::encode::_W2X_W2GBK
+#define W2X_GBK2W						w2x::encode::_W2X_GBK2W
+#define W2X_A2UTF						w2x::encode::_W2X_A2UTF
+#define W2X_UTF2A						w2x::encode::_W2X_UTF2A
+#define W2X_W2UTF						w2x::encode::_W2X_W2UTF
+#define W2X_UTF2W						w2x::encode::_W2X_UTF2W
+#define W2X_GBK2UTF						w2x::encode::_W2X_GBK2UTF
+#define W2X_UTF2GBK						w2x::encode::_W2X_UTF2GBK
 #define W2X_ALLOC_STR_URL_ENCODE_A		w2x::encode::AllocStringUrlEncodeA
 #define W2X_ALLOC_STR_URL_ENCODE_W		w2x::encode::AllocStringUrlEncodeW
 #define W2X_ALLOC_STR_URL_ENCODE_UTF8	w2x::encode::AllocStringUrlEncodeUTF8
-
-#ifdef UNICODE
-#  define W2X_ALLOC_STR_URL_ENCODE	w2x::encode::AllocStringUrlEncodeW
-#else
-#  define W2X_ALLOC_STR_URL_ENCODE	w2x::encode::AllocStringUrlEncodeA
-#endif
-
-inline std::string _W2X_URL_ENCODE_A(LPCSTR _mbs)
-{
-	LPSTR encode_mbs = w2x::encode::AllocStringUrlEncodeA(_mbs);
-	std::string ret_str = encode_mbs;
-	w2x::encode::FreeStringA(&encode_mbs);
-	return ret_str;
-}
-
-#define W2X_URL_ENCODE_A	w2x::encode::_W2X_URL_ENCODE_A
-
-inline std::wstring _W2X_URL_ENCODE_W(LPCWSTR _wcs)
-{
-	LPWSTR encode_wcs = w2x::encode::AllocStringUrlEncodeW(_wcs);
-	std::wstring ret_str = encode_wcs;
-	w2x::encode::FreeStringW(&encode_wcs);
-	return ret_str;
-}
-
-#define W2X_URL_ENCODE_W	w2x::encode::_W2X_URL_ENCODE_W
-
-inline std::string _W2X_URL_ENCODE_UTF8(LPCSTR _utf8)
-{
-	LPSTR encode_utf8 = w2x::encode::AllocStringUrlEncodeUTF8(_utf8);
-	std::string ret_str = encode_utf8;
-	w2x::encode::FreeStringA(&encode_utf8);
-	return ret_str;
-}
-
-#define W2X_URL_ENCODE_UTF8	w2x::encode::_W2X_URL_ENCODE_UTF8
-
-#ifdef UNICODE
-#  define W2X_URL_ENCODE	W2X_URL_ENCODE_W
-#else
-#  define W2X_URL_ENCODE	W2X_URL_ENCODE_A
-#endif
-
-/** URL 解码：多字节字符串进行 UTF-8 解码 */
-W2X_COMMON_API LPSTR AllocStringUrlDecodeA(LPCSTR _mbs);
-
-/** URL 解码：宽字节字符串进行 UTF-8 解码 */
-W2X_COMMON_API LPWSTR AllocStringUrlDecodeW(LPCWSTR _wcs);
-
-/** URL 解码：UTF-8 字节字符串进行 UTF-8 解码 */
-W2X_COMMON_API LPSTR AllocStringUrlDecodeUTF8(LPCSTR _utf8);
-
 #define W2X_ALLOC_STR_URL_DECODE_A		w2x::encode::AllocStringUrlDecodeA
 #define W2X_ALLOC_STR_URL_DECODE_W		w2x::encode::AllocStringUrlDecodeW
 #define W2X_ALLOC_STR_URL_DECODE_UTF8	w2x::encode::AllocStringUrlDecodeUTF8
+#define W2X_URL_ENCODE_A				w2x::encode::_W2X_URL_ENCODE_A
+#define W2X_URL_ENCODE_W				w2x::encode::_W2X_URL_ENCODE_W
+#define W2X_URL_ENCODE_UTF8				w2x::encode::_W2X_URL_ENCODE_UTF8
+#define W2X_URL_DECODE_A				w2x::encode::_W2X_URL_DECODE_A
+#define W2X_URL_DECODE_W				w2x::encode::_W2X_URL_DECODE_W
+#define W2X_URL_DECODE_UTF8				w2x::encode::_W2X_URL_DECODE_UTF8
+
 
 #ifdef UNICODE
+#  define W2X_ALLOC_STR				w2x::encode::AllocStringW
+#  define W2X_FREE_STR(p)			w2x::encode::FreeStringW(&(p))
+#  define W2X_ALLOC_STR_A2T			w2x::encode::AllocStringA2W
+#  define W2X_ALLOC_STR_T2A			w2x::encode::AllocStringW2A
+#  define W2X_ALLOC_STR_W2T			w2x::encode::AllocStringW
+#  define W2X_ALLOC_STR_T2W			w2x::encode::AllocStringW
+#  define W2X_ALLOC_STR_GBK2T		w2x::encode::AllocStringGBK2W
+#  define W2X_ALLOC_STR_T2GBK		w2x::encode::AllocStringW2GBK
+#  define W2X_ALLOC_STR_UTF2T		w2x::encode::AllocStringUTF2W
+#  define W2X_ALLOC_STR_T2UTF		w2x::encode::AllocStringW2UTF
+#  define W2X_A2T					w2x::encode::_W2X_A2W
+#  define W2X_T2A					w2x::encode::_W2X_W2A
+#  define W2X_W2T(s)				(s)
+#  define W2X_T2W(s)				(s)
+#  define W2X_GBK2T					w2x::encode::_W2X_GBK2W
+#  define W2X_T2GBK					w2x::encode::_W2X_W2GBK
+#  define W2X_UTF2T					w2x::encode::_W2X_UTF2W
+#  define W2X_T2UTF					w2x::encode::_W2X_W2UTF
+#  define W2X_ALLOC_STR_URL_ENCODE	w2x::encode::AllocStringUrlEncodeW
 #  define W2X_ALLOC_STR_URL_DECODE	w2x::encode::AllocStringUrlDecodeW
-#else
+#  define W2X_URL_ENCODE			w2x::encode::_W2X_URL_ENCODE_W
+#  define W2X_URL_DECODE			w2x::encode::_W2X_URL_DECODE_W
+#else // !UNICODE
+#  define W2X_ALLOC_STR				w2x::encode::AllocStringA
+#  define W2X_FREE_STR(p)			w2x::encode::FreeStringA(&(p))
+#  define W2X_ALLOC_STR_A2T			w2x::encode::AllocStringA
+#  define W2X_ALLOC_STR_T2A			w2x::encode::AllocStringA
+#  define W2X_ALLOC_STR_T2W			w2x::encode::AllocStringA2W
+#  define W2X_ALLOC_STR_W2T			w2x::encode::AllocStringW2A
+#  define W2X_ALLOC_STR_GBK2T		w2x::encode::AllocStringGBK2A
+#  define W2X_ALLOC_STR_T2GBK		w2x::encode::AllocStringA2GBK
+#  define W2X_ALLOC_STR_UTF2T		w2x::encode::AllocStringUTF2A
+#  define W2X_ALLOC_STR_T2UTF		w2x::encode::AllocStringA2UTF
+#  define W2X_A2T(s)				(s)
+#  define W2X_T2A(s)				(s)
+#  define W2X_W2T					w2x::encode::_W2X_W2A
+#  define W2X_T2W					w2x::encode::_W2X_A2W
+#  define W2X_GBK2T					w2x::encode::_W2X_GBK2A
+#  define W2X_T2GBK					w2x::encode::_W2X_A2GBK
+#  define W2X_UTF2T					w2x::encode::_W2X_UTF2A
+#  define W2X_T2UTF					w2x::encode::_W2X_A2UTF
+#  define W2X_ALLOC_STR_URL_ENCODE	w2x::encode::AllocStringUrlEncodeA
 #  define W2X_ALLOC_STR_URL_DECODE	w2x::encode::AllocStringUrlDecodeA
-#endif
-
-inline std::string _W2X_URL_DECODE_A(LPCSTR _mbs)
-{
-	LPSTR decode_mbs = w2x::encode::AllocStringUrlDecodeA(_mbs);
-	std::string ret_str = decode_mbs;
-	w2x::encode::FreeStringA(&decode_mbs);
-	return ret_str;
-}
-
-#define W2X_URL_DECODE_A	w2x::encode::_W2X_URL_DECODE_A
-
-inline std::wstring _W2X_URL_DECODE_W(LPCWSTR _wcs)
-{
-	LPWSTR decode_wcs = w2x::encode::AllocStringUrlDecodeW(_wcs);
-	std::wstring ret_str = decode_wcs;
-	w2x::encode::FreeStringW(&decode_wcs);
-	return ret_str;
-}
-
-#define W2X_URL_DECODE_W	w2x::encode::_W2X_URL_DECODE_W
-
-inline std::string _W2X_URL_DECODE_UTF8(LPCSTR _utf8)
-{
-	LPSTR decode_utf8 = w2x::encode::AllocStringUrlDecodeA(_utf8);
-	std::string ret_str = decode_utf8;
-	w2x::encode::FreeStringA(&decode_utf8);
-	return ret_str;
-}
-
-#define W2X_URL_DECODE_UTF8		w2x::encode::_W2X_URL_DECODE_UTF8
-
-#ifdef UNICODE
-#  define W2X_URL_DECODE	W2X_URL_DECODE_W
-#else
-#  define W2X_URL_DECODE	W2X_URL_DECODE_A
-#endif
+#  define W2X_URL_ENCODE			w2x::encode::_W2X_URL_ENCODE_A
+#  define W2X_URL_DECODE			w2x::encode::_W2X_URL_DECODE_A
+#endif // UNICODE
 
 
 W2X_DEFINE_NAME_SPACE_END(encode)
