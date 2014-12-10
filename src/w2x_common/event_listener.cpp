@@ -113,7 +113,6 @@ inline LPCTSTR CEventListener::GetListenerId(void) const
 
 inline void CEventListener::SetListenerId(LPCTSTR _listener_id)
 {
-	_ASSERT(NULL != _listener_id);
 	if (NULL == _listener_id || TEXT('\0') == _listener_id[0]) {
 		m_listener_id = new TCHAR[32];
 		_stprintf_s(m_listener_id, 32,
