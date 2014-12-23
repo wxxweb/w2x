@@ -465,7 +465,7 @@ W2X_COMMON_API LPSTR AllocStringUrlEncodeA(LPCSTR _mbs)
 
 W2X_COMMON_API LPWSTR AllocStringUrlEncodeW(LPCWSTR _wcs)
 {
-	LPSTR utf_str = _AllocStringWCS2MBS(936, _wcs, -1);
+	LPSTR utf_str = _AllocStringWCS2MBS(CP_UTF8, _wcs, -1);
 	LPSTR utf_str_encode = Curl_escape(utf_str, 0);
 	FreeStringA(&utf_str);
 	return AllocStringUTF2W(utf_str_encode);
@@ -495,7 +495,7 @@ W2X_COMMON_API LPWSTR AllocStringUrlDecodeW(LPCWSTR _wcs)
 	char* out_str = NULL;
 	size_t out_len = 0;
 
-	LPSTR utf_str = _AllocStringWCS2MBS(936, _wcs, -1);
+	LPSTR utf_str = _AllocStringWCS2MBS(CP_UTF8, _wcs, -1);
 	Curl_urldecode(utf_str, 0, &out_str, &out_len);
 	FreeStringA(&utf_str);
 	return AllocStringUTF2W(out_str);
