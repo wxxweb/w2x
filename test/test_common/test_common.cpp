@@ -501,6 +501,18 @@ void TestFileSys(void)
 
 void TestEncode(void)
 {
+	LPCWSTR pszOfflineT = TEXT("离线状态");
+	FILE* file_ptr = fopen("C:\\\\Workspace\\t.x", "wb");
+	fwrite(pszOfflineT, strlen((char*)pszOfflineT), 1, file_ptr);
+	fclose(file_ptr);
+	file_ptr = NULL;
+	LPCSTR pszOfflneA = "离线状态";
+	std::string strOfflineGbk = W2X_T2GBK(pszOfflineT);
+	std::string strOfflineUtf = W2X_T2UTF(pszOfflineT);
+
+	strOfflineUtf = W2X_GBK2UTF(reinterpret_cast<LPCSTR>(pszOfflineT));
+	strOfflineGbk = W2X_UTF2GBK(strOfflineUtf.c_str());
+
 	LPCWSTR pszWdie = L"大写aBCd中文";
 	LPCSTR pszAscii = "小写edzD英文";
 	LPCTSTR pszType = TEXT("字母dddAd评语");

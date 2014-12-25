@@ -117,11 +117,16 @@ public:
 	 * 初始化全局浏览器配置，并配置缓存保存目录路径及日志文件全路径名称。
 	 *
 	 * @note 该函数须在 CCefWebBrowser 类对象构造之前调用，建议放在主程序入口处调用。
+	 * @param _locales_path 语言包目录路径。
 	 * @param _cache_path 浏览器缓存保存目录路径。
 	 * @param _log_file 浏览器日志文件全路径名称。
 	 * @return 初始化成功返回 true。
 	 */
-	static bool Initialize(LPCTSTR _cache_path, LPCTSTR _log_file);
+	static bool Initialize(
+		LPCTSTR _locales_path,
+		LPCTSTR _cache_path,
+		LPCTSTR _log_file
+		);
 
 	/**
 	 * @brief 释放全局浏览器资源。

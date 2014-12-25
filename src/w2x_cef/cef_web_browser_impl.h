@@ -13,10 +13,8 @@
 #define __W2X_CEF_WEB_BROWSER_IMPL_H__
 #pragma once
 
-//#include "cef_web_browser_i.h"
-//#include "w2x_common/macros.h"
-//#include "w2x_common/mutex.h"
-#include "w2x_common/msg_loop.h"
+
+#include "../w2x_common/msg_loop.h"
 #include "include/cef_client.h"
 //#include "cefclient/download_handler.h"
 #include <map>
@@ -233,7 +231,11 @@ public:
 		const TSTDSTR& _args
 		);
 
-	static bool Initialize(LPCTSTR _cache_path, LPCTSTR _log_file);
+	static bool Initialize(
+		LPCTSTR _locales_path,
+		LPCTSTR _cache_path,
+		LPCTSTR _log_file
+		);
 
 	static void Uninitialize(void);
 

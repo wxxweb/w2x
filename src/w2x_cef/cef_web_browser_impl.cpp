@@ -1051,7 +1051,11 @@ CCefWebBrowserImpl* CCefWebBrowserImpl::GetThisPtr(CefWindowHandle _hwnd)
 	return it->second;
 }
 
-bool CCefWebBrowserImpl::Initialize(LPCTSTR _cache_path, LPCTSTR _log_file)
+bool CCefWebBrowserImpl::Initialize(
+	LPCTSTR _locales_path,
+	LPCTSTR _cache_path,
+	LPCTSTR _log_file
+	)
 {
 	// Parse command line arguments. The passed in values are ignored on Windows.
 	//AppInitCommandLine(0, NULL);
@@ -1078,10 +1082,14 @@ bool CCefWebBrowserImpl::Initialize(LPCTSTR _cache_path, LPCTSTR _log_file)
 	settings.uncaught_exception_stack_size = 1;
 
 	// ”Ô—‘∞¸Œª÷√
-	//TCHAR locales_dir_path[MAX_PATH] = TEXT("");
-	//::GetCurrentDirectory(MAX_PATH, locales_dir_path);
-	//_tcscat_s(locales_dir_path, TEXT("\\locales"));
-	//CefString(&settings.locales_dir_path) = locales_dir_path;
+	TCHAR locales_dir_path[MAX_PATH] = TEXT("");
+	if (NULL != _locales_path && TEXT('\0') != _locales_path[0]) {
+		_tcscat_s(locales_dir_path, _locales_path);
+	} else {
+		::GetCurrentDirectory(MAX_PATH, locales_dir_path);
+		_tcscat_s(locales_dir_path, TEXT("\\locales"));
+	}
+	CefString(&settings.locales_dir_path) = locales_dir_path;
 
 	// Initialize CEF.
 	return CefInitialize(settings, app);
