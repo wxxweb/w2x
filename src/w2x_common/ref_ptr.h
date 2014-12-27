@@ -63,12 +63,25 @@ public:
 		return _ptr == static_cast<T*>(m_ptr);
 	}
 
+	template <class X>
+	bool operator!=(const X* _ptr) const {
+		return _ptr != static_cast<T*>(m_ptr);
+	}
+
 	bool operator==(const T* _ptr) const {
 		return _ptr == m_ptr;
 	}
 
+	bool operator!=(const T* _ptr) const {
+		return _ptr != m_ptr;
+	}
+
 	bool operator==(const CRefPtr<T>& _ref) const {
 		return _ref.m_ptr == m_ptr;
+	}
+
+	bool operator!=(const CRefPtr<T>& _ref) const {
+		return _ref.m_ptr != m_ptr;
 	}
 
 	template <class X>
@@ -148,6 +161,12 @@ W2X_NAME_SPACE_END
 template <class T>
 bool operator==(void* _ptr, const w2x::CRefPtr<T>& _ref) {
 	return _ref.get() == _ptr;
+}
+
+
+template <class T>
+bool operator!=(void* _ptr, const w2x::CRefPtr<T>& _ref) {
+	return _ref.get() != _ptr;
 }
 
 
