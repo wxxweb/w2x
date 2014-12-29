@@ -10,6 +10,8 @@
 #include "stdafx.h"
 #include "string_util.h"
 
+W2X_NS_BEGIN
+
 
 CStringUtil::CStringUtil(void)
 	: m_is_mbs(false)
@@ -29,3 +31,5 @@ CStringUtil::~CStringUtil(void)
 	}
 }
 
+
+W2X_NS_END
