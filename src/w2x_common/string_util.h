@@ -17,7 +17,7 @@
 W2X_NS_BEGIN
 
 
-class CStringUtil
+class W2X_COMMON_API CStringUtil
 {
 public:
 	CStringUtil(void);
