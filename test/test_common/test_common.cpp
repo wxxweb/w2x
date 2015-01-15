@@ -11,6 +11,7 @@
 #include "w2x_network/tiny_socket.h"
 #include "w2x_common/file_sys.h"
 #include "w2x_common/encode.h"
+#include "w2x_common/process.h"
 
 class CDerived;
 class CBase
@@ -547,6 +548,65 @@ void TestEncode(void)
 
 }
 
+void TestProcess(void)
+{
+	const DWORD begin_time = ::GetTickCount();
+
+	UINT array_length = 0;
+	TCHAR process_name[MAX_PATH] = TEXT("vcpkgsrv.EXE");
+	w2x::CProcessSnapshot ps;
+	w2x::CProcessSnapshot::ProcessInfo info;
+	w2x::CProcessSnapshot::ProcessInfo info_array[2];
+
+	bool found = ps.FindProcess(NULL, 1);
+	found = ps.GetProcessInfo(&info, 0);
+	found = ps.FindProcess(&info, 1);
+	found = ps.FindProcess(NULL, 100000);
+	found = ps.FindProcess(&info, 100000);
+
+	UINT count = ps.GetProcessCount();
+
+	array_length = 1;
+	count = ps.FindProcesses(&info, &array_length, process_name);
+	count = ps.FindProcesses(&info, NULL, process_name);
+	count = ps.FindProcesses(&info, &array_length, NULL);
+	count = ps.FindProcesses(&info, NULL, NULL);
+	count = ps.FindProcesses(NULL, &array_length, process_name);
+	count = ps.FindProcesses(NULL, &array_length, NULL);
+	count = ps.FindProcesses(NULL, NULL, process_name);
+	count = ps.FindProcesses(NULL, NULL, NULL);
+
+	found = ps.CreateSnapshot();
+	count = ps.GetProcessCount();
+
+	found = ps.FindProcess(NULL, 1);
+	found = ps.GetProcessInfo(&info, 0);
+	found = ps.FindProcess(&info, 1);
+	found = ps.FindProcess(NULL, 100000);
+	found = ps.FindProcess(&info, 100000);
+
+	array_length = sizeof(info_array) / sizeof(info_array[0]);
+	count = ps.FindProcesses(info_array, &array_length, process_name);
+	count = ps.FindProcesses(info_array, NULL, process_name);
+	count = ps.FindProcesses(info_array, &array_length, NULL);
+	count = ps.FindProcesses(info_array, NULL, NULL);
+	count = ps.FindProcesses(NULL, &array_length, process_name);
+	count = ps.FindProcesses(NULL, &array_length, NULL);
+	count = ps.FindProcesses(NULL, NULL, process_name);
+	count = ps.FindProcesses(NULL, NULL, NULL);
+	
+	count = w2x::GetProcessName(process_name, MAX_PATH, 1160, true);
+	count = w2x::GetProcessName(NULL, MAX_PATH, 1160, true);
+	//count = w2x::GetProcessName(process_name, 10, 1160, true);
+	count = w2x::GetProcessName(process_name, MAX_PATH, 0, true);
+	count = w2x::GetProcessName(process_name, MAX_PATH, 4, true);
+	count = w2x::GetProcessName(process_name, MAX_PATH, GetCurrentProcessId(), true);
+
+	DWORD parent_id = w2x::GetParentProcessId(GetCurrentProcessId());
+
+	const DWORD interval = ::GetTickCount() - begin_time;
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	w2x::debug::EnableExcptionHandle(/*HandleExcption*/);
@@ -558,7 +618,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	//TestNetwork();
 	//TestLog();
 	//TestFileSys();
-	TestEncode();
+	//TestEncode();
+	TestProcess();
 	
 	system("pause");
 	return 0;
