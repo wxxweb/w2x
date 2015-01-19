@@ -110,11 +110,12 @@ CCommand::ExecuteStatus CCommand::CImpl::Execute(
 	::SetHandleInformation(m_read_pipe_handle, HANDLE_FLAG_INHERIT, 0);
 
 	memset(m_app_path, 0, sizeof(m_app_path));
-	wcscpy_s(m_app_path, NULL != _app_path ? _app_path : TEXT(""));
+	_tcscpy_s(m_app_path, NULL != _app_path ? _app_path : TEXT(""));
 	memset(m_app_args, 0, sizeof(m_app_args));
-	m_app_args[0] = TEXT(' ');
-	wcscpy_s(m_app_args + 1, _countof(m_app_args) - 1,
-		NULL != _app_args ? _app_args : TEXT(""));
+	if (NULL != _app_path) {
+		m_app_args[0] = TEXT(' ');
+	}
+	_tcscat_s(m_app_args, NULL != _app_args ? _app_args : TEXT(""));
 
 	// 创建子进程
 	PROCESS_INFORMATION pi = {0};
