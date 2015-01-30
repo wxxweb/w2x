@@ -14,11 +14,10 @@
 #pragma once
 
 
+#include <map>
 #include "../w2x_common/msg_loop.h"
 #include "include/cef_client.h"
-//#include "cefclient/download_handler.h"
-#include <map>
-#include <string>
+#include "string_util.h"
 
 
 class ICefWebBrowserEventHandler;

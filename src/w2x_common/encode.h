@@ -10,10 +10,10 @@
 #ifndef __W2X_COMMON_ENCODE_H__
 #define __W2X_COMMON_ENCODE_H__
 
-#include "macros.h"
 #include <WTypes.h>
-#include <string>
 #include <memory>
+#include "macros.h"
+#include "string_util.h"
 
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(encode)

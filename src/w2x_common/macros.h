@@ -22,7 +22,7 @@
 
 /** 模仿 MFC 的 ASSERT */
 #ifndef ASSERT
-#  define ASSERT _ASSERT
+#  define ASSERT _ASSERTE
 #endif // ASSERT
 
 /** 指明一个函数是回调函数 */
@@ -162,16 +162,6 @@
 /** 如果指针 p 值为空,  弹出断言对话框, 并返回指定值 r */
 #ifndef IF_NULL_ASSERT_RETURN_VALUE
 #  define IF_NULL_ASSERT_RETURN_VALUE(p,r) IF_NULL_ASSERT(p) {return (r);}
-#endif
-
-
-/** 根据UNICODE决定使用宽字符或多字符版C++字符串 */
-#ifndef TSTDSTR
-#  ifdef UNICODE
-#    define TSTDSTR std::wstring
-#  else
-#    define TSTDSTR std::string
-#  endif
 #endif
 
 

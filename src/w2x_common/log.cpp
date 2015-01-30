@@ -12,6 +12,7 @@
 #include "msg_loop.h"
 #include "mutex.h"
 #include "log.h"
+#include "string_util.h"
 
 
 W2X_NAME_SPACE_BEGIN

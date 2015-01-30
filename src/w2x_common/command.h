@@ -12,9 +12,10 @@
 #ifndef __W2X_COMMON_COMMAND_H__
 #define __W2X_COMMON_COMMAND_H__
 
-#include "macros.h"
 #include <WTypes.h>
-#include <string>
+#include "macros.h"
+#include "string_util.h"
+
 
 W2X_NAME_SPACE_BEGIN
 

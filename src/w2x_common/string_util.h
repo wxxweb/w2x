@@ -14,6 +14,16 @@
 #include <string>
 #include "macros.h"
 
+/** 根据UNICODE决定使用宽字符或多字符版C++字符串 */
+#ifndef TSTDSTR
+#  ifdef UNICODE
+#    define TSTDSTR std::wstring
+#  else
+#    define TSTDSTR std::string
+#  endif
+#endif
+
+
 W2X_NS_BEGIN
 
 
