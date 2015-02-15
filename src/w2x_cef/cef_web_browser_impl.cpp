@@ -14,8 +14,9 @@
 #include "include/cef_scheme.h"
 #include "include/cef_task.h"
 #include "util.h"
-//#include "w2x_common/log.h"
+#include <Shlwapi.h>
 #include <string>
+#include <process.h>
 
 
 // #define REQUIRE_UI_THREAD()   ASSERT(CefCurrentlyOn(TID_UI));
@@ -239,6 +240,9 @@ WNDPROC CCefWebBrowserImpl::sm_old_wnd_proc = NULL;
 CCefWebBrowserImpl::ThisPtrMap CCefWebBrowserImpl::sm_this_ptrs;
 CefCriticalSection CCefWebBrowserImpl::sm_this_ptrs_mutex;
 int CCefWebBrowserImpl::sm_instance_count = 0;
+bool CCefWebBrowserImpl::sm_initialized = false;
+//HANDLE CCefWebBrowserImpl::sm_uninitialize_event = NULL;
+
 
 CCefWebBrowserImpl::CCefWebBrowserImpl(void)
 	: m_parent_hwnd(NULL)
@@ -246,12 +250,17 @@ CCefWebBrowserImpl::CCefWebBrowserImpl(void)
 	, m_event_handler(NULL)
 	//, m_bFormElementHasFocus(false)
 {
-	++sm_instance_count;
+	if (0 == sm_instance_count++)
+	{
+		// 如果外部未对其做过初始化，则使用默认值初始化
+		bool ret = CCefWebBrowserImpl::Initialize(NULL, NULL, NULL);
+		ASSERT(ret);
+	}
 	memset(&m_caption_margin, 0, sizeof(m_caption_margin));
 }
 
 
-CCefWebBrowserImpl::~CCefWebBrowserImpl()
+CCefWebBrowserImpl::~CCefWebBrowserImpl(void)
 {
 	--sm_instance_count;
 }
@@ -272,10 +281,10 @@ void CCefWebBrowserImpl::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 		// 替换WebViewHost的窗口处理函数
 		::EnumChildWindows(m_browser_hwnd, WebViewHostFinder, 0);
 
-		RECT rect = {0};
-		::GetClientRect(::GetParent(m_parent_hwnd), &rect);
-		::MoveWindow(m_browser_hwnd, 0, 0, 
-			rect.right - rect.left, rect.bottom - rect.top, FALSE);
+// 		RECT rect = {0};
+// 		::GetClientRect(::GetParent(m_parent_hwnd), &rect);
+// 		::MoveWindow(m_browser_hwnd, 0, 0, 
+// 			rect.right - rect.left, rect.bottom - rect.top, FALSE);
 
 		if (NULL != m_event_handler)
 		{
@@ -1057,6 +1066,9 @@ bool CCefWebBrowserImpl::Initialize(
 	LPCTSTR _log_file
 	)
 {
+	if (true == sm_initialized) {
+		return true;
+	}
 	// Parse command line arguments. The passed in values are ignored on Windows.
 	//AppInitCommandLine(0, NULL);
 
@@ -1067,47 +1079,103 @@ bool CCefWebBrowserImpl::Initialize(
 	CefSettingsTraits::init(&settings);
 	//AppGetSettings(settings, app);
 
-	if (NULL != _cache_path) {
-		CefString(&settings.cache_path) = _cache_path;
-	}
-
-	if (NULL != _log_file) {
-		settings.log_severity = LOGSEVERITY_WARNING;
-		CefString(&settings.log_file) = _log_file;
-	} else {
-		settings.log_severity = LOGSEVERITY_DISABLE;
-	}
-
 	settings.multi_threaded_message_loop = true;
 	settings.uncaught_exception_stack_size = 1;
 
-	// 语言包位置
-	TCHAR locales_dir_path[MAX_PATH] = TEXT("");
-	if (NULL != _locales_path && TEXT('\0') != _locales_path[0]) {
-		_tcscat_s(locales_dir_path, _locales_path);
-	} else {
-		::GetCurrentDirectory(MAX_PATH, locales_dir_path);
-		_tcscat_s(locales_dir_path, TEXT("\\locales"));
+	TCHAR work_dir[MAX_PATH] = TEXT("");
+	TCHAR temp_path[MAX_PATH] = TEXT("");
+	::GetCurrentDirectory(MAX_PATH, work_dir);
+
+	if (NULL == _cache_path || TEXT('\0') == _cache_path[0]) {
+		_tcscpy_s(temp_path, work_dir);
+		_tcscat_s(temp_path, TEXT("\\cache"));
+		_cache_path = temp_path;
 	}
-	CefString(&settings.locales_dir_path) = locales_dir_path;
+	CefString(&settings.cache_path) = _cache_path;
+
+	if (NULL == _log_file || TEXT('\0') == _log_file[0]) {
+		_tcscpy_s(temp_path, work_dir);
+		_tcscat_s(temp_path, TEXT("\\log\\cef.log"));
+		_log_file = temp_path;
+	}
+	//settings.log_severity = LOGSEVERITY_DISABLE;
+	settings.log_severity = LOGSEVERITY_WARNING;
+	CefString(&settings.log_file) = _log_file;
+
+	// 语言包位置，如果找不到语言包初始化会失败
+	if (NULL == _locales_path || TEXT('\0') == _locales_path[0]) {
+		_tcscpy_s(temp_path, work_dir);
+		_tcscat_s(temp_path, TEXT("\\locales"));
+		if (FALSE == ::PathFileExists(temp_path)) {
+			TCHAR msg[MAX_PATH] = TEXT("");
+			_stprintf_s(msg, TEXT("Locales directory not found: %s"), temp_path);
+			::MessageBox(NULL, msg, TEXT("CEF - ERROR"), MB_OK);
+			return false;
+		}
+		_locales_path = temp_path;
+	}
+	CefString(&settings.locales_dir_path) = _locales_path;
 
 	// Initialize CEF.
-	return CefInitialize(settings, app);
+	sm_initialized = CefInitialize(settings, app);
+	if (true == sm_initialized) {
+// 		sm_uninitialize_event = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+// 		::CloseHandle((HANDLE)_beginthreadex(NULL, 0, 
+// 			CCefWebBrowserImpl::UninitializeThread, NULL, 0, NULL));
+	}
+	return sm_initialized;
 }
 
 void CCefWebBrowserImpl::Uninitialize(void)
 {
-	//::CloseHandle((HANDLE)_beginthreadex(
-	//	NULL, 0, CCefWebBrowserImpl::UninitializeThread, NULL, 0, NULL));
-
-	const DWORD begin_time = ::GetTickCount();
-	while (0 < sm_instance_count && 1000 > ::GetTickCount() - begin_time)
-	{
-		::Sleep(50);
+	if (false == sm_initialized) {
+		return;
 	}
 
+	const DWORD timeout = 2000;
+	DWORD total_time = 0;
+	for (DWORD begin_time = ::GetTickCount(); 
+		0 < sm_instance_count && timeout > total_time;
+		total_time = ::GetTickCount() - begin_time)
+	{
+		::Sleep(100);
+	}
+	ASSERT(0 == sm_instance_count && timeout > total_time);
+
+	CefClearSchemeHandlerFactories();
 	CefShutdown();
+	sm_initialized = false;
 }
+
+// UINT CALLBACK CCefWebBrowserImpl::UninitializeThread(PVOID _param)
+// {
+// 	UNUSED_ALWAYS(_param);
+// 
+// 	::WaitForSingleObject(sm_uninitialize_event, INFINITE);
+// 	::CloseHandle(sm_uninitialize_event);
+// 	sm_uninitialize_event = NULL;
+// 
+// 	if (false == sm_initialized) {
+// 		return 0;
+// 	}
+// 
+// 	const DWORD timeout = 2000;
+// 	DWORD total_time = 0;
+// 	for (DWORD begin_time = ::GetTickCount(); 
+// 		0 < sm_instance_count && timeout > total_time;
+// 		total_time = ::GetTickCount() - begin_time)
+// 	{
+// 		::Sleep(100);
+// 	}
+// 	ASSERT(0 == sm_instance_count && timeout > total_time);
+// 
+// 	CefClearSchemeHandlerFactories();
+// 
+// 	CefShutdown();
+// 	sm_initialized = false;
+// 
+// 	return 0;
+// }
 
 bool CCefWebBrowserImpl::RegisterCustomScheme(
 	LPCTSTR _scheme_name,

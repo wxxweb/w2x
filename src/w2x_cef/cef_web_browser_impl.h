@@ -14,10 +14,12 @@
 #pragma once
 
 
-#include <map>
-#include "../w2x_common/msg_loop.h"
 #include "include/cef_client.h"
-#include "string_util.h"
+//#include "cefclient/download_handler.h"
+#include "../w2x_common/msg_loop.h"
+#include "../w2x_common/string_util.h"
+#include <map>
+#include <string>
 
 
 class ICefWebBrowserEventHandler;
@@ -238,6 +240,8 @@ public:
 
 	static void Uninitialize(void);
 
+	//static UINT CALLBACK UninitializeThread(PVOID _param);
+
 	static bool RegisterCustomScheme(
 		LPCTSTR _scheme_name, 
 		CustomSchemeHandler _handler
@@ -316,7 +320,10 @@ private:
 
 	static WNDPROC sm_old_wnd_proc;
 
+	// CCefWebBrowserImpl 对象实例构建计数
 	static int sm_instance_count;
+	static bool sm_initialized;
+	//static HANDLE sm_uninitialize_event;
 };
 
 #endif ///< __W2X_CEF_WEB_BROWSER_IMPL_H__
