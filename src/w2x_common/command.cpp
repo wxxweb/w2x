@@ -191,7 +191,7 @@ CCommand::ExecuteStatus CCommand::CImpl::Execute(
 
 			// 等读管道线程正常返回（子进程结束后读管道可自动结束）
 			DWORD exit_code = 0;
-			::WaitForSingleObject(m_read_thread_handle, INFINITE);
+			::WaitForSingleObject(m_read_thread_handle, _time_out);
 			::GetExitCodeThread(m_read_thread_handle, &exit_code);
 			::CloseHandle(m_read_thread_handle);
 			m_read_thread_handle = NULL;
