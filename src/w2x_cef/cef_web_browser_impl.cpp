@@ -263,6 +263,7 @@ CCefWebBrowserImpl::CCefWebBrowserImpl(void)
 CCefWebBrowserImpl::~CCefWebBrowserImpl(void)
 {
 	--sm_instance_count;
+	m_event_handler = NULL;
 }
 
 
@@ -971,7 +972,7 @@ void CCefWebBrowserImpl::Close(void)
 	if (NULL != m_browser)
 	{
 		m_browser->ParentWindowWillClose();
-		m_browser->CloseBrowser();
+		//m_browser->CloseBrowser();
 	}
 }
 
