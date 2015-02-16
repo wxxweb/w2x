@@ -257,6 +257,7 @@ CCefWebBrowserImpl::CCefWebBrowserImpl(void)
 		ASSERT(ret);
 	}
 	memset(&m_caption_margin, 0, sizeof(m_caption_margin));
+	memset(&m_rect, 0, sizeof(m_rect));
 }
 
 
@@ -282,10 +283,10 @@ void CCefWebBrowserImpl::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 		// 替换WebViewHost的窗口处理函数
 		::EnumChildWindows(m_browser_hwnd, WebViewHostFinder, 0);
 
-// 		RECT rect = {0};
-// 		::GetClientRect(::GetParent(m_parent_hwnd), &rect);
-// 		::MoveWindow(m_browser_hwnd, 0, 0, 
-// 			rect.right - rect.left, rect.bottom - rect.top, FALSE);
+		if (0 < (m_rect.right - m_rect.left) && 0 < (m_rect.bottom - m_rect.left)) {
+			::MoveWindow(m_browser_hwnd, m_rect.left, m_rect.top, 
+				m_rect.right - m_rect.left, m_rect.bottom - m_rect.top, FALSE);
+		}
 
 		if (NULL != m_event_handler)
 		{
@@ -978,9 +979,13 @@ void CCefWebBrowserImpl::Close(void)
 
 bool CCefWebBrowserImpl::MoveBrowser(int _x, int _y, int _width, int _height)
 {
-	if (NULL != m_browser_hwnd)
-	{
+	if (NULL != m_browser_hwnd) {
 		return TRUE == ::MoveWindow(m_browser_hwnd, _x, _y, _width, _height, FALSE);
+	} else {
+		m_rect.left = _x;
+		m_rect.top = _y;
+		m_rect.right = m_rect.left + _width;
+		m_rect.bottom = m_rect.top + _height;
 	}
 	return false;
 }

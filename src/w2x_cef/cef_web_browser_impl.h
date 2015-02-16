@@ -308,6 +308,7 @@ private:
 	ICefWebBrowserEventHandler* m_event_handler;
 
 	RECT m_caption_margin;
+	RECT m_rect;
 
 	w2x::CMsgLoop m_cpp_msg_loop;
 
