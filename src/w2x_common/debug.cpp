@@ -143,7 +143,7 @@ static LONG WINAPI HandleTopLevelException(EXCEPTION_POINTERS *_excption_ptr)
 	custom.is_immediately = true;
 
 	w2x::log::Log(&custom, excption_str);
-	::MessageBox(NULL, excption_str, TEXT("Excption"), MB_ICONERROR);
+	//::MessageBox(NULL, excption_str, TEXT("Excption"), MB_ICONERROR);
 
 	return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -173,7 +173,7 @@ static void HandleInvalidParameter(
 	custom.is_immediately = true;
 
 	w2x::log::Log(&custom, excption_str);
-	::MessageBox(NULL, excption_str, TEXT("Excption"), MB_ICONERROR);
+	//::MessageBox(NULL, excption_str, TEXT("Excption"), MB_ICONERROR);
 
 	// 必须抛出异常，否则无法定位错误位置
 	throw 1;
@@ -189,7 +189,7 @@ static void HandlePurecall(void)
 	custom.is_immediately = true;
 
 	w2x::log::Log(&custom, excption_str);
-	::MessageBox(NULL, excption_str, TEXT("Excption"), MB_ICONERROR);
+	//::MessageBox(NULL, excption_str, TEXT("Excption"), MB_ICONERROR);
 
 	// 必须抛出异常，否则无法定位错误位置
 	throw 1;
