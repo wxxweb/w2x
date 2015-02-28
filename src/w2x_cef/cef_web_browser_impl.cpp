@@ -979,14 +979,15 @@ void CCefWebBrowserImpl::Close(void)
 
 bool CCefWebBrowserImpl::MoveBrowser(int _x, int _y, int _width, int _height)
 {
+	m_rect.left = _x;
+	m_rect.top = _y;
+	m_rect.right = m_rect.left + _width;
+	m_rect.bottom = m_rect.top + _height;
+
 	if (NULL != m_browser_hwnd) {
 		return TRUE == ::MoveWindow(m_browser_hwnd, _x, _y, _width, _height, FALSE);
-	} else {
-		m_rect.left = _x;
-		m_rect.top = _y;
-		m_rect.right = m_rect.left + _width;
-		m_rect.bottom = m_rect.top + _height;
 	}
+
 	return false;
 }
 
