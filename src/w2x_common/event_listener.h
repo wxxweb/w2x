@@ -56,11 +56,17 @@ public:
     /** 检查事件监听器是否启用 */
     virtual bool IsEnabled(void) const = 0;
 
-	 /** 标记该事件监听器已经被事件分发器注册过 */
+	 /** 标记该事件监听器已经被事件分发器注册过，若反注册则将在下次调用后从监听器列表中移除 */
 	virtual void SetRegistered(bool _registered) = 0;
 
 	/** 检查该事件监听器是否被事件分发器注册过 */
-	virtual bool IsRegistered() const = 0;
+	virtual bool IsRegistered(void) const = 0;
+
+	/** 在事件监听器被调用的过程中须对其进行保护，防止在同线程中移除监听器引发异常  */
+	virtual void SetProtected(bool _protected) = 0;
+
+	/** 检查该事件监听器是否处于保护状态 */
+	virtual bool IsProtected(void) const = 0;
 
 	/** 获取事件监听器 ID，可通过这个 ID 来查找事件监听器 */
     virtual LPCTSTR GetListenerId(void) const = 0;

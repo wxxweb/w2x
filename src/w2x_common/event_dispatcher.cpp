@@ -113,12 +113,23 @@ bool CEventDispatcher::CDispImpl::DispatchEvent(CEvent& _event)
 		if (false == listener->IsEnabled()) {
 			continue;
 		}
-
+		
 		if (NULL != m_target_name_ptr && TEXT('\0') != m_target_name_ptr[0])
 		{
 			_event.SetTargetName(m_target_name_ptr);
 		}
+		listener->SetProtected(true);
 		listener->Execute(_event);
+		listener->SetProtected(false);
+
+		if (false == listener->IsRegistered()) {
+			EventListeners::iterator itTemp = range.first;
+			++(range.first);
+			m_listeners.erase(itTemp);
+			if (range.first == range.second) {
+				return true;
+			}
+		}
 	}
 
 	return true;
@@ -151,8 +162,11 @@ bool CEventDispatcher::CDispImpl::RemoveEventListener(
 	{
 		if (range.first->second == _listener)
 		{
-			range.first->second->SetRegistered(false);
-			m_listeners.erase(range.first);
+			_listener->SetRegistered(false);
+			if (false == _listener->IsProtected())
+			{
+				m_listeners.erase(range.first);
+			}
 			return true;
 		}
 	}
@@ -175,11 +189,15 @@ bool CEventDispatcher::CDispImpl::RemoveEventListener(
 		= m_listeners.equal_range(_event_type);
 		range.first != range.second; ++(range.first))
 	{
-		LPCTSTR id = range.first->second->GetListenerId();
+		EventListenerPtr& listener = range.first->second;
+		LPCTSTR id = listener->GetListenerId();
 		if (0 == _tcscmp(id, _listener_id))
 		{
-			range.first->second->SetRegistered(false);
-			m_listeners.erase(range.first);
+			listener->SetRegistered(false);
+			if (false == listener->IsProtected())
+			{
+				m_listeners.erase(range.first);
+			}
 			return true;
 		}
 	}

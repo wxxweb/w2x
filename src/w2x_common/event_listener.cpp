@@ -39,6 +39,10 @@ public:
 
 	virtual inline bool IsRegistered() const;
 
+	virtual inline void SetProtected(bool _protected);
+
+	virtual inline bool IsProtected(void) const;
+
 	virtual inline LPCTSTR GetListenerId(void) const;
 
 	virtual inline void Execute(CEvent& _event);
@@ -49,6 +53,7 @@ private:
 private:
 	bool m_enabled;
 	bool m_registered;
+	bool m_protected;
 	Callback m_callback;
 	LPTSTR m_listener_id;
 
@@ -62,6 +67,7 @@ size_t CEventListener::sm_next_auto_listener_id = 0;
 CEventListener::CEventListener(LPCTSTR _listener_id, const Callback& _callback)
 	: m_enabled(true)
 	, m_registered(false)
+	, m_protected(false)
 	, m_callback(_callback)
 	, m_listener_id(NULL)
 {
@@ -108,6 +114,18 @@ inline bool CEventListener::IsRegistered() const
 inline LPCTSTR CEventListener::GetListenerId(void) const
 {
 	return m_listener_id;
+}
+
+
+inline void CEventListener::SetProtected(bool _protected)
+{
+	m_protected = _protected;
+}
+
+
+inline bool CEventListener::IsProtected(void) const
+{
+	return m_protected;
 }
 
 
