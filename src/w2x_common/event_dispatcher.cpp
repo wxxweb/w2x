@@ -87,6 +87,17 @@ inline bool CEventDispatcher::CDispImpl::AddEventListener(
 
 	mutex::CScopedLock lock(m_thread_mutex);
 
+	for (std::pair<EventListeners::const_iterator, EventListeners::const_iterator>
+		range = m_listeners.equal_range(_event_type);
+		range.first != range.second; ++(range.first))
+	{
+		const EventListenerPtr& listener = range.first->second;
+		if (listener == _listener || true == listener->IsSame(_listener)) {
+			ASSERT(false);
+			return false;
+		}
+	}
+
 	m_listeners.insert(
 		std::pair<TSTDSTR, EventListenerPtr>(_event_type, _listener));
 	_listener->SetRegistered(true);

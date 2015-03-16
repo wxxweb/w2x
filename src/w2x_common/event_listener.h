@@ -47,8 +47,14 @@ public:
 		);
 
 public:
-	/** 检查事件监听器是否有效 */
+	/** 检查事件监听器是否有效，当事件回调为空值时返回 false */
 	virtual bool IsValid(void) const = 0;
+
+	/** 检查检查两个对象是否为同一事件监听器，事件监听器 ID 相同即认为是同一对象 */
+	virtual bool IsSame(const EventListenerPtr& _right) const = 0;
+
+	/** 获取事件监听器 ID，可通过这个 ID 来查找事件监听器 */
+	virtual LPCTSTR GetListenerId(void) const = 0;
 
 	/** 启用或者禁用事件监听器，仅当事件监听器为启用状态时才能接收到事件通知。*/
     virtual void SetEnabled(bool _enabled) = 0;
@@ -62,16 +68,24 @@ public:
 	/** 检查该事件监听器是否被事件分发器注册过 */
 	virtual bool IsRegistered(void) const = 0;
 
-	/** 在事件监听器被调用的过程中须对其进行保护，防止在同线程中移除监听器引发异常  */
+	/** @private
+	 * 在事件监听器被调用的过程中须对其进行保护，防止在同线程中移除监听器引发异常
+	 */
 	virtual void SetProtected(bool _protected) = 0;
 
-	/** 检查该事件监听器是否处于保护状态 */
+	/** @private
+	 * 检查该事件监听器是否处于保护状态
+	 */
 	virtual bool IsProtected(void) const = 0;
 
-	/** 获取事件监听器 ID，可通过这个 ID 来查找事件监听器 */
-    virtual LPCTSTR GetListenerId(void) const = 0;
+	/** @private
+	 * 获取事件回调对象
+	 */
+	virtual const Callback& GetCallback(void) const = 0;
 
-	/** 执行事件监听器事件回调函数 */
+	/** @private
+	 * 执行事件监听器事件回调函数
+	 */
 	virtual void Execute(CEvent& _event) = 0;
 };
 
