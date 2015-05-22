@@ -1,9 +1,10 @@
 /*******************************************************************************
- * 文件:		system.cpp
- * 描述:		参见 system.h
- * 作者:		wu.xiongxing					
- * 邮箱:		wxxweb@gmail.com
- * 日期:		2014-03-28
+ * 文件:	system.cpp
+ * 描述:	参见 system.h
+ * 作者:	wu.xiongxing					
+ * 邮箱:	wxxweb@gmail.com
+ * 日期:	2014-03-28
+ * 修改:	2015-05-22
  ******************************************************************************/
 
 #include "stdafx.h"
@@ -15,6 +16,9 @@
 
 W2X_NAME_SPACE_BEGIN
 W2X_DEFINE_NAME_SPACE_BEGIN(sys)
+
+
+#define REG_SUB_KEY_AUTORUN TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run")
 
 
 W2X_COMMON_API FARPROC GetLibraryProcAddress(
@@ -33,7 +37,7 @@ W2X_COMMON_API FARPROC GetLibraryProcAddress(
 		const DWORD last_error = ::GetLastError();
 		TCHAR err_str[MAX_PATH] = TEXT("");
 		debug::FormatError(err_str, MAX_PATH, last_error);
-		log::LogError(TEXT("[GetLibraryProc] LoadLibrary: %s - (%d) %s"), 
+		log::LogError(TEXT("[GetLibraryProc] LoadLibrary: %s - (%lu) %s"), 
 			_lib_name, last_error, err_str);
 		ASSERT(NULL != (*_lib_handle_ptr));
 		return NULL;
@@ -45,7 +49,7 @@ W2X_COMMON_API FARPROC GetLibraryProcAddress(
 		const DWORD last_error = ::GetLastError();
 		TCHAR err_str[MAX_PATH] = TEXT("");
 		debug::FormatError(err_str, MAX_PATH, last_error);
-		log::LogError(TEXT("[GetLibraryProc] GetProcAddress: %s: %s - (%d) %s"), 
+		log::LogError(TEXT("[GetLibraryProc] GetProcAddress: %s: %s - (%lu) %s"), 
 			_lib_name, _proc_name, last_error, err_str);
 		ASSERT(NULL != proc_addr);
 
@@ -68,13 +72,13 @@ W2X_COMMON_API bool IsOcxRegistered(CLSID _cls_id)
 
 	HKEY key_handle = NULL;
 	LSTATUS status = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, 
-		sub_key_str, 0, KEY_READ, &key_handle);
+		sub_key_str, 0, KEY_READ | KEY_WOW64_64KEY, &key_handle);
 
 	IF_FALSE_ASSERT (ERROR_SUCCESS == status) 
 	{
 		TCHAR err_str[MAX_PATH] = TEXT("");
 		debug::FormatError(err_str, MAX_PATH, status);
-		log::LogWarn(TEXT("[IsOcxRegistered] %s - (%d) %s"), 
+		log::LogWarn(TEXT("[IsOcxRegistered] %s - (%lu) %s"), 
 			cls_id_str, status, err_str);
 		return false;
 	}
@@ -89,7 +93,7 @@ W2X_COMMON_API bool IsOcxRegistered(CLSID _cls_id)
 	{
 		TCHAR err_str[MAX_PATH] = TEXT("");
 		debug::FormatError(err_str, MAX_PATH, status);
-		log::LogWarn(TEXT("[IsOcxRegistered] %s - (%d) %s"), 
+		log::LogWarn(TEXT("[IsOcxRegistered] %s - (%lu) %s"), 
 			cls_id_str, status, err_str);
 
 		::RegCloseKey(key_handle);
@@ -124,7 +128,7 @@ W2X_COMMON_API bool RegisterOcx(LPCTSTR _ocx_path)
 			const DWORD last_error = ::GetLastError();
 			TCHAR err_str[MAX_PATH] = TEXT("");
 			debug::FormatError(err_str, MAX_PATH, last_error);
-			log::LogError(TEXT("[RegisterOcx] %s - (%d) %s"), 
+			log::LogError(TEXT("[RegisterOcx] %s - (%lu) %s"), 
 				_ocx_path, last_error, err_str);
 
 			ASSERT(SUCCEEDED(call_result));
@@ -154,7 +158,7 @@ W2X_COMMON_API bool UnregisterOcx(LPCTSTR _ocx_path)
 			const DWORD last_error = ::GetLastError();
 			TCHAR err_str[MAX_PATH] = TEXT("");
 			debug::FormatError(err_str, MAX_PATH, last_error);
-			log::LogError(TEXT("[RegisterOcx] %s - (%d) %s"), 
+			log::LogError(TEXT("[RegisterOcx] %s - (%lu) %s"), 
 				_ocx_path, last_error, err_str);
 
 			ASSERT(SUCCEEDED(call_result));
@@ -167,6 +171,77 @@ W2X_COMMON_API bool UnregisterOcx(LPCTSTR _ocx_path)
 	}
 
 	return false;
+}
+
+
+W2X_COMMON_API bool RegisterAutorun(LPCTSTR _name, LPCTSTR _command)
+{
+	IF_NULL_ASSERT_RETURN_VALUE(_name, false);
+	IF_NULL_ASSERT_RETURN_VALUE(_command, false);
+
+	HKEY reg_key = NULL;
+	LSTATUS status = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		REG_SUB_KEY_AUTORUN, 0, KEY_WRITE | KEY_WOW64_64KEY, &reg_key);
+
+	IF_FALSE_ASSERT (ERROR_SUCCESS == status) {
+		TCHAR err_str[MAX_PATH] = TEXT("");
+		debug::FormatError(err_str, MAX_PATH, status);
+		log::LogError(TEXT("[RegisterAutorun] [%s=%s] - (%lu) %s"),
+			_name, _command, status, err_str);
+		return false;
+	}
+
+	const DWORD data_bytes = _tcslen(_command) * sizeof(TCHAR);
+	status = ::RegSetValueEx(reg_key, _name, 0, REG_SZ,
+		reinterpret_cast<const BYTE*>(_command), data_bytes);
+
+	IF_FALSE_ASSERT (ERROR_SUCCESS == status) {
+		TCHAR err_str[MAX_PATH] = TEXT("");
+		debug::FormatError(err_str, MAX_PATH, status);
+		log::LogError(TEXT("[RegisterAutorun] [%s=%s] - (%lu) %s"),
+			_name, _command, status, err_str);
+		::RegCloseKey(reg_key);
+		reg_key = NULL;
+		return false;
+	}
+
+	::RegCloseKey(reg_key);
+	reg_key = NULL;
+	return true;
+}
+
+
+W2X_COMMON_API bool UnregisterAutorun(LPCTSTR _name)
+{
+	IF_NULL_ASSERT_RETURN_VALUE(_name, false);
+
+	HKEY reg_key = NULL;
+	LSTATUS status = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		REG_SUB_KEY_AUTORUN, 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, &reg_key);
+
+	IF_FALSE_ASSERT (ERROR_SUCCESS == status) {
+		TCHAR err_str[MAX_PATH] = TEXT("");
+		debug::FormatError(err_str, MAX_PATH, status);
+		log::LogError(TEXT("[UnregisterAutorun] [%s] - (%lu) %s"),
+			_name, status, err_str);
+		return false;
+	}
+
+	status = ::RegDeleteValue(reg_key, _name);
+
+	IF_FALSE_ASSERT (ERROR_SUCCESS == status) {
+		TCHAR err_str[MAX_PATH] = TEXT("");
+		debug::FormatError(err_str, MAX_PATH, status);
+		log::LogError(TEXT("[UnregisterAutorun] [%s] - (%lu) %s"),
+			_name, status, err_str);
+		::RegCloseKey(reg_key);
+		reg_key = NULL;
+		return false;
+	}
+
+	::RegCloseKey(reg_key);
+	reg_key = NULL;
+	return true;
 }
 
 

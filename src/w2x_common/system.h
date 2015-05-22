@@ -1,10 +1,10 @@
 /*******************************************************************************
-文件:	system.h
-描述:	定义一些系统相关的函数。
-作者:	wu.xiongxing					
-邮箱:	wxxweb@gmail.com
-日期:	2014-03-28
-修改:	2014-05-21
+ * 文件:	system.h
+ * 描述:	定义一些系统相关的函数。
+ * 作者:	wu.xiongxing					
+ * 邮箱:	wxxweb@gmail.com
+ * 日期:	2014-03-28
+ * 修改:	2015-05-22
 *******************************************************************************/
 
 #ifndef __W2X_COMMON_SYSTEM_H__
@@ -33,6 +33,10 @@ W2X_COMMON_API bool IsOcxRegistered(CLSID _cls_id);
 W2X_COMMON_API bool RegisterOcx(LPCTSTR _ocx_path);
 
 W2X_COMMON_API bool UnregisterOcx(LPCTSTR _ocx_path);
+
+W2X_COMMON_API bool RegisterAutorun(LPCTSTR _name, LPCTSTR _command);
+
+W2X_COMMON_API bool UnregisterAutorun(LPCTSTR _name);
 
 W2X_DEFINE_NAME_SPACE_END(sys)
 W2X_NAME_SPACE_END
