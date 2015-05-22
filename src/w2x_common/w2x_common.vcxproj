@@ -135,6 +135,8 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="macros.h" />
     <ClInclude Include="thread.h" />
+    <ClInclude Include="timer.h" />
+    <ClInclude Include="timer_event.h" />
     <ClInclude Include="variable.h" />
     <ClInclude Include="version.h" />
     <ClInclude Include="w2x_common.h" />
@@ -171,6 +173,8 @@
     <ClCompile Include="system.cpp" />
     <ClCompile Include="sys_tray.cpp" />
     <ClCompile Include="thread.cpp" />
+    <ClCompile Include="timer.cpp" />
+    <ClCompile Include="timer_event.cpp" />
     <ClCompile Include="variable.cpp" />
     <ClCompile Include="version.cpp" />
   </ItemGroup>
