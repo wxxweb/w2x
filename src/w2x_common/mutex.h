@@ -1,11 +1,11 @@
 /******************************************************************************
-文件:	mutex.h
-描述:	提供线程同步的相关帮助器，如互斥体、临界代码段保护等.
-作者:	wu.xiongxing					
-邮箱:	wxxweb@gmail.com
-日期:	2013-12-10
-修改:	2014-07-02
-*******************************************************************************/
+ * 文件:	mutex.h
+ * 描述:	提供线程同步的相关帮助器，如互斥体、临界代码段保护等.
+ * 作者:	wu.xiongxing					
+ * 邮箱:	wxxweb@gmail.com
+ * 日期:	2013-12-10
+ * 修改:	2015-05-22
+ ******************************************************************************/
 
 #ifndef __W2X_COMMON_MUTEX_H__
 #define __W2X_COMMON_MUTEX_H__
@@ -13,8 +13,8 @@
 #include "macros.h"
 
 /** 对一个 32 位的变量进行原子递增及递减 */
-#define W2X_ATOMIC_INCREMENT(ptr) InterlockedIncrement(ptr)
-#define W2X_ATOMIC_DECREMENT(ptr) InterlockedDecrement(ptr)
+#define W2X_ATOMIC_INCREMENT(num) InterlockedIncrement(&num)
+#define W2X_ATOMIC_DECREMENT(num) InterlockedDecrement(&num)
 
 
 W2X_NAME_SPACE_BEGIN
