@@ -1,9 +1,10 @@
 /******************************************************************************
- * 文件:		process.cpp
- * 描述:		参见 process.h
- * 作者:		wu.xiongxing					
- * 邮箱:		wxxweb@gmail.com
- * 日期:		2014-03-27
+ * 文件:	process.cpp
+ * 描述:	参见 process.h
+ * 作者:	wu.xiongxing					
+ * 邮箱:	wxxweb@gmail.com
+ * 日期:	2014-03-27
+ * 修改:	2015-05-22
  ******************************************************************************/
 
 #include "stdafx.h"
@@ -148,7 +149,7 @@ W2X_COMMON_API DWORD GetProcessName(
 		return (0 > written) ? 0 : static_cast<DWORD>(written);
 	}
 
-	memset(_buffer, 0, _size_in_words);
+	memset(_buffer, 0, _size_in_words * sizeof(TCHAR));
 	TCHAR module_name[MAX_PATH] = TEXT("");
 	if ((false == _full_file_name && 
 		::GetModuleBaseName(process_handle, NULL, module_name, MAX_PATH) == 0) ||
