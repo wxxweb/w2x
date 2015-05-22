@@ -1,9 +1,10 @@
 /******************************************************************************
-文件:	msg_loop.cpp
-描述:	参见 msg_loop.h
-作者:	wu.xiongxing
-邮箱:	wxxweb@gmail.com
-日期:	2013-12-10
+ * 文件:	msg_loop.cpp
+ * 描述:	参见 msg_loop.h
+ * 作者:	wu.xiongxing
+ * 邮箱:	wxxweb@gmail.com
+ * 日期:	2013-12-10
+ * 修改:	2015-05-22
  ******************************************************************************/
 
 #include "stdafx.h"
@@ -52,8 +53,6 @@ public:
 	inline void StopLoopThread(void);
 
 private:
-//	inline size_t GetMsgQueueSize(void);
-
 	inline size_t GetFrontMsgLength(void);
 
 	inline bool QuitMsg(void);
@@ -74,7 +73,6 @@ private:
 
 private:
 	HANDLE		m_msg_event_handle;
-//	HANDLE		m_loop_thread_handle;
 	MsgQueue	m_msg_queue;
 	MsgHandler	m_msg_handler;
 	PVOID		m_handler_param;
@@ -87,7 +85,6 @@ W2X_IMPLEMENT_LOCKING_CLASS(CMsgLoop::CImpl, CAutoLock)
 
 CMsgLoop::CImpl::CImpl(void)
 	: m_msg_event_handle(NULL)
-//	, m_loop_thread_handle(NULL)
 	, m_msg_handler(NULL)
 	, m_handler_param(NULL)
 	, m_loop_thread(new CThread(TEXT("MsgLoop")))
@@ -143,8 +140,7 @@ inline bool CMsgLoop::CImpl::EnterMsg(
 	Msg msg = {0};
 	msg.param = _msg_param;
 	msg.bytes = (0 == _bytes) ? ((_tcslen(_msg) + 1) * sizeof(TCHAR)) : _bytes;
-	LPTSTR buffer = reinterpret_cast<LPTSTR>(new BYTE[msg.bytes]);
-	msg.msg = buffer;
+	msg.msg = reinterpret_cast<LPTSTR>(new BYTE[msg.bytes]);
 	memcpy((void*)msg.msg, (void*)_msg, msg.bytes);
 
 	CImpl::LockThis();
@@ -157,11 +153,6 @@ inline bool CMsgLoop::CImpl::EnterMsg(
 	return true;
 }
 
-// inline size_t CMsgLoop::CImpl::GetMsgQueueSize(void)
-// {
-// 	CAutoLock autoLock(this);
-// 	return m_msg_queue.size();
-// }
 
 inline size_t CMsgLoop::CImpl::GetFrontMsgLength(void)
 {
@@ -196,7 +187,7 @@ inline bool CMsgLoop::CImpl::GetFrontMsg(
 		return false;
 	}
 
-	Msg& msg_ref = m_msg_queue.front();
+	const Msg& msg_ref = m_msg_queue.front();
 	_msg_param = msg_ref.param;
 	if (_bytes >= msg_ref.bytes)
 	{
@@ -326,12 +317,12 @@ UINT CMsgLoop::CImpl::LoopThread(PVOID _thread_param)
 		if (false == this_ptr->GetFrontMsg(msg_buffer, bytes, msg_param))
 		{
 			this_ptr->QuitMsg();
+			SAFE_DELETE_ARRAY(msg_buffer);
 			continue;
 		}
 		this_ptr->HandleMsg(msg_buffer, bytes, msg_param);
 
-		delete[] msg_buffer;
-		msg_buffer = NULL;
+		SAFE_DELETE_ARRAY(msg_buffer);
 		this_ptr->QuitMsg();
 	}
 
