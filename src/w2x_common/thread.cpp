@@ -1,11 +1,11 @@
 /******************************************************************************
-文件:	thread.cpp
-描述:	参见 thread.h
-作者:	wu.xiongxing					
-邮箱:	wxxweb@gmail.com
-日期:	2014-04-01
-修改:	2014-05-21
-*******************************************************************************/
+ * 文件:	thread.cpp
+ * 描述:	参见 thread.h
+ * 作者:	wu.xiongxing					
+ * 邮箱:	wxxweb@gmail.com
+ * 日期:	2014-04-01
+ * 修改:	2015-05-22
+ ******************************************************************************/
 
 #include "stdafx.h"
 #include "thread.h"
@@ -74,7 +74,7 @@ DWORD CThread::CImpl::sm_obj_count = 0;
 
 
 CThread::CImpl::CImpl(LPCTSTR _name)
-	: m_obj_id(W2X_ATOMIC_INCREMENT(&sm_obj_count))
+	: m_obj_id(::InterlockedIncrement(&sm_obj_count))
 	, m_thread_id(0)
 	, m_obj_name(NULL)
 	, m_handle(NULL)
@@ -89,6 +89,7 @@ CThread::CImpl::CImpl(LPCTSTR _name)
 			_stprintf_s(m_obj_name, count, _name, m_obj_id);
 		}
 		catch(std::exception e) {
+			SAFE_DELETE_ARRAY(m_obj_name);
 			m_obj_name = TEXT("w2x:thread:unnamed(null)");
 			::MessageBoxA(NULL, e.what(), "w2x:thread:unnamed", MB_ICONERROR);
 		}
@@ -102,6 +103,7 @@ CThread::CImpl::CImpl(LPCTSTR _name)
 			m_obj_name[len] = TEXT('\0');
 		}
 		catch (std::exception e) {
+			SAFE_DELETE_ARRAY(m_obj_name);
 			m_obj_name = TEXT("w2x:thread:name(null)");
 			MessageBoxA(NULL, e.what(), "w2x:thread:name", MB_ICONERROR);
 		}
@@ -322,7 +324,7 @@ CThread::CThread(LPCTSTR _name)
 
 CThread::~CThread(void)
 {
-	SAFE_DELETE(const_cast<CImpl*>(m_impl_ptr));
+	delete m_impl_ptr;
 }
 
 
