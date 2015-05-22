@@ -1,9 +1,10 @@
 /******************************************************************************
- * 文件:		command.cpp
- * 描述:		参见 command.h
- * 作者:		wu.xiongxing
- * 邮箱:		wxxweb@gmail.com
- * 时间:		2014-01-21
+ * 文件:	command.cpp
+ * 描述:	参见 command.h
+ * 作者:	wu.xiongxing
+ * 邮箱:	wxxweb@gmail.com
+ * 时间:	2014-01-21
+ * 修改:	2015-05-22
  ******************************************************************************/
 
 #include "stdafx.h"
@@ -291,7 +292,7 @@ LPTSTR CCommand::CImpl::GetOutput(LPTSTR str_buffer, size_t size_in_bytes)
 	
 	IF_FALSE_ASSERT (output_str_bytes > size_in_bytes)
 	{
-		memset(str_buffer, 0, size_in_bytes * sizeof(TCHAR));
+		memset(str_buffer, 0, size_in_bytes);
 		return NULL;
 	}
 
