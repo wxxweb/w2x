@@ -1,10 +1,11 @@
 /******************************************************************************
- * 文件:		sys_tray.cpp
- * 描述:		参见 sys_tray.h
- * 作者:		wu.xiongxing					
- * 邮箱:		wxxweb@gmail.com
- * 日期:		2014-03-17
-*******************************************************************************/
+ * 文件:	sys_tray.cpp
+ * 描述:	参见 sys_tray.h
+ * 作者:	wu.xiongxing					
+ * 邮箱:	wxxweb@gmail.com
+ * 日期:	2014-03-17
+ * 修改:	2015-05-22
+ ******************************************************************************/
 
 #include "stdafx.h"
 #include "sys_tray.h"
@@ -21,11 +22,10 @@ public:
 	~CImpl(void);
 
 public:
-	void Initialise(void);
 	void InstallIconPending(void);
 
 	bool Create(
-		HWND _main_wnd, UINT _callback_msg_id, LPCTSTR _tip, 
+		HWND _parent, UINT _callback_msg_id, LPCTSTR _tip, 
 		HICON _icon, UINT _menu_id, bool _is_hidden = false
 		);
 
@@ -47,6 +47,7 @@ private:
 
 private:
 	HWND			m_icon_wnd;				// 托盘图标的窗口句柄
+	HWND			m_parent_hwnd;
 	HICON			m_icon_handle;
 	NOTIFYICONDATA	m_icon_data;
 	bool            m_is_hidden;			// 托盘图标是否被隐藏
@@ -65,8 +66,18 @@ HINSTANCE CSysTray::CImpl::sm_app_instance = ::GetModuleHandle(NULL);
 
 
 CSysTray::CImpl::CImpl(void)
+	: m_icon_wnd(NULL)
+	, m_parent_hwnd(NULL)
+	, m_icon_handle(NULL)
+	, m_is_hidden(true)
+	, m_is_removed(true)
+	, m_is_show_icon_pending(false)
+	, m_creation_flags(0)
+	, m_def_menu_item_id(0)
+	, m_def_menu_item_by_pos(0)
+	, m_taskbar_created_msg(0)
 {
-	this->Initialise();
+	memset(&m_icon_data, 0, sizeof(m_icon_data));
 }
 
 
@@ -80,30 +91,17 @@ CSysTray::CImpl::~CImpl(void)
 }
 
 
-void CSysTray::CImpl::Initialise(void)
-{
-	memset(&m_icon_data, 0, sizeof(m_icon_data));
-
-	m_icon_wnd = NULL;
-	m_icon_handle = NULL;
-	m_is_hidden = true;
-	m_is_removed = true;
-	m_is_show_icon_pending = false;
-	m_creation_flags = 0;
-	m_def_menu_item_id = 0;
-	m_def_menu_item_by_pos = 0;
-	m_taskbar_created_msg = 0;
-	
-}
-
-
 bool CSysTray::CImpl::Create(
-	HWND _target_wnd, UINT _callback_msg_id, LPCTSTR _tip, 
+	HWND _parent, UINT _callback_msg_id, LPCTSTR _tip, 
 	HICON _icon, UINT _menu_id, bool _is_hidden
 	)
 {
 	// 要避免和其他系统消息冲突
-	ASSERT(_callback_msg_id >= WM_APP);
+	IF_FALSE_ASSERT (_callback_msg_id >= WM_APP) {
+		return false;
+	}
+
+	m_parent_hwnd = _parent;
 
 	IF_NULL_ASSERT (_tip) {
 		_tip = TEXT("System Tray Tip");
@@ -136,10 +134,10 @@ bool CSysTray::CImpl::Create(
 	m_icon_wnd = ::CreateWindowEx(
 		WS_EX_TOOLWINDOW, wnd_class_name, TEXT(""), WS_POPUP, 
 		0,0,0,0, NULL, NULL, sm_app_instance, static_cast<LPVOID>(this));
-
+	IF_NULL_ASSERT_RETURN_VALUE(m_icon_wnd, false);
 
 	m_icon_data.cbSize = sizeof(NOTIFYICONDATA);
-	m_icon_data.hWnd   = NULL != _target_wnd ? _target_wnd : m_icon_wnd;
+	m_icon_data.hWnd   = m_icon_wnd;
 	m_icon_data.uID    = _menu_id;
 	m_icon_data.hIcon  = _icon;
 	m_icon_data.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
@@ -323,42 +321,57 @@ void CSysTray::CImpl::OnTrayNotification(WPARAM wParam, LPARAM lParam)
 	if (wParam != m_icon_data.uID) {
 		return;
 	}
-	HWND target_wnd = m_icon_data.hWnd;
-	if (NULL == target_wnd) {
-		return;
-	}
-	HMENU menu = NULL;
-	HMENU sub_menu = NULL;
-
+	
 	// Clicking with right button brings up a context menu
 	if (LOWORD(lParam) == WM_RBUTTONUP)
-	{    
-		menu = ::LoadMenu(sm_app_instance, MAKEINTRESOURCE(m_icon_data.uID));
+	{   
+		::PostMessage(m_parent_hwnd, m_icon_data.uCallbackMessage, wParam, lParam);
+
+		if (0 == m_icon_data.uID) {
+			return;
+		}
+
+		IF_NULL_ASSERT_RETURN(m_icon_data.hWnd);
+
+		HMENU menu = ::LoadMenu(sm_app_instance, MAKEINTRESOURCE(m_icon_data.uID));
 		IF_NULL_ASSERT_RETURN(menu);
 
-		sub_menu = ::GetSubMenu(menu, 0);
+		HMENU sub_menu = ::GetSubMenu(menu, 0);
 		IF_NULL_ASSERT_RETURN(sub_menu);
 
 		// Make chosen menu item the default (bold font)
 		::SetMenuDefaultItem(sub_menu, m_def_menu_item_id, m_def_menu_item_by_pos);
 
 		// Display and track the popup menu
+
 		POINT pos = {0};
 		::GetCursorPos(&pos);
-		::SetForegroundWindow(target_wnd); 
-		::TrackPopupMenu(sub_menu, 0, pos.x, pos.y, 0, target_wnd, NULL);
-		::PostMessage(target_wnd, WM_NULL, 0, 0);
+		::SetForegroundWindow(m_icon_data.hWnd); 
+		::TrackPopupMenu(sub_menu, 0, pos.x, pos.y, 0, m_icon_data.hWnd, NULL);
+		::PostMessage(m_icon_data.hWnd, WM_NULL, 0, 0);
 		::DestroyMenu(menu);
-	} 
+	}
 	else if (LOWORD(lParam) == WM_LBUTTONDBLCLK) 
 	{
+		::PostMessage(m_parent_hwnd, m_icon_data.uCallbackMessage, wParam, lParam);
+		::PostMessage(m_parent_hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
+		::SetForegroundWindow(m_parent_hwnd);
+	}
+	else if (LOWORD(lParam) == WM_LBUTTONDOWN)
+	{
+		::PostMessage(m_parent_hwnd, m_icon_data.uCallbackMessage, wParam, lParam);
+
+		if (0 == m_icon_data.uID) {
+			return;
+		}
+
 		UINT item_id = 0;
 		if (0 != m_def_menu_item_by_pos)
 		{
-			menu = ::LoadMenu(sm_app_instance, MAKEINTRESOURCE(m_icon_data.uID));
+			HMENU menu = ::LoadMenu(sm_app_instance, MAKEINTRESOURCE(m_icon_data.uID));
 			IF_NULL_ASSERT_RETURN(menu);
 
-			sub_menu = ::GetSubMenu(menu, 0);
+			HMENU sub_menu = ::GetSubMenu(menu, 0);
 			IF_NULL_ASSERT_RETURN(sub_menu);
 
 			item_id = ::GetMenuItemID(sub_menu, m_def_menu_item_id);
@@ -368,8 +381,7 @@ void CSysTray::CImpl::OnTrayNotification(WPARAM wParam, LPARAM lParam)
 		{
 			item_id = m_def_menu_item_id;
 		}
-		::PostMessage(target_wnd, WM_COMMAND, item_id, 0);
-		::SetForegroundWindow(target_wnd);
+		::PostMessage(m_parent_hwnd, WM_COMMAND, item_id, 0);
 	}
 }
 

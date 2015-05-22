@@ -1,11 +1,11 @@
 /******************************************************************************
-文件:	sys_tray.h
-描述:	用于构建系统托盘图标及添加托盘图标右键菜单等。
-作者:	wu.xiongxing					
-邮箱:	wxxweb@gmail.com
-日期:	2014-03-17
-修改:	2014-05-21
-*******************************************************************************/
+ * 文件:	sys_tray.h
+ * 描述:	用于构建系统托盘图标及添加托盘图标右键菜单等。
+ * 作者:	wu.xiongxing					
+ * 邮箱:	wxxweb@gmail.com
+ * 日期:	2014-03-17
+ * 修改:	2015-05-22
+ ******************************************************************************/
 
 #ifndef __W2X_COMMON_SYS_TRAY_H__
 #define __W2X_COMMON_SYS_TRAY_H__
@@ -29,8 +29,12 @@ public:
 W2X_IMPLEMENT_REFCOUNTING(CSysTray)
 
 public:
+	/**
+	 * 构建系统托盘图标。
+	 * @param _main_wnd 
+	 */
 	bool Create(
-		HWND _main_wnd, UINT _callback_msg_id, LPCTSTR _tip, 
+		HWND _parent, UINT _callback_msg_id, LPCTSTR _tip, 
 		HICON _icon, UINT _menu_id, bool _is_hidden = false
 		);
 
