@@ -67,11 +67,12 @@ bool CCefWebBrowser::Create(
 	} else {
 		_tcscpy_s(path, _url);
 	}
-	if (true == m_impl_ptr->Create(path, _parent_hwnd, _handler))
-	{
-		if (NULL != _handler) {
-			_handler->RegisterWebBrowser(this);
-		}
+	
+	if (NULL != _handler) {
+		const_cast<CCefWebBrowser*>(_handler->m_browser) = this;
+	}
+
+	if (true == m_impl_ptr->Create(path, _parent_hwnd, _handler)) {
 		return true;
 	}
 	return false;
@@ -79,12 +80,22 @@ bool CCefWebBrowser::Create(
 
 void CCefWebBrowser::Destory(void)
 {
-	return m_impl_ptr->Close();
+	m_impl_ptr->Close();
+	ICefWebBrowserEventHandler* event_handler = m_impl_ptr->GetEventHandler();
+	if (NULL != event_handler) {
+		const_cast<CCefWebBrowser*>(event_handler->m_browser) = NULL;
+	}
+	
 }
 
-bool CCefWebBrowser::MoveBrowser(int _x, int _y, int _width, int _height)
+bool CCefWebBrowser::MoveBrowser(int _x, int _y)
 {
-	return m_impl_ptr->MoveBrowser(_x, _y, _width, _height);
+	return m_impl_ptr->MoveBrowser(_x, _y);
+}
+
+bool CCefWebBrowser::ChangeBrowserSize(int _width, int _height)
+{
+	return m_impl_ptr->ChangeBrowserSize(_width, _height);
 }
 
 TSTDSTR CCefWebBrowser::GetUrl(void) const
@@ -97,7 +108,7 @@ bool CCefWebBrowser::LoadUrl(LPCTSTR _url)
 	return m_impl_ptr->LoadUrl(_url);
 }
 
-bool CCefWebBrowser::ExecuteJsCode(const TSTDSTR& _js_code)
+bool CCefWebBrowser::ExecuteJsCode(LPCTSTR _js_code)
 {
 	return m_impl_ptr->AddJsCode(_js_code);
 }

@@ -11,41 +11,19 @@
 #define __W2X_CEF_WEB_BROWSER_EVENT_HANDLER_H__
 #pragma once
 
-#include <string>
 
-#ifdef W2X_CEF_EXPORTS
-#  ifndef  W2X_CEF_API
-#    define W2X_CEF_API __declspec(dllexport)
-#  endif
-#else
-#  ifndef W2X_CEF_API
-#    define W2X_CEF_API __declspec(dllimport)
-#  endif
-#endif
+#include "cef_web_browser.h"
 
-/** 根据UNICODE决定使用宽字符或多字符版C++字符串 */
-#ifndef TSTDSTR
-#  ifdef UNICODE
-#    define TSTDSTR std::wstring
-#  else
-#    define TSTDSTR std::string
-#  endif
-#endif
 
-class ICefWebBrowser;
-
-class ICefWebBrowserEventHandler
+class W2X_CEF_API ICefWebBrowserEventHandler
 {
+	friend class CCefWebBrowser;
+
 public:
+	ICefWebBrowserEventHandler(void) : m_browser(NULL) {}
 	virtual ~ICefWebBrowserEventHandler(void) {}
 
 public:
-	/** 注册浏览器接口 */
-	virtual bool RegisterWebBrowser(ICefWebBrowser* _cef_web_browser) = 0;
-
-	/** 注销浏览器接口 */
-	virtual void UnregisterWebBrowser(void) = 0;
-
 	/** 当浏览器窗口被创建后回调 */
 	virtual void OnAfterCreated(const TSTDSTR& _startup_url) = 0;
 
@@ -82,10 +60,7 @@ public:
 	 * 执行 JS 的方法调用，传入方法的名称和参数字符串，并设置其返回值。
 	 * 当方法被处理返回 true。
 	 */
-	virtual bool OnJsInvoke(
-		LPCTSTR _fn_name,
-		LPCTSTR _args
-		) = 0;
+	virtual bool OnJsInvoke(LPCTSTR _fn_name, LPCTSTR _args) = 0;
 
 	/** 当接收到控制台消息时被回调 */
 	virtual void OnConsoleMessage(const TSTDSTR& _msg) = 0;
@@ -98,6 +73,9 @@ public:
 		int _line_num,
 		int _column
 		) = 0;
+
+protected:
+	CCefWebBrowser* const m_browser;
 };
 
 #endif ///< __W2X_CEF_WEB_BROWSER_EVENT_HANDLER_H__

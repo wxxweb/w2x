@@ -30,9 +30,6 @@
     <ClInclude Include="cef_web_browser_event_handler_i.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="cef_web_browser_i.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="cef_web_browser_impl.h">
       <Filter>头文件</Filter>
     </ClInclude>

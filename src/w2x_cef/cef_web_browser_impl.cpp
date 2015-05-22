@@ -286,6 +286,8 @@ void CCefWebBrowserImpl::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 		if (0 < (m_rect.right - m_rect.left) && 0 < (m_rect.bottom - m_rect.left)) {
 			::MoveWindow(m_browser_hwnd, m_rect.left, m_rect.top, 
 				m_rect.right - m_rect.left, m_rect.bottom - m_rect.top, FALSE);
+		} else {
+			::ShowWindow(m_browser_hwnd, SW_HIDE);
 		}
 
 		if (NULL != m_event_handler)
@@ -301,7 +303,6 @@ void CCefWebBrowserImpl::OnBeforeClose(CefRefPtr<CefBrowser> browser)
 
 	if (NULL != m_event_handler)
 	{
-		m_event_handler->UnregisterWebBrowser();
 		m_event_handler->OnBeforeClose();
 		m_event_handler = NULL;
 	}
@@ -566,10 +567,9 @@ void CCefWebBrowserImpl::OnUncaughtException(CefRefPtr<CefBrowser> browser,
 //   return false;
 // }
 
-bool CCefWebBrowserImpl::ExecuteJsCode(const TSTDSTR& _js_code)
+bool CCefWebBrowserImpl::ExecuteJsCode(const LPCTSTR _js_code)
 {
-	if (NULL == m_browser)
-	{
+	if (NULL == m_browser || NULL == _js_code) {
 		return false;
 	}
 
@@ -605,7 +605,7 @@ bool CCefWebBrowserImpl::CallJsFunction(
 
 bool CCefWebBrowserImpl::Create(
 	const CefString& _url,
-	CefWindowHandle _parent_hwnd, 
+	CefWindowHandle _parent_hwnd,
 	ICefWebBrowserEventHandler* _handler
 	)
 {
@@ -965,7 +965,6 @@ void CCefWebBrowserImpl::Close(void)
 {
 	if (NULL != m_event_handler)
 	{
-		m_event_handler->UnregisterWebBrowser();
 		m_event_handler->OnBeforeClose();
 		m_event_handler = NULL;
 	}
@@ -977,15 +976,30 @@ void CCefWebBrowserImpl::Close(void)
 	}
 }
 
-bool CCefWebBrowserImpl::MoveBrowser(int _x, int _y, int _width, int _height)
+bool CCefWebBrowserImpl::MoveBrowser(int _x, int _y)
 {
+	m_rect.right = _x + (m_rect.right - m_rect.left);
+	m_rect.bottom = _y + (m_rect.bottom - m_rect.top);
 	m_rect.left = _x;
 	m_rect.top = _y;
+	
+
+	if (NULL != m_browser_hwnd) {
+		::SetWindowPos(m_browser_hwnd, NULL, _x, _y, 0, 0,
+			SWP_ASYNCWINDOWPOS | SWP_NOSIZE | SWP_NOZORDER);
+	}
+
+	return false;
+}
+
+bool CCefWebBrowserImpl::ChangeBrowserSize(int _width, int _height)
+{
 	m_rect.right = m_rect.left + _width;
 	m_rect.bottom = m_rect.top + _height;
 
 	if (NULL != m_browser_hwnd) {
-		return TRUE == ::MoveWindow(m_browser_hwnd, _x, _y, _width, _height, FALSE);
+		::SetWindowPos(m_browser_hwnd, NULL, 0, 0, _width, _height,
+			SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOZORDER);
 	}
 
 	return false;
@@ -1025,6 +1039,13 @@ void CCefWebBrowserImpl::SetCaptionMargin(
 	m_caption_margin.top = _margin_top;
 	m_caption_margin.bottom = _height;
 }
+
+
+ICefWebBrowserEventHandler* CCefWebBrowserImpl::GetEventHandler(void) const
+{
+	return m_event_handler;
+}
+
 
 bool CCefWebBrowserImpl::AddThisPtr(CefWindowHandle _hwnd, CCefWebBrowserImpl* _ptr)
 {
@@ -1220,8 +1241,12 @@ bool CALLBACK CCefWebBrowserImpl::ProcJsCodeMsg(
 	return this_ptr->ExecuteJsCode(pszJsonMsg);
 }
 
-bool CCefWebBrowserImpl::AddJsCode(const TSTDSTR& _js_code)
+bool CCefWebBrowserImpl::AddJsCode(LPCTSTR _js_code)
 {
-	return m_cpp_msg_loop.AddMsg(_js_code.c_str(), 
-		(_js_code.length() + 1) * sizeof(TCHAR), NULL);
+	if (NULL == _js_code) {
+		_js_code = TEXT("alert(null)");
+		return false;
+	}
+	return m_cpp_msg_loop.AddMsg(_js_code,
+		(_tcslen(_js_code) + 1) * sizeof(TCHAR), NULL);
 }

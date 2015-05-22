@@ -13,14 +13,34 @@
 #define __W2X_CEF_WEB_BROWSER_H__
 #pragma once
 
+#include <string>
 
-#include "cef_web_browser_i.h"
+
+#ifdef W2X_CEF_EXPORTS
+#  ifndef  W2X_CEF_API
+#    define W2X_CEF_API __declspec(dllexport)
+#  endif
+#else
+#  ifndef W2X_CEF_API
+#    define W2X_CEF_API __declspec(dllimport)
+#  endif
+#endif
 
 
-class ICefWebBrowserEventHandler;
+/** 根据UNICODE决定使用宽字符或多字符版C++字符串 */
+#ifndef TSTDSTR
+#  ifdef UNICODE
+#    define TSTDSTR std::wstring
+#  else
+#    define TSTDSTR std::string
+#  endif
+#endif
+
+
 class CCefWebBrowserImpl;
+class ICefWebBrowserEventHandler;
 
-class W2X_CEF_API CCefWebBrowser: public ICefWebBrowser
+class W2X_CEF_API CCefWebBrowser
 {
 public:
 	/** 自定义协议处理器，传入捕获到的对应 URL */
@@ -40,17 +60,26 @@ public:
 public:
 	/**
 	 * @brief 执行 JavaScript 代码。
-	 * @see ICefWebBrowser
+	 *
+	 * 传入一段 JavaScript 字符串代码，交由 Web 页面执行，
+	 * 如传入字符串 "alert('Hello World');"，Web 页面将弹框显示 "Hello World"。
+	 *
+	 * @return 如果浏览器窗口未创建完成返回 false，否则返回 true。
 	 */
-	virtual bool ExecuteJsCode(const TSTDSTR& _js_code);
+	bool ExecuteJsCode(LPCTSTR _js_code);
 
 	/**
 	 * @brief 调用 JavaScript 函数。
-	 * @see ICefWebBrowser
+	 *
+	 * 根据指定的函数名称来调用 Web 页面中 JavaScript 函数。所调用函数在全局作用域，声明如下：
+	 * function _fn_name(_args);
+	 *
+	 * @param _fn_name 所调用的 JavaScript 函数名称。
+	 * @param _args 所调用的 JavaScript 函数的字符串参数，可传入 JSON 字符串来扩展参数。
+	 * @return 如果浏览器窗口未创建完成返回 false，否则返回 true。
 	 */
-	virtual bool CallJsFunction(const TSTDSTR& _fn_name, const TSTDSTR& _args);
+	bool CallJsFunction(const TSTDSTR& _fn_name, const TSTDSTR& _args);
 
-public:
 	/**
 	 * @brief 创建 Web 浏览器窗口。
 	 * 
@@ -72,8 +101,11 @@ public:
 	/** 获取浏览器窗口句柄。*/
 	HWND GetHwnd(void) const;
 
-	/** 移动及改变浏览器窗口位置及大小。*/
-	bool MoveBrowser(int _x, int _y, int _width, int _height);
+	/** 移动浏览器窗口位置。*/
+	bool MoveBrowser(int _x, int _y);
+
+	/** 改变浏览器窗口大小。*/
+	bool ChangeBrowserSize(int _width, int _height);
 
 	/**
 	 * @brief 设置标题栏矩形的高度及间距，用于鼠标拖动浏览器窗口。

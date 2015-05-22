@@ -196,7 +196,7 @@ public:
 public:
 	bool Create(
 		const CefString& url = "about:blank",
-		CefWindowHandle _parent_hwnd = NULL, 
+		CefWindowHandle _parent_hwnd = NULL,
 		ICefWebBrowserEventHandler* _handler = NULL
 		);
 
@@ -214,7 +214,9 @@ public:
 
 	void Close(void);
 
-	bool MoveBrowser(int _x, int _y, int _width, int _height);
+	bool MoveBrowser(int _x, int _y);
+
+	bool ChangeBrowserSize(int _width, int _height);
 
 	void SetCaptionMargin(
 		int _height = 0, 
@@ -225,12 +227,14 @@ public:
 
 	bool AddExternal(const TSTDSTR& _fn_name);
 
-	bool AddJsCode(const TSTDSTR& _js_code);
+	bool AddJsCode(LPCTSTR _js_code);
 
 	bool CallJsFunction(
 		const TSTDSTR& _fn_name,
 		const TSTDSTR& _args
 		);
+
+	ICefWebBrowserEventHandler* GetEventHandler(void) const;
 
 	static bool Initialize(
 		LPCTSTR _locales_path,
@@ -257,7 +261,7 @@ private:
 	void AddDOMVisitor(const std::string& path, CefRefPtr<CefDOMVisitor> visitor);
 	CefRefPtr<CefDOMVisitor> GetDOMVisitor(const std::string& path);
 
-	bool ExecuteJsCode(const TSTDSTR& _js_code);
+	bool ExecuteJsCode(const LPCTSTR _js_code);
 
 	static bool AddThisPtr(CefWindowHandle _hwnd, CCefWebBrowserImpl* _ptr);
 	static bool RemoveThisPtr(CefWindowHandle _hwnd);
