@@ -1,10 +1,10 @@
 /******************************************************************************
- * 文件:		event_dispathcer.cpp
- * 描述:		参见 event_dispathcer.h
- * 作者:		wu.xiongxing					
- * 邮箱:		wxxweb@gmail.com
- * 创建:		2014-02-24
- * 修改:		2014-04-19
+ * 文件:	event_dispathcer.cpp
+ * 描述:	参见 event_dispathcer.h
+ * 作者:	wu.xiongxing					
+ * 邮箱:	wxxweb@gmail.com
+ * 创建:	2014-02-24
+ * 修改:	2015-05-22
  ******************************************************************************/
 
 #include "stdafx.h"
@@ -134,9 +134,9 @@ bool CEventDispatcher::CDispImpl::DispatchEvent(CEvent& _event)
 		listener->SetProtected(false);
 
 		if (false == listener->IsRegistered()) {
-			EventListeners::iterator itTemp = range.first;
+			EventListeners::iterator it_temp = range.first;
 			++(range.first);
-			m_listeners.erase(itTemp);
+			m_listeners.erase(it_temp);
 			if (range.first == range.second) {
 				return true;
 			}

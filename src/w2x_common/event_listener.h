@@ -1,13 +1,13 @@
 /*******************************************************************************
-文件:	event_listener.h
-描述:	定义事件监听器接口类 IEventListener，当你需要使用不同类型的回调函数来定制事件监听
-		器时，你需要继承这个接口类。通过它，你可以将全局函数/类静态成员函数和类成员函数作为
-		事件回调函数。
-作者:	wu.xiongxing					
-邮箱:	wxxweb@gmail.com
-日期:	2014-08-13
-修改:
-*******************************************************************************/
+ * 文件:	event_listener.h
+ * 描述:	定义事件监听器接口类 IEventListener，当你需要使用不同类型的回调函数来定制事件监听
+ *		器时，你需要继承这个接口类。通过它，你可以将全局函数/类静态成员函数和类成员函数作为
+ * 		事件回调函数。
+ * 作者:	wu.xiongxing
+ * 邮箱:	wxxweb@gmail.com
+ * 日期:	2014-08-13
+ * 修改:	2015-05-22
+ ******************************************************************************/
 
 #ifndef __W2X_COMMON_EVENT_LISTENER_H__
 #define __W2X_COMMON_EVENT_LISTENER_H__
@@ -88,6 +88,11 @@ public:
 	 */
 	virtual void Execute(CEvent& _event) = 0;
 };
+
+
+#define W2X_CREATE_EVENT_LISTENER(__listener_id__, __selector__, __target__) \
+    w2x::events::IEventListener::Create(__listener_id__, \
+        W2X_CALLBACK_1(__selector__, __target__))
 
 
 W2X_DEFINE_NAME_SPACE_END(events)

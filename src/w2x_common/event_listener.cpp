@@ -1,11 +1,11 @@
 /*******************************************************************************
-文件:	event_listener.cpp
-描述:	参见 event_listener.h
-作者:	wu.xiongxing					
-邮箱:	wxxweb@gmail.com
-日期:	2014-08-14
-修改:
-*******************************************************************************/
+ * 文件:	event_listener.cpp
+ * 描述:	参见 event_listener.h
+ * 作者:	wu.xiongxing					
+ * 邮箱:	wxxweb@gmail.com
+ * 日期:	2014-08-14
+ * 修改:	2015-05-22
+ ******************************************************************************/
 
 #include "stdafx.h"
 #include "event_listener.h"
@@ -91,9 +91,9 @@ inline bool CEventListener::IsSame(const EventListenerPtr& _right) const
 	if (right_ptr == this) {
 		return true;
 	}
-	if (right_ptr->GetCallback() == m_callback) {
-		return true;
-	}
+// 	if (right_ptr->GetCallback() == m_callback) {
+// 		return true;
+// 	}
 	if (0 == _tcscmp(m_listener_id, right_ptr->GetListenerId())) {
 		return true;
 	}
