@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{a31a5d81-7508-4ab9-9239-519e45f6b9b4}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{dcd1e62a-1e9a-45e5-aa02-a8eed1f67394}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{efdee4b1-e42a-4f6b-b7d7-5bd28bf32a1e}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="png.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngerror.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngget.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngmem.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngpread.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngread.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngrio.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngrtran.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngrutil.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngset.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngtrans.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngwio.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngwrite.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngwtran.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pngwutil.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="png.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pngconf.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pngdebug.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pnginfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pnglibconf.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pngpriv.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pngstruct.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\pngwin.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
