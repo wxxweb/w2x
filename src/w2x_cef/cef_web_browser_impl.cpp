@@ -234,8 +234,6 @@ private:
 	CustomSchemeHandler m_handler;
 };
 
-
-bool CCefWebBrowserImpl::sm_is_console_alloc = false;
 WNDPROC CCefWebBrowserImpl::sm_old_wnd_proc = NULL;
 CCefWebBrowserImpl::ThisPtrMap CCefWebBrowserImpl::sm_this_ptrs;
 CefCriticalSection CCefWebBrowserImpl::sm_this_ptrs_mutex;
@@ -399,7 +397,7 @@ bool CCefWebBrowserImpl::OnLoadError(
 	if (NULL != m_event_handler)
 	{
 		TSTDSTR text;
-		m_event_handler->OnLoadError(text, failedUrl, errorCode);
+		m_event_handler->OnLoadError(text, failedUrl, static_cast<CefErrorCode>(errorCode));
 		errorText = text;
 	}
 
@@ -421,26 +419,21 @@ void CCefWebBrowserImpl::OnNavStateChange(
 	}
 }
 
-bool CCefWebBrowserImpl::OnConsoleMessage(
-	CefRefPtr<CefBrowser> browser,
-	const CefString& message,
-	const CefString& source,
-	int line) 
-{
-	REQUIRE_UI_THREAD();
-
-	if (true == sm_is_console_alloc)
-	{
-		_ftprintf_s(stdout, TEXT("\nCEF> %s"), message.c_str());
-	}
-
-	if (NULL != m_event_handler)
-	{
-		m_event_handler->OnConsoleMessage(message);
-	}
-
-	return true;
-}
+// bool CCefWebBrowserImpl::OnConsoleMessage(
+// 	CefRefPtr<CefBrowser> browser,
+// 	const CefString& message,
+// 	const CefString& source,
+// 	int line) 
+// {
+// 	REQUIRE_UI_THREAD();
+// 
+// 	if (NULL != m_event_handler)
+// 	{
+// 		m_event_handler->OnConsoleMessage(message);
+// 	}
+// 
+// 	return true;
+// }
 
 // void CCefWebBrowserImpl::OnFocusedNodeChanged(CefRefPtr<CefBrowser> browser,
 //                                          CefRefPtr<CefFrame> frame,
@@ -502,24 +495,6 @@ void CCefWebBrowserImpl::OnUncaughtException(CefRefPtr<CefBrowser> browser,
 	CefRefPtr<CefV8Exception> exception,
 	CefRefPtr<CefV8StackTrace> stackTrace)
 {
-	if (true == sm_is_console_alloc)
-	{
-		_ftprintf_s(stderr,
-			TEXT("CEF>\n")
-			TEXT("CEF> [UNCAUGHT EXCPTION]\n")
-			TEXT("CEF>   DESC: %s\n")
-			TEXT("CEF>   FILE: %s\n")
-			TEXT("CEF>   LINE: %d\n")
-			TEXT("CEF>   COL:  %d\n")
-			TEXT("CEF>   SRC:  %s\n")
-			TEXT("CEF>\n"),
-			exception->GetMessage().c_str(),
-			exception->GetScriptResourceName().c_str(),
-			exception->GetLineNumber(),
-			exception->GetStartColumn(),
-			exception->GetSourceLine().c_str());
-	}
-
 	if (NULL != m_event_handler)
 	{
 		m_event_handler->OnUncaughtException(
@@ -846,7 +821,7 @@ LRESULT CCefWebBrowserImpl::OnRButtonDown(HWND hWnd, WPARAM wParam, LPARAM lPara
 		FRAME_CMD_GO_FORWARD, TEXT("前进"));
 	::AppendMenu(hMenu, MF_STRING | MF_POPUP, FRAME_CMD_SHOW_URL, TEXT("地址"));
 	::AppendMenu(hMenu, MF_STRING | MF_POPUP, FRAME_CMD_REFRESH, TEXT("刷新"));
-	::AppendMenu(hMenu, MF_STRING | MF_POPUP, FRAME_CMD_CONSOLE, TEXT("控制台"));
+	::AppendMenu(hMenu, MF_STRING | MF_POPUP, FRAME_CMD_SHOW_DEV_TOOLS, TEXT("调试器"));
 
 	POINT ptMouse = {0};
 	::GetCursorPos(&ptMouse);
@@ -892,26 +867,14 @@ LRESULT CCefWebBrowserImpl::OnCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		::MessageBox(NULL, 
 			this_ptr->m_browser->GetFocusedFrame()->GetURL().c_str(),
 			TEXT("URL"), MB_OK);
+		break;
+
+	case FRAME_CMD_SHOW_DEV_TOOLS:
 		this_ptr->m_browser->ShowDevTools();
 		break;
 
 	case FRAME_CMD_REFRESH:
 		this_ptr->m_browser->Reload();
-		break;
-
-	case FRAME_CMD_CONSOLE:
-		if (TRUE == ::AllocConsole())
-		{
-			FILE* pFile = NULL;
-			::freopen_s(&pFile, "CONOUT$", "w", stdout);
-			::freopen_s(&pFile, "CONOUT$", "w", stderr);
-			sm_is_console_alloc = true;
-		}
-		else
-		{
-			::FreeConsole();
-			sm_is_console_alloc = false;
-		}
 		break;
 
 	default:
@@ -1168,7 +1131,9 @@ void CCefWebBrowserImpl::Uninitialize(void)
 	{
 		::Sleep(100);
 	}
-	ASSERT(0 == sm_instance_count && timeout > total_time);
+
+	// this assert, what are you doing
+	// ASSERT(0 == sm_instance_count && timeout > total_time);
 
 	CefClearSchemeHandlerFactories();
 	CefShutdown();

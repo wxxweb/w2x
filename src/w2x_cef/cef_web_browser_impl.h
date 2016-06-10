@@ -45,11 +45,11 @@ class CCefWebBrowserImpl
 {
 public:
 	enum { 
-		FRAME_CMD_REFRESH		= 4001,
-		FRAME_CMD_CONSOLE		= 4002,
-		FRAME_CMD_GO_BACK		= 4003,
-		FRAME_CMD_GO_FORWARD	= 4004,
-		FRAME_CMD_SHOW_URL		= 4005,
+		FRAME_CMD_REFRESH		 = 4001,
+		FRAME_CMD_GO_BACK		 = 4002,
+		FRAME_CMD_GO_FORWARD	 = 4003,
+		FRAME_CMD_SHOW_URL		 = 4004,
+		FRAME_CMD_SHOW_DEV_TOOLS = 4005,
 	};
 
 public:
@@ -125,12 +125,12 @@ public:
 		CefRefPtr<CefFrame> frame,
 		const CefString& url
 		);
-	virtual bool OnConsoleMessage(
-		CefRefPtr<CefBrowser> browser,
-		const CefString& message,
-		const CefString& source,
-		int line
-		);
+// 	virtual bool OnConsoleMessage(
+// 		CefRefPtr<CefBrowser> browser,
+// 		const CefString& message,
+// 		const CefString& source,
+// 		int line
+// 		);
 
 	// CefV8ContextHandler methods
 	virtual void OnContextCreated(
@@ -318,11 +318,7 @@ private:
 
 	typedef std::map<CefWindowHandle, CCefWebBrowserImpl*> ThisPtrMap;
 	static ThisPtrMap sm_this_ptrs;
-
 	static CefCriticalSection sm_this_ptrs_mutex;
-
-	static bool sm_is_console_alloc;
-
 	static WNDPROC sm_old_wnd_proc;
 
 	// CCefWebBrowserImpl 对象实例构建计数
