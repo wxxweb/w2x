@@ -286,28 +286,6 @@ inline std::string _W2X_URL_DECODE_UTF8(LPCSTR _utf8)
 	return ret_str;
 }
 
-/**
- * 将 16字节(128位) 的 GUID 转换成字符串表现形式，例如：
- * BF3EE013-F387-4BCA-9599-581546EAB6DC，
- * 该字符串包含 36 字符（32 个十六进制字符 + 4 个连字符，不含结束符 '\0'）
- */
-W2X_COMMON_API bool Guid2String(
-	OUT LPTSTR _str_buffer, 
-	size_t _size_in_words, 
-	GUID _guid
-);
-
-#ifndef W2X_GUID_STR_LEN
-#  define W2X_GUID_STR_LEN	37
-#endif
-
-/** 生成文件 MD5 消息摘要 */
-W2X_COMMON_API bool GenerateFileMD5(
-	OUT TSTDSTR _md5_digest,
-	LPCTSTR _file_path
-);
-
-
 #define W2X_ALLOC_STR_A					w2x::encode::AllocStringA
 #define W2X_ALLOC_STR_W					w2x::encode::AllocStringW
 #define W2X_FREE_STR_A(p)				w2x::encode::FreeStringA(&(p))
@@ -398,6 +376,34 @@ W2X_COMMON_API bool GenerateFileMD5(
 #  define W2X_URL_DECODE			w2x::encode::_W2X_URL_DECODE_A
 #endif // UNICODE
 
+
+/**
+ * 将 16字节(128位) 的 GUID 转换成字符串表现形式，例如：
+ * BF3EE013-F387-4BCA-9599-581546EAB6DC，
+ * 该字符串包含 36 字符（32 个十六进制字符 + 4 个连字符，不含结束符 '\0'）
+ */
+W2X_COMMON_API bool Guid2String(
+	OUT LPTSTR _str_buffer, 
+	size_t _size_in_words, 
+	GUID _guid
+);
+
+#ifndef W2X_GUID_STR_LEN
+#  define W2X_GUID_STR_LEN	37
+#endif
+
+/** 生成文件 MD5 消息摘要, 请使用 W2X_FREE_STR 释放 _md5_digest 指向的内存空间 */
+W2X_COMMON_API LPTSTR AllocFileMD5(LPCTSTR _file_path);
+
+inline TSTDSTR _W2X_ALLOC_FILE_MD5(LPCTSTR _file_path)
+{
+	LPTSTR md5_digital = w2x::encode::AllocFileMD5(_file_path);
+	TSTDSTR ret_str = md5_digital;
+	W2X_FREE_STR(md5_digital);
+	return ret_str;
+}
+
+#define W2X_ALLOC_FILE_MD5 w2x::encode::_W2X_ALLOC_FILE_MD5
 
 W2X_DEFINE_NAME_SPACE_END(encode)
 W2X_NAME_SPACE_END

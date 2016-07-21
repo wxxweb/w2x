@@ -531,13 +531,8 @@ W2X_COMMON_API bool Guid2String(
 }
 
 
-W2X_COMMON_API bool GenerateFileMD5(
-	OUT TSTDSTR _md5_digest,
-	LPCTSTR _file_path
-	)
+W2X_COMMON_API LPTSTR AllocFileMD5(LPCTSTR _file_path)
 {
-	_md5_digest.clear();
-
 	IF_NULL_ASSERT_RETURN_VALUE(_file_path, false);
 
 	HANDLE file_handle = ::CreateFile(_file_path, GENERIC_READ, FILE_SHARE_READ, 
@@ -547,33 +542,37 @@ W2X_COMMON_API bool GenerateFileMD5(
 
 	// 获得 CSP (Cryptographic Service Provider) 中一个密钥容器的句柄
 	HCRYPTPROV prov_handle = NULL;
-	IF_FALSE_ASSERT (FALSE != ::CryptAcquireContext(&prov_handle, 
-		NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+	BOOL result = ::CryptAcquireContext(&prov_handle, 
+		NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+	IF_FALSE_ASSERT (!!result)
 	{
 		::CloseHandle(file_handle);
-		return false;
+		return NULL;
 	}
 
 	// 初始化数据流 hash，创建一个 CSP 的 hash 对象并返回它的句柄，
 	// 这个句柄接下来将被 CryptHashData 调用来对数据流做 hash 运算。
 	HCRYPTHASH hash_handle = NULL;
-	IF_FALSE_ASSERT (FALSE != ::CryptCreateHash(
-		prov_handle, CALG_MD5, NULL, 0, &hash_handle))
+	result = ::CryptCreateHash(prov_handle, CALG_MD5, NULL, 0, &hash_handle);
+	IF_FALSE_ASSERT (!!result)
 	{
 		::CloseHandle(file_handle);
 		::CryptReleaseContext(prov_handle, 0);
-
-		return false;
+		return NULL;
 	}
 
 	bool is_generate_successed = true;
+	const DWORD HASH_DATA_BYTES = 16;
 	const int STREAM_BUFFER_SIZE = 4096;
 	DWORD bytes_read = 0;
-	BYTE stream_buffer[STREAM_BUFFER_SIZE] = {0};
+	BYTE stream_buffer[STREAM_BUFFER_SIZE + 1] = {0};
+	LPTSTR md5_str = new TCHAR[HASH_DATA_BYTES * 2 + 1];
+	ZeroMemory(md5_str, HASH_DATA_BYTES * 2 + 1);
 
 	do {
-		IF_FALSE_ASSERT (FALSE != ::ReadFile(file_handle, 
-			stream_buffer, STREAM_BUFFER_SIZE, &bytes_read, NULL))
+		result = ::ReadFile(file_handle, stream_buffer, 
+			STREAM_BUFFER_SIZE, &bytes_read, NULL);
+		IF_FALSE_ASSERT (!!result)
 		{
 			is_generate_successed = false;
 			goto generate_md5_digest_error;
@@ -584,27 +583,26 @@ W2X_COMMON_API bool GenerateFileMD5(
 			break;
 		}
 
-		IF_FALSE_ASSERT (FALSE != ::CryptHashData(
-			hash_handle, stream_buffer, bytes_read, 0))
+		result = ::CryptHashData(hash_handle, stream_buffer, bytes_read, 0);
+		IF_FALSE_ASSERT (!!result)
 		{
 			is_generate_successed = false;
 			goto generate_md5_digest_error;
 		}
 	} while (true);
 
-	const DWORD HASH_DATA_SIZE = 32;
-	bytes_read = HASH_DATA_SIZE;
-	BYTE hash_data[HASH_DATA_SIZE] = {0};
+	bytes_read = HASH_DATA_BYTES;
+	BYTE hash_data[HASH_DATA_BYTES + 1] = {0};
 
-	IF_FALSE_ASSERT (FALSE != ::CryptGetHashParam(
-		hash_handle, HP_HASHVAL, hash_data, &bytes_read, 0))
+	result = ::CryptGetHashParam(hash_handle, HP_HASHVAL, hash_data, &bytes_read, 0);
+	IF_FALSE_ASSERT (!!result)
 	{
-		TCHAR unit_str[3] = {0};
-		for (DWORD i = 0; i < bytes_read; i++)
-		{
-			_sntprintf_s(unit_str, 2, TEXT("%02x"), hash_data[i]);
-			_md5_digest.append(unit_str);
-		}
+		is_generate_successed = false;
+	}
+
+	for (DWORD i = 0; i < bytes_read; i++)
+	{
+		_sntprintf_s((md5_str + (i * 2)), 3, 2, TEXT("%02x"), hash_data[i]);
 	}
 
 generate_md5_digest_error:
@@ -612,7 +610,12 @@ generate_md5_digest_error:
 	::CryptReleaseContext(prov_handle, 0);
 	::CloseHandle(file_handle);
 
-	return is_generate_successed;
+	if (!is_generate_successed) {
+		SAFE_DELETE_ARRAY(md5_str);
+		return NULL;
+	}
+
+	return md5_str;
 }
 
 
