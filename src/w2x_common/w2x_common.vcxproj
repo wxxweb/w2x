@@ -173,8 +173,7 @@
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>python "$(SolutionDir)tool\modify_version_num.py" "$(ProjectDir)$(TargetName).rc" 0.9.1</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">
@@ -208,8 +207,7 @@
       </Command>
     </PreLinkEvent>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>python "$(SolutionDir)tool\modify_version_num.py" "$(ProjectDir)$(TargetName).rc" 0.9.1</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
