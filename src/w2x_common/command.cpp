@@ -44,6 +44,7 @@ private:
 
 private:
 	bool		 m_is_save_output;
+	HANDLE		 m_ready_event;
 	HANDLE		 m_read_pipe_handle;
 	HANDLE		 m_read_thread_handle;
 	TCHAR		 m_app_path[MAX_PATH];
@@ -54,6 +55,7 @@ private:
 
 CCommand::CImpl::CImpl(void)
 	: m_is_save_output(false)
+	, m_ready_event(NULL)
 	, m_read_pipe_handle(NULL)
 	, m_read_thread_handle(NULL)
 {
@@ -95,8 +97,10 @@ CCommand::ExecuteStatus CCommand::CImpl::Execute(
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 	sa.lpSecurityDescriptor = NULL;
 	sa.bInheritHandle = TRUE;
+
 	const BOOL is_create_pipe_successed = ::CreatePipe(
-		&m_read_pipe_handle, &pipe_write_handle, &sa, PIPE_BUFFER_SIZE);
+		&m_read_pipe_handle, &pipe_write_handle, &sa, 0);
+
 	if (FALSE == is_create_pipe_successed)
 	{
 		const DWORD dwErrorCode = ::GetLastError();
@@ -118,6 +122,9 @@ CCommand::ExecuteStatus CCommand::CImpl::Execute(
 	}
 	_tcscat_s(m_app_args, NULL != _app_args ? _app_args : TEXT(""));
 
+	// 读管道线程就绪事件
+	m_ready_event = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+
 	// 创建子进程
 	PROCESS_INFORMATION pi = {0};
 	STARTUPINFO si = {0};
@@ -130,13 +137,17 @@ CCommand::ExecuteStatus CCommand::CImpl::Execute(
 
 	// app_path 不能用 m_app_path 替代, 否则DOS命令会执行失败
 	const BOOL is_create_process_successed = ::CreateProcess(
-		_app_path, m_app_args, NULL, NULL, TRUE, NULL, NULL, NULL, &si, &pi);
+		_app_path, m_app_args, NULL, NULL, TRUE, 
+		CREATE_NO_WINDOW | CREATE_SUSPENDED, NULL, NULL, &si, &pi);
+
 	if (FALSE == is_create_process_successed)
 	{  
 		const DWORD dwErrorCode = ::GetLastError();
 
+		::CloseHandle(m_ready_event);
 		::CloseHandle(pipe_write_handle);
 		::CloseHandle(m_read_pipe_handle);
+		m_ready_event = NULL;
 		pipe_write_handle = NULL;
 		m_read_pipe_handle = NULL;
 
@@ -146,6 +157,7 @@ CCommand::ExecuteStatus CCommand::CImpl::Execute(
 		ASSERT(FALSE != is_create_process_successed);
 		return kCreateProcessFailed;
 	}
+
 	// 父进程不需要写句柄，需立即关掉
 	::CloseHandle(pipe_write_handle);
 	pipe_write_handle = NULL;
@@ -164,52 +176,82 @@ CCommand::ExecuteStatus CCommand::CImpl::Execute(
 	CCommand::ExecuteStatus exe_status = kSuccessed;
 	if (INFINITE == _time_out)
 	{
+		::SetEvent(m_ready_event);
+		::ResumeThread(pi.hThread);
 		exe_status = this->ReadPipe();
+
+		::CloseHandle(pi.hThread);
+		::CloseHandle(pi.hProcess);
+		::CloseHandle(m_read_pipe_handle);
+		::CloseHandle(m_ready_event);
+		m_ready_event = NULL;
+		m_read_pipe_handle = NULL;
+
+		return exe_status;
 	}
-	else // 如果要控制读管道的超时时间，就要创建读管道线程
+
+	// 如果要控制读管道的超时时间，就要创建读管道线程
+
+	m_read_thread_handle = (HANDLE)_beginthreadex(NULL, 0, 
+		CImpl::ReadPipeThread, static_cast<LPVOID>(this), 0, NULL);
+
+	if (NULL == m_read_thread_handle)
 	{
-		m_read_thread_handle = (HANDLE)_beginthreadex(NULL, 0, 
-			CImpl::ReadPipeThread, static_cast<LPVOID>(this), 0, NULL);
-		if (NULL == m_read_thread_handle)
-		{
-			const DWORD dwErrorCode = ::GetLastError();
-			w2x::log::LogError(TEXT("Create read pipe thread faild(%d). CMD: %s %s"), 
-				dwErrorCode, m_app_path, m_app_args);
-			ASSERT(NULL != m_read_thread_handle);
-		}
-		else
-		{
-			// 等子进程正常退出，超时的话就把子进程干掉
-			const DWORD wait_status = ::WaitForSingleObject(pi.hProcess, _time_out);
-			IF_FALSE_ASSERT (WAIT_TIMEOUT != wait_status)
-			{
-				::TerminateProcess(pi.hProcess, 0);
+		const DWORD dwErrorCode = ::GetLastError();
+		w2x::log::LogError(TEXT("Create read pipe thread faild(%d). CMD: %s %s"), 
+			dwErrorCode, m_app_path, m_app_args);
+		ASSERT(NULL != m_read_thread_handle);
 
-				w2x::log::LogError(
-					TEXT("Wait command sub process time out(%d ms). CMD: %s %s"), 
-					_time_out, m_app_path, m_app_args);
-			}
+		::TerminateProcess(pi.hProcess, 1);
 
-			// 等读管道线程正常返回（子进程结束后读管道可自动结束）
-			DWORD exit_code = 0;
-			::WaitForSingleObject(m_read_thread_handle, _time_out);
-			::GetExitCodeThread(m_read_thread_handle, &exit_code);
-			::CloseHandle(m_read_thread_handle);
-			m_read_thread_handle = NULL;
-			if (WAIT_TIMEOUT == wait_status) {
-				exe_status = kTimeout;
-			} else {
-				exe_status = static_cast<CCommand::ExecuteStatus>(exit_code);
-			}
-		}
+		::CloseHandle(pi.hThread);
+		::CloseHandle(pi.hProcess);
+		::CloseHandle(m_read_pipe_handle);
+		::CloseHandle(m_ready_event);
+		m_ready_event = NULL;
+		m_read_pipe_handle = NULL;
+
+		return exe_status;
+	}
+	
+	// 等待读管道线程准备就绪才可以让进程开始执行
+	::WaitForSingleObject(m_ready_event, INFINITE);
+	::WaitForSingleObject(m_read_thread_handle, 200);
+	::ResumeThread(pi.hThread);
+
+	::OutputDebugString(TEXT("\nbegin process.\n"));
+
+	// 等子进程正常退出，超时的话就把子进程干掉
+	DWORD wait_status = ::WaitForSingleObject(pi.hProcess, _time_out);
+	IF_FALSE_ASSERT (WAIT_TIMEOUT != wait_status)
+	{
+		::TerminateProcess(pi.hProcess, 0);
+
+		w2x::log::LogWarn(
+			TEXT("Wait command sub process time out(%d ms). CMD: %s %s"), 
+			_time_out, m_app_path, m_app_args);
 	}
 
-	::CloseHandle(m_read_pipe_handle);
+	::OutputDebugString(TEXT("\nend process.\n"));
+
+	// 等读管道线程正常返回（子进程结束后读管道可自动结束）
+	wait_status = ::WaitForSingleObject(m_read_thread_handle, 1000);
+	if (WAIT_TIMEOUT == wait_status) {
+		::TerminateThread(m_read_thread_handle, kSuccessed);
+	}
+
+	DWORD exit_code = 0;
+	::GetExitCodeThread(m_read_thread_handle, &exit_code);
+	exe_status = static_cast<CCommand::ExecuteStatus>(exit_code);
+
 	::CloseHandle(pi.hThread);
 	::CloseHandle(pi.hProcess);
+	::CloseHandle(m_ready_event);
+	::CloseHandle(m_read_thread_handle);
+	::CloseHandle(m_read_pipe_handle);
+	m_ready_event = NULL;
+	m_read_thread_handle = NULL;
 	m_read_pipe_handle = NULL;
-
-	ASSERT(kSuccessed == exe_status);
 
 	return exe_status;
 }
@@ -220,9 +262,14 @@ CCommand::ExecuteStatus CCommand::CImpl::ReadPipe(void)
 	BOOL is_read_successed = FALSE;
 	char read_buffer[PIPE_BUFFER_SIZE] = {0};
 	DWORD bytes_read = 0;
+
+	::SetEvent(m_ready_event);
+
 	do {
+		::OutputDebugString(TEXT("\nbegin read.\n"));
 		is_read_successed = ::ReadFile(m_read_pipe_handle, read_buffer,
 			PIPE_BUFFER_SIZE - 1, &bytes_read, NULL);
+		::OutputDebugString(TEXT("\nend read.\n"));
 		if (TRUE == is_read_successed && true == m_is_save_output)
 		{
 			m_output_str_ascii += read_buffer;
@@ -231,8 +278,10 @@ CCommand::ExecuteStatus CCommand::CImpl::ReadPipe(void)
 	}
 	while (TRUE == is_read_successed);
 
+	::OutputDebugString(TEXT("\nfinish read.\n"));
+
 	const DWORD last_error = ::GetLastError();
-	IF_FALSE_ASSERT (FALSE != is_read_successed || ERROR_BROKEN_PIPE == last_error)
+	if (FALSE == is_read_successed && ERROR_BROKEN_PIPE != last_error)
 	{
 		w2x::log::LogError(TEXT("Read pipe error(%d). CMD: %s %s"), 
 			last_error, m_app_path, m_app_args);
@@ -248,6 +297,10 @@ UINT CALLBACK CCommand::CImpl::ReadPipeThread(PVOID _thread_param)
 	IF_NULL_ASSERT_RETURN_VALUE(_thread_param, kInvalidArg);
 
 	CImpl* this_ptr = static_cast<CImpl*>(_thread_param);
+
+	// 等待子进程执行
+	//::WaitForSingleObject(this_ptr->m_ready_event, INFINITE);
+
 	return this_ptr->ReadPipe();
 }
 
