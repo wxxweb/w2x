@@ -219,8 +219,6 @@ CCommand::ExecuteStatus CCommand::CImpl::Execute(
 	::WaitForSingleObject(m_read_thread_handle, 200);
 	::ResumeThread(pi.hThread);
 
-	::OutputDebugString(TEXT("\nbegin process.\n"));
-
 	// 等子进程正常退出，超时的话就把子进程干掉
 	DWORD wait_status = ::WaitForSingleObject(pi.hProcess, _time_out);
 	IF_FALSE_ASSERT (WAIT_TIMEOUT != wait_status)
@@ -231,8 +229,6 @@ CCommand::ExecuteStatus CCommand::CImpl::Execute(
 			TEXT("Wait command sub process time out(%d ms). CMD: %s %s"), 
 			_time_out, m_app_path, m_app_args);
 	}
-
-	::OutputDebugString(TEXT("\nend process.\n"));
 
 	// 等读管道线程正常返回（子进程结束后读管道可自动结束）
 	wait_status = ::WaitForSingleObject(m_read_thread_handle, 1000);
@@ -266,10 +262,8 @@ CCommand::ExecuteStatus CCommand::CImpl::ReadPipe(void)
 	::SetEvent(m_ready_event);
 
 	do {
-		::OutputDebugString(TEXT("\nbegin read.\n"));
 		is_read_successed = ::ReadFile(m_read_pipe_handle, read_buffer,
 			PIPE_BUFFER_SIZE - 1, &bytes_read, NULL);
-		::OutputDebugString(TEXT("\nend read.\n"));
 		if (TRUE == is_read_successed && true == m_is_save_output)
 		{
 			m_output_str_ascii += read_buffer;
@@ -277,8 +271,6 @@ CCommand::ExecuteStatus CCommand::CImpl::ReadPipe(void)
 		}
 	}
 	while (TRUE == is_read_successed);
-
-	::OutputDebugString(TEXT("\nfinish read.\n"));
 
 	const DWORD last_error = ::GetLastError();
 	if (FALSE == is_read_successed && ERROR_BROKEN_PIPE != last_error)
