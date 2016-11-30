@@ -118,6 +118,7 @@ public:
 	/** 当 JavaScript 脚本出现未捕获异常时被回调 */
 	virtual void OnUncaughtException(
 		const TSTDSTR& _msg,
+		const TSTDSTR& _stack_trace,
 		const TSTDSTR& _file_name,
 		const TSTDSTR& _src_line,
 		int _line_num,

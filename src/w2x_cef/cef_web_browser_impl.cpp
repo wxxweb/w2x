@@ -495,14 +495,43 @@ void CCefWebBrowserImpl::OnUncaughtException(CefRefPtr<CefBrowser> browser,
 	CefRefPtr<CefV8Exception> exception,
 	CefRefPtr<CefV8StackTrace> stackTrace)
 {
+	TSTDSTR stack_trace_info;
 	if (NULL != m_event_handler)
 	{
+		if (NULL != stackTrace.get() && stackTrace->IsValid()) {
+			const int frame_count = stackTrace->GetFrameCount();
+			CefRefPtr<CefV8StackFrame> stack_frame;
+			TCHAR num_str[16] = {0};
+
+			for (int i = 0; i < frame_count; ++i) {
+				stack_frame = stackTrace->GetFrame(i);
+				if (NULL == stack_frame.get() || !stack_frame->IsValid()) {
+					continue;
+				}
+				stack_trace_info += TEXT("\n\t[");
+				_itot_s(stack_frame->GetLineNumber(), num_str, 10);
+				stack_trace_info += num_str;
+				stack_trace_info += TEXT(":");
+				_itot_s(stack_frame->GetColumn(), num_str, 10);
+				stack_trace_info += num_str;
+				stack_trace_info += TEXT("]\t ");
+				stack_trace_info += stack_frame->GetFunctionName();
+				const TSTDSTR& url = stack_frame->GetScriptNameOrSourceURL();
+				if (0 < url.length()) {
+					stack_trace_info += TEXT("\n\t\t");
+					stack_trace_info += stack_frame->GetScriptNameOrSourceURL();
+				}
+			}
+		}
+
 		m_event_handler->OnUncaughtException(
 			exception->GetMessage(),
+			stack_trace_info,
 			exception->GetScriptResourceName(),
 			exception->GetSourceLine(),
 			exception->GetLineNumber(),
-			exception->GetStartColumn());
+			exception->GetStartColumn()
+			);
 	}
 }
 
