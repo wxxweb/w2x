@@ -10,30 +10,30 @@ ver_num = []
 
 
 def usage():
-    print "Modify program version number, using VC development and increasing its compiler version number."
-    print "USAGE: python", sys.argv[0], "<rc> <major>.<minor>.<revision>"
-    print "e.g.:  python", sys.argv[0], "resource.rc 1.0.1"
+    print("Modify program version number, using VC development and increasing its compiler version number.")
+    print("USAGE: python", sys.argv[0], "<rc> <major>.<minor>.<revision>")
+    print("e.g.:  python", sys.argv[0], "resource.rc 1.0.1")
 
   
 def checkArgv():
     #检测参数个数
     argc = len(sys.argv)
     if 3 != argc:
-        print "The number of parameters does not match.\n"
+        print("The number of parameters does not match.\n")
         return False
     #检测资源文件是否存在
     if False == os.path.exists(sys.argv[1]):
-        print "Not found file:", sys.argv[1], "\n"
+        print("Not found file:", sys.argv[1], "\n")
         return
     #检测版本号格式是否正确
     global ver_num
     ver_num = sys.argv[2].split(".")
     if 3 != len(ver_num):
-        print "Invalid version number.\n"
+        print("Invalid version number.\n")
         return
     for i in range(0, 3):
         if False == ver_num[i].isdigit():
-            print "Invalid version number.\n"
+            print("Invalid version number.\n")
             return
     return True
             
@@ -43,7 +43,7 @@ def checkLine(file_, line_, name_, seq_):
         file_.write(line_)
         return False
     
-    print line_
+    print(line_)
     
     line_info = re.split("[ \t\n]", line_)
     index = -1
@@ -58,10 +58,10 @@ def checkLine(file_, line_, name_, seq_):
     has_quote = False
     ver_str = line_info[index]
     if -1 != ver_str.find('"'):
-        ver_str = string.strip(ver_str, '"')
+        ver_str = ver_str.strip('"')
         has_quote = True     
     ver_info = re.split("[" + seq_ + "]", ver_str)
-    ver_info[3] = str(string.atoi(ver_info[3]) + 1)
+    ver_info[3] = str(int(ver_info[3]) + 1)
     global ver_num
     ver_info[0] = ver_num[0]
     ver_info[1] = ver_num[1]
@@ -72,7 +72,7 @@ def checkLine(file_, line_, name_, seq_):
     line_info[index] = ver_str
     line_ = " ".join(line_info)
     file_.write(line_[:-1] + "\n")
-    print line_
+    print(line_)
     return True
     
 def scanResFile(file_path_):
